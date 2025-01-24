@@ -1,0 +1,41 @@
+# Ignore Python files
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv/
+db.sqlite3
+
+# Ignore Django secret credentials
+config/credentials.json
+
+# Node.js dependencies and builds
+node_modules/
+frontend/node_modules/
+build/
+frontend/build/
+
+# Testing and coverage
+coverage/
+frontend/coverage/
+
+# IDE-specific files
+.idea/
+*.iml
+
+# Logs and system files
+*.log
+*.DS_Store
+*.lock
+
+# Environment variables (Frontend and Backend)
+.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# NPM/Yarn debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

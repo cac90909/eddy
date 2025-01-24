@@ -1,0 +1,28 @@
+body {
+  font-family: Arial, sans-serif;
+}
+
+.landing-page {
+  text-align: center;
+  margin: 2em;
+}
+
+button {
+  margin: 1em;
+  padding: 0.5em 1em;
+}
+
+table {
+  width: 80%;
+  margin: 2em auto;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+th {
+  background-color: #f2f2f2;
+}
