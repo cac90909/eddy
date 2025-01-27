@@ -31,7 +31,7 @@ class CacheService:
 
         user_cache.append(data)
         cache.set(user_cache_key, user_cache, timeout=3600)  # Cache for 1 hour
-        debug_print("Cached Data", {user_cache_key: user_cache})
+        debug_print(f"{cache_type} ({len(user_cache)}/3) cached {data.count()} rows on key {user_cache_key}")
 
     def get_cache_data(self, user_id, cache_type, cache_num):
         """

@@ -1,6 +1,8 @@
 from django.http import JsonResponse
 from django.views import View
 from explorer.services.init_user_service import InitUserService
+from explorer.views.data_operation_view import DataOperationView
+from shared.logger import debug_request
 
 
 class InitUserView(View):
@@ -18,6 +20,7 @@ class InitUserView(View):
         Returns:
             JsonResponse: A JSON response containing all the user's data.
         """
+        debug_request(request)
         user_id = request.GET.get("user_id")
 
         if not user_id:

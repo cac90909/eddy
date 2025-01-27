@@ -1,6 +1,8 @@
 from django.http import JsonResponse
 from django.views import View
 from explorer.services.filter_service import FilterService
+from explorer.views.data_operation_view import DataOperationView
+from shared.logger import debug_request
 
 class FilterView(View):
     def __init__(self, **kwargs):
@@ -21,6 +23,7 @@ class FilterView(View):
             JsonResponse: Filtered data or an error message.
         """
         try:
+            debug_request(request)
             user_id = int(request.GET.get("user_id"))
             column_name = request.GET.get("column_name")
             filter_value = request.GET.get("filter_value")
