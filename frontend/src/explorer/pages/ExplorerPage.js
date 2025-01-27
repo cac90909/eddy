@@ -1,52 +1,109 @@
-import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useUser } from "../../UserContext";
 import explorerService from "../services/explorerService";
-import FilterForm from "../components/FilterForm";
 import DataTable from "../components/DataTable";
+import FilterPanel from "../components/FilterPanel";
+import TraversalPanel from "../components/TraversalPanel";
+import SortPanel from "../components/SortPanel";
+import ActionBar from "../components/ActionBar";
 
 function ExplorerPage() {
-  const { state } = useLocation();
-  const userId = state?.userId || null;
-
+  const { userId } = useUser();
   const [data, setData] = useState([]);
   const [columns, setColumns] = useState([]);
+  const [savedAliases, setSavedAliases] = useState([]); // Temp saves
+  const isFetching = useRef(false);
 
   useEffect(() => {
-    if (!userId) {
-      console.log("No userId provided");
-      return;
-    }
+    if (!userId) return;
 
     const fetchData = async () => {
-      try {
-        console.log("Fetching data for userId:", userId);
-        const response = await explorerService.initUser(userId);
-        console.log("API Response:", response);
+      if (isFetching.current) return;
+      isFetching.current = true;
 
-        if (response.data && Array.isArray(response.data)) {
-          setData(response.data); // Set the array from the `data` property
-          setColumns(Object.keys(response.data[0] || {})); // Extract column headers from the first object
-        } else {
-          console.error("Unexpected response format:", response);
-        }
+      try {
+        const response = await explorerService.initUser(userId);
+        setData(response.data);
+        setColumns(Object.keys(response.data[0] || {}));
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        isFetching.current = false;
       }
     };
 
     fetchData();
   }, [userId]);
 
-  if (!userId) return <div>No User ID Provided</div>;
+  // Callbacks for ActionBar
+  const handlePrevious = async () => {
+    try {
+      const response = await explorerService.previousData(userId);
+      setData(response.data);
+    } catch (error) {
+      console.error("Error fetching previous dataset:", error);
+    }
+  };
 
-  console.log("Data to render:", data);
-  console.log("Columns to render:", columns);
+  const handleTempSave = async () => {
+    try {
+      const alias = `Temp Save ${savedAliases.length + 1}`;
+      await explorerService.tempSave(data, alias);
+      setSavedAliases([...savedAliases, alias]); // Update saved aliases
+    } catch (error) {
+      console.error("Error saving dataset:", error);
+    }
+  };
+
+  const handleUnion = async (alias) => {
+    try {
+      const response = await explorerService.unionData(userId, alias);
+      setData(response.data);
+    } catch (error) {
+      console.error("Error performing union:", error);
+    }
+  };
+
+  const handleDeepSave = async (alias) => {
+    try {
+      await explorerService.deepSave(data, alias);
+      console.log("Dataset deep saved with alias:", alias);
+    } catch (error) {
+      console.error("Error deep saving dataset:", error);
+    }
+  };
+
+  const handleSort = async (sortParams) => {
+    try {
+      const response = await explorerService.sortData(sortParams.columnName, sortParams.sortOrder);
+      setData(response.data);
+    } catch (error) {
+      console.error("Error applying sort:", error);
+    }
+  };
+
+  if (!userId) return <div>No User ID Provided</div>;
 
   return (
     <div>
       <h1>Explorer</h1>
-      <FilterForm onApplyFilter={() => {}} columns={columns} />
-      <DataTable data={data} columns={columns} />
+      <div style={{ display: "flex", gap: "1rem" }}>
+        <div style={{ flex: "1", maxWidth: "300px" }}>
+          <FilterPanel onApplyFilter={(filter) => console.log("Filter applied:", filter)} columns={columns} />
+          <TraversalPanel />
+          <SortPanel onSort={handleSort} />
+        </div>
+        <div style={{ flex: "3" }}>
+          <ActionBar
+            onPrevious={handlePrevious}
+            onTempSave={handleTempSave}
+            onUnion={handleUnion}
+            onDeepSave={handleDeepSave}
+            savedAliases={savedAliases}
+          />
+          <DataTable data={data} columns={columns} />
+        </div>
+      </div>
     </div>
   );
 }

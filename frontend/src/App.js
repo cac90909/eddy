@@ -1,16 +1,22 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import LandingPage from "./pages/LandingPage";
+import { UserProvider } from "./UserContext";
+import SignInPage from "./pages/SignInPage";
+import NavigationPage from "./pages/NavigationPage";
 import ExplorerPage from "./explorer/pages/ExplorerPage";
 
 function App() {
+console.log("App.js")
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/explorer" element={<ExplorerPage />} />
-      </Routes>
-    </Router>
+    <UserProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<SignInPage />} />
+          <Route path="/navigation" element={<NavigationPage />} />
+          <Route path="/explorer" element={<ExplorerPage />} />
+        </Routes>
+      </Router>
+    </UserProvider>
   );
 }
 

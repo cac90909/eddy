@@ -46,3 +46,13 @@ def debug_print(*args):
     # Combine all arguments into a single message
     message = "||-----||".join(str(arg) for arg in args)
     print(f"[{file_name}:{line_number} - {function_name}] {message}")
+    print()
+
+def debug_request(request):
+    print(f"Method: {request.method}")
+    print(f"Path: {request.path}")
+    print(f"Query Parameters: {request.GET}")
+    print(f"Headers: {dict(request.headers)}")
+    print(f"Body: {request.body.decode('utf-8') if request.body else 'No Body'}")
+    print()
+
