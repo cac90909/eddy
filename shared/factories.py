@@ -1,3 +1,5 @@
+#TODO - implement factory structure at a later date
+
 from shared.repositories.google_sheets_repository import GoogleSheetsRepository
 from shared.pandas_adapter import PandasAdapter
 

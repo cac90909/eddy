@@ -6,14 +6,14 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from shared.logger import debug_print
-from explorer.services.explorer_service import ExplorerService
+from explorer.services.cache_service import CacheService
 
 
-class ExplorerView(APIView):
+class CacheView(APIView):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.explorer_service = ExplorerService
+        self.cache_service = CacheService
 
     def get(self, request):
         try:

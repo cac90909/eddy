@@ -1,7 +1,7 @@
 from django.db.models import Q
 from explorer.models import UserData
 from shared.logger import debug_print
-from django.db.models import Func, F
+from django.db.models import Func, F, Value
 from django.db import connection
 
 class UserDataRepository:
@@ -16,16 +16,21 @@ class UserDataRepository:
         """
         return UserData.objects.filter(user_id=user_id)
 
+    #Right now, this handles getting unique values for list columns as well as json column (keys + values).
+    #Eager loading on json values (could wait until user specifies a key to filter on and then get its possible values)
+    #I think down the line, frontend may be delegated to handle this since they already have the data on hand
+    #And making a query to get the unique values for a dataset already possessed may be excessive
     @staticmethod
     def get_unique_filter_options(user_data_queryset):
         """
-        Retrieve unique values for specific columns containing arrays.
-        Columns: functionalities, subject_matters, general_categories, tags.
+        Retrieve unique values for specific columns containing arrays and unique keys and values from a JSON column.
+        Columns: functionalities, subject_matters, general_categories, tags, and fields (JSON).
+
         Args:
             user_data_queryset: QuerySet to process.
 
         Returns:
-            Dict: A dictionary containing unique values for each column.
+            Dict: A dictionary containing unique values for each column and unique keys and values for the JSON column.
         """
         columns_to_extract = [
             "functionalities",
@@ -35,15 +40,36 @@ class UserDataRepository:
         ]
 
         unique_values = {}
+
+        # Process array-based columns
         for column in columns_to_extract:
-            # Use UNNEST to expand arrays and retrieve unique values
             column_values = (
                 user_data_queryset.annotate(expanded_values=Func(F(column), function="UNNEST"))
                 .values_list("expanded_values", flat=True)
                 .distinct()
             )
-            debug_print(f"{column} has {len(set(column_values))} vals")
             unique_values[column] = set(column_values)
+
+        # Process JSON column (fields)
+        json_column = "fields"
+
+        # Step 1: Extract all unique keys from the JSON column
+        json_keys = (
+            user_data_queryset.annotate(keys=Func(Value(json_column), function="jsonb_object_keys"))
+            .values_list("keys", flat=True)
+            .distinct()
+        )
+        unique_values[json_column] = {"keys": set(json_keys)}
+
+        # Step 2: Extract unique values for each JSON key
+        for key in json_keys:
+            key_values = (
+                user_data_queryset.filter(**{f"{json_column}__has_key": key})
+                .annotate(value=F(f"{json_column}__{key}"))
+                .values_list("value", flat=True)
+                .distinct()
+            )
+            unique_values[json_column][key] = set(key_values)
 
         return unique_values
 
@@ -101,6 +127,7 @@ class UserDataRepository:
     #
     #     return result
 
+    #Equipped to work on JSON/non-JSON Data
     @staticmethod
     def filter_data(user_data_queryset, column_name, filter_value, filter_type):
         """
@@ -123,6 +150,14 @@ class UserDataRepository:
             'array_contains': {f"{column_name}__contains": filter_value},
             'array_not_contains': {f"{column_name}__contains": filter_value}
         }
+
+        #If wanting option for JSON filtering where you return valid rows + rows not containing passed key
+        """# Build the filter query
+        query = Q(**filter_map[filter_type])
+
+        if not strict_filter:
+            # Include rows where the key does not exist
+            query |= ~Q(**{f"{column_name}__isnull": False})"""
 
         if filter_type not in filter_map:
             raise ValueError(f"Unsupported filter type: {filter_type}")

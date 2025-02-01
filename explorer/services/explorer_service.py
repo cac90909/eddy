@@ -1,42 +1,33 @@
+from shared.logger import debug_print
+from explorer.repositories.user_data_repository import UserDataRepository
+from explorer.services.cache_service import CacheService
+
+
+
 class ExplorerService:
 
-    def __init__(self, data_operations_service, cache_service):
+
+    def __init__(self):
         super().__init__()
-        self.data_operations_service = data_operations_service
-        self.cache_service = cache_service
+        self.user_data_repository = UserDataRepository()
+        self.cache_service = CacheService()
 
-    def perform_data_operation(self, user_id, data_operation_type, data_operation_params, cache_operation_params):
-        operation_mapping = {
-            "init_user": self.data_operations_service.get_user_data,
-            "filter": self.data_operations_service.filter_data,
-            "traverse_siblings": self.data_operations_service.traverse_siblings,
-            "traverse_children": self.data_operations_service.traverse_children,
-            "sort": self.data_operations_service.sort_data,
-            "union": self.data_operations_service.union_data
-        }
+    #Performs the passed data operation data by invoking the mapped repository method and then saves to automatic cache
+    #Currently supports data_operation_types: init_user, filter, traverse
+    def perform_data_operation(self, user_id, data_operation_type, data_operation_params):
+        debug_print(user_id, data_operation_type, data_operation_params)
 
-        operation = operation_mapping[data_operation_type]
-        #validated_params = validate_data_operation(data_operation_type, data_operation_parameters)
-
-        if data_operation_type == "init_user":
-            result_data = self.data_operations_service.get_user_data(user_id=user_id)
-            self.save_data_to_cache(user_id=user_id, data=result_data, cache_type="Auto")
-        elif data_operation_type in ["filter", "traverse_siblings", "traverse_children", "sort"]:
-            original_data = self.get_data_from_cache(user_id=user_id, **cache_operation_params)
-            result_data = operation(data=original_data, **data_operation_params)
-            self.cache_service.cache_data(user_id=user_id, data=result_data, **cache_operation_params)
-        elif data_operation_type in ["union"]:
-            original_data1 = self.get_most_recent_cache_data(user_id=user_id) #Most recent item in cache (current dataset they are looking at)
-            original_data2 = self.get_data_from_cache(user_id=user_id, **cache_operation_params)
-            result_data = operation(data1=original_data1, data2=original_data2)
+        if data_operation_type == "init_user": result_data = self.user_data_repository.get_user_data(user_id=user_id)
         else:
-            raise ValueError(f"Unsupported data operation type: {data_operation_type}")
+            original_data = self.cache_service.get_most_recent_cache_data(user_id=user_id, cache_type="auto")
+            data_operation_params["user_data_queryset"] = original_data
+            if data_operation_type == "filter": result_data = self.user_data_repository.filter_data(**data_operation_params)
+            elif data_operation_type == "traverse": result_data = self.user_data_repository.traverse_data(**data_operation_params)
+            else: raise ValueError(f"Unsupported data operation type: {data_operation_type}")
+        self.cache_service.cache_data(user_id=user_id,data=result_data,cache_type="auto")
 
         return result_data
 
-
-    def get_most_recent_cache_data(self, user_id):
-        return self.cache_service.get_most_recent_cache_data(user_id=user_id)
 
     def get_data_from_cache(self, user_id, cache_type, cache_num):
         cache_data = self.cache_service.get_cache_data(user_id=user_id, cache_type=cache_type, cache_num=cache_num)
