@@ -1,9 +1,9 @@
 #TODO - implement factory structure at a later date
 
-from shared.repositories.google_sheets_repository import GoogleSheetsRepository
-from shared.pandas_adapter import PandasAdapter
+from shared.dep.google_sheets_repository import GoogleSheetsRepository
+from shared.dep.pandas_adapter import PandasAdapter
 
-from shared.data_operations import DataOperationsService
+from shared.dep.data_operations import DataOperationsService
 from explorer.services.cache_service import CacheManager
 from explorer.services.explorer_service import ExplorerService
 
