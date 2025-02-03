@@ -25,14 +25,17 @@ class Universal(models.Model):
 
 class Snapshots(models.Model):
     # Using the default primary key field renamed as dataset_id
-    dataset_id = models.AutoField(primary_key=True)
+    snapshot_id = models.AutoField(primary_key=True)
 
     # Foreign key to the User model.
-    #Can access user snapshot data by user.snapshots.ACCESSOR -> ex: "user.snapshots.all()"
+    # Can access user snapshot data by user.snapshots.ACCESSOR -> ex: "user.snapshots.all()"
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="snapshots")
 
     # A title that the user assigns to the dataset.
     title = models.CharField(max_length=255)
+
+    # Additional info explaining the nature of the data
+    description = models.CharField(max_length=255)
 
     # Stores the chain of operations that produced the dataset.
     # Using a JSONField lets you naturally store a list (or dict) of operations.

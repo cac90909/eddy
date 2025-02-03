@@ -1,10 +1,10 @@
 from django.db.models import Q
-from shared.models import UserData
+from shared.models import Universal
 from shared.logger import debug_print
 from django.db.models import Func, F, Value
 from django.db import connection
 
-class UniversalDataRepository:
+class UniversalRepository:
     """
     Repository for interacting with the UserData model.
     """
@@ -14,12 +14,13 @@ class UniversalDataRepository:
         """
         Retrieve all data for a specific user.
         """
-        return UserData.objects.filter(user_id=user_id)
+        return Universal.objects.filter(user_id=user_id)
 
-    #Right now, this handles getting unique values for list columns as well as json column (keys + values).
+    """Right now, this handles getting unique values for list columns as well as json column (keys + values).
     #Eager loading on json values (could wait until user specifies a key to filter on and then get its possible values)
     #I think down the line, frontend may be delegated to handle this since they already have the data on hand
     #And making a query to get the unique values for a dataset already possessed may be excessive
+    """
     @staticmethod
     def get_unique_filter_options(user_data_queryset):
         """
@@ -128,6 +129,7 @@ class UniversalDataRepository:
     #     return result
 
     #Equipped to work on JSON/non-JSON Data
+
     @staticmethod
     def filter_data(user_data_queryset, column_name, filter_value, filter_type):
         """
