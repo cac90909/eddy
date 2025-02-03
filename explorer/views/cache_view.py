@@ -19,9 +19,13 @@ class CacheView(APIView):
         try:
             debug_print(request)
             user_id = request.query_params.get("user_id")
-            data_operation_type = request.query_params.get("data_operation_type")
-            data_operation_params = request.query_params.get("data_operation_params", None)
-            result_data = self.explorer_service.perform_data_operation(user_id=user_id, data_operation_type=data_operation_type, data_operation_params=data_operation_params)
+            cache_type = request.query_params.get("cache_type")
+            if cache_type == "manual":
+                result_data = CacheService
+            elif cache_type == "deep_save":
+                result_data = CacheService
+            else:
+                raise ValueError(f"Unsupported cache type: {cache_type}")
             return JsonResponse({"data":result_data, "row_count":len(result_data)}, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

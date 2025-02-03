@@ -36,7 +36,7 @@ class CacheService:
         debug_print(f"{cache_type} ({len(user_cache)}/{self.MAX_CACHE_DATASETS}) cached {data.count()} rows on key {user_cache_key}")
 
     #Retrieving a session saved manual cache dataset
-    def get_cache_data(self, user_id, cache_num, cache_type="manual" ):
+    def get_manual_cache_data(self, user_id, cache_num, cache_type="manual" ):
         """
         Retrieves a specific cached dataset by its index.
 
@@ -56,6 +56,12 @@ class CacheService:
 
         debug_print("Retrieved Specific Data From Cache", {user_cache_key: cached_data[cache_num]})
         return cached_data[cache_num]
+
+    #Retrieving a persistent deep saved dataset
+    def get_deep_save_data(self, ):
+        #TODO - this blurs the line between session based cache and persistence, seperate these into different class or subclasses perhaps
+        pass
+
 
     #Retrieving the most recent auto cache dataset (at the top of the cache stack)
     def get_most_recent_cache_data(self, user_id, cache_type="auto"):

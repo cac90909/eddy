@@ -1,5 +1,5 @@
 from shared.logger import debug_print
-from explorer.repositories.user_data_repository import UserDataRepository
+from shared.repositories.user_data_repository import UserDataRepository
 from explorer.services.cache_service import CacheService
 
 
@@ -30,7 +30,7 @@ class ExplorerService:
 
 
     def get_data_from_cache(self, user_id, cache_type, cache_num):
-        cache_data = self.cache_service.get_cache_data(user_id=user_id, cache_type=cache_type, cache_num=cache_num)
+        cache_data = self.cache_service.get_manual_cache_data(user_id=user_id, cache_type=cache_type, cache_num=cache_num)
         return cache_data
 
     def save_data_to_cache(self, user_id, data, cache_type):
