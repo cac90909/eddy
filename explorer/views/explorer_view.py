@@ -19,9 +19,9 @@ class ExplorerView(APIView):
         try:
             debug_print(request)
             user_id = request.query_params.get("user_id")
-            data_operation_type = request.query_params.get("data_operation_type")
-            data_operation_params = request.query_params.get("data_operation_params", None)
-            result_data = self.explorer_service.perform_data_operation(user_id=user_id, data_operation_type=data_operation_type, data_operation_params=data_operation_params)
+            operation_type = request.query_params.get("operation_type")
+            operation_params = request.query_params.get("operation_params", None)
+            result_data = self.explorer_service.handle_operation(user_id=user_id, operation_type=operation_type, operation_params=operation_params)
             return JsonResponse({"data":result_data, "row_count":len(result_data)}, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

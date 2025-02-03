@@ -6,7 +6,7 @@ const API_BASE_URL = "http://localhost:8000/explorer";
 const explorerService = {
   initUser: async (userId) => {
   console.log("explorer service: calling init user")
-    const response = await axios.get(`${API_BASE_URL}/init/`, {
+    const response = await axios.get(`${API_BASE_URL}/`, {
       params: { user_id: userId },
     });
     return response.data;
@@ -14,11 +14,19 @@ const explorerService = {
 
   filterData: async (columnName, filterCondition, filterValue) => {
   console.log("explorer service: calling filter")
-    const response = await axios.get(`${API_BASE_URL}/filter/`, {
+    const response = await axios.get(`${API_BASE_URL}/`, {
       params: { column_name: columnName, filter_type: filterCondition, filter_value: filterValue },
     });
     return response.data;
   },
+
+  loadSnapshot: async (userId, snapshotId) => {
+    console.log("explorer service: calling load snapshot")
+      const response = await axios.get(`${API_BASE_URL}/filter/`, {
+        params: { column_name: columnName, filter_type: filterCondition, filter_value: filterValue },
+      });
+      return response.data;
+    },
 };
 
 export default explorerService;

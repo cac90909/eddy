@@ -3,13 +3,13 @@ from shared.logger import debug_print
 
 
 class CacheService:
-    MAX_CACHE_DATASETS = 3  # Max datasets for both auto and manual cache
+    MAX_CACHE_DATASETS = 5  # Max datasets for both auto and manual cache
 
     #Formats user id into a valid key
     def get_cache_key(self, user_id):
         return f"{user_id}_cache"
 
-    #Performs either a manual or auto cache
+    #Caches data and operation chain
     def cache_data(self, user_id, data):
         """
         Caches data for a user. Automatically manages the size of the cache.
