@@ -5,18 +5,12 @@ from shared.logger import debug_print
 class CacheService:
     MAX_CACHE_DATASETS = 3  # Max datasets for both auto and manual cache
 
-    #Formats the cache type and user id into a valid key
-    def _get_cache_key(self, user_id, cache_type):
-        """
-        Generates the cache key based on the user ID and cache type.
-        """
-        if cache_type not in ["manual", "auto"]:
-            debug_print("Invalid Cache Type", cache_type)
-            raise ValueError(f"Invalid cache type: {cache_type}")
-        return f"{user_id}_{cache_type}"
+    #Formats user id into a valid key
+    def get_cache_key(self, user_id):
+        return f"{user_id}_cache"
 
     #Performs either a manual or auto cache
-    def cache_data(self, user_id, data, cache_type="auto"):
+    def cache_data(self, user_id, data):
         """
         Caches data for a user. Automatically manages the size of the cache.
 
@@ -25,7 +19,7 @@ class CacheService:
             data: The dataset to cache (e.g., list of dictionaries or any serializable object).
             cache_type (str): The type of cache ('manual' or 'auto').
         """
-        user_cache_key = self._get_cache_key(user_id, cache_type)
+        user_cache_key = self.get_cache_key(user_id)
         user_cache = cache.get(user_cache_key, [])
 
         if len(user_cache) >= self.MAX_CACHE_DATASETS:
@@ -33,49 +27,11 @@ class CacheService:
 
         user_cache.append(data)
         cache.set(user_cache_key, user_cache, timeout=3600)  # Cache for 1 hour
-        debug_print(f"{cache_type} ({len(user_cache)}/{self.MAX_CACHE_DATASETS}) cached {data.count()} rows on key {user_cache_key}")
+        debug_print(f"{user_cache_key}: ({len(user_cache)}/{self.MAX_CACHE_DATASETS}) cached {data.count()}")
 
-    #Retrieving a session saved manual cache dataset
-    def get_manual_cache_data(self, user_id, cache_num, cache_type="manual" ):
-        """
-        Retrieves a specific cached dataset by its index.
-
-        Args:
-            user_id (int): User's ID.
-            cache_type (str): The type of cache ('manual' or 'auto').
-            cache_num (int): The index of the dataset in the cache.
-
-        Returns:
-            The requested cached dataset.
-        """
-        user_cache_key = self._get_cache_key(user_id, cache_type)
-        cached_data = cache.get(user_cache_key, [])
-
-        if cache_num >= len(cached_data) or cache_num < 0:
-            raise IndexError(f"Cache index {cache_num} out of range for {user_cache_key}")
-
-        debug_print("Retrieved Specific Data From Cache", {user_cache_key: cached_data[cache_num]})
-        return cached_data[cache_num]
-
-    #Retrieving a persistent deep saved dataset
-    def get_deep_save_data(self, ):
-        #TODO - this blurs the line between session based cache and persistence, seperate these into different class or subclasses perhaps
-        pass
-
-
-    #Retrieving the most recent auto cache dataset (at the top of the cache stack)
-    def get_most_recent_cache_data(self, user_id, cache_type="auto"):
-        """
-        Retrieves the most recent dataset from the cache.
-
-        Args:
-            user_id (int): User's ID.
-            cache_type (str): The type of cache ('manual' or 'auto').
-
-        Returns:
-            The most recent cached dataset.
-        """
-        user_cache_key = self._get_cache_key(user_id, cache_type)
+    #Retrieving the most recently cached dataset (at the top of the cache stack)
+    def get_most_recent_cache_data(self, user_id):
+        user_cache_key = self.get_cache_key(user_id, )
         cached_data = cache.get(user_cache_key, [])
 
         if not cached_data:
@@ -85,21 +41,7 @@ class CacheService:
         return cached_data[-1]
 
     #Clears both auto and manual cache if a cache type is not passed
-    def clear_cache(self, user_id, cache_type=None):
-        """
-        Clears all or specific type of cache for a user.
-
-        Args:
-            user_id (int): User's ID.
-            cache_type (str, optional): The type of cache to clear ('manual' or 'auto').
-                                        If None, clears all types of cache for the user.
-        """
-        if cache_type:
-            user_cache_key = self._get_cache_key(user_id, cache_type)
-            cache.delete(user_cache_key)
-            debug_print("Cleared Specific Cache", user_cache_key)
-        else:
-            for type_key in ["manual", "auto"]:
-                user_cache_key = self._get_cache_key(user_id, type_key)
-                cache.delete(user_cache_key)
-                debug_print("Cleared All Cache for User", user_cache_key)
+    def clear_cache(self, user_id):
+        user_cache_key = self.get_cache_key(user_id)
+        cache.delete(user_cache_key)
+        debug_print("Cleared All Cache for User: ", user_cache_key)

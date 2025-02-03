@@ -1,5 +1,5 @@
 from shared.logger import debug_print
-from shared.repositories.user_data_repository import UserDataRepository
+from shared.repositories.universal_repository import UniversalRepository
 from explorer.services.cache_service import CacheService
 
 

@@ -1,10 +1,10 @@
 from django.db.models import Q
-from explorer.models import UserData
+from shared.models import UserData
 from shared.logger import debug_print
 from django.db.models import Func, F, Value
 from django.db import connection
 
-class UserDataRepository:
+class UniversalDataRepository:
     """
     Repository for interacting with the UserData model.
     """

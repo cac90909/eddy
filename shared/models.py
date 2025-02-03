@@ -4,7 +4,7 @@ from django.contrib.postgres.fields import ArrayField
 
 User = get_user_model()
 
-class UserData(models.Model):
+class Universal(models.Model):
     date = models.DateField()
     functionalities = ArrayField(models.TextField(), blank=True, null=True)
     subject_matters = ArrayField(models.TextField(), blank=True, null=True)
@@ -20,23 +20,27 @@ class UserData(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'user_data_test'
+        db_table = 'universal'
 
 
-# class UserDataSnapshot(models.Model):
-#     # Using the default primary key field renamed as dataset_id
-#     dataset_id = models.AutoField(primary_key=True)
-#
-#     # Foreign key to the User model.
-#     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="data_snapshots")
-#
-#     # A title that the user assigns to the dataset.
-#     title = models.CharField(max_length=255)
-#
-#     # Stores the chain of operations that produced the dataset.
-#     # Using a JSONField lets you naturally store a list (or dict) of operations.
-#     operation_chain = models.JSONField(default=list, blank=True)
-#
-#     # Optional: Timestamps to track creation and updates.
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
+class Snapshots(models.Model):
+    # Using the default primary key field renamed as dataset_id
+    dataset_id = models.AutoField(primary_key=True)
+
+    # Foreign key to the User model.
+    #Can access user snapshot data by user.snapshots.ACCESSOR -> ex: "user.snapshots.all()"
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="snapshots")
+
+    # A title that the user assigns to the dataset.
+    title = models.CharField(max_length=255)
+
+    # Stores the chain of operations that produced the dataset.
+    # Using a JSONField lets you naturally store a list (or dict) of operations.
+    operation_chain = models.JSONField(default=list, blank=True)
+
+    # Optional: Timestamps to track creation and updates.
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'snapshots'
