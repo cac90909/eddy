@@ -34,6 +34,8 @@ class ExplorerService:
             "filter": self.universal_repository.filter_data(user_id=user_id, **data_operation_params),
             "traverse": self.universal_repository.traverse_data(user_id=user_id, **data_operation_params)
         }[data_operation_type]
+    
+    #TODO - creating a method for saving a dataset (involves assemembly from operation chain)
 
     def assemble_dataset_from_operation_chain(self, user_id, snapshot_id):
         # Retrieve the snapshot and its operation chain
