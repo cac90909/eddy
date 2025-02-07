@@ -32,10 +32,16 @@ class CacheService:
         user_cache_obj = self.get_user_cache_obj(user_id, obj_name)
         return user_cache_obj[item_index]
     
+    def get_most_recent_user_cache_obj_item(self, user_id, obj_name):
+        debug_print("get_most_recent_user_cache_obj_item called with:", {"user_id": user_id, "obj_name": obj_name})
+        user_cache_obj = self.get_user_cache_obj(user_id, obj_name)
+        return user_cache_obj[-1]
+    
+
     def cache_user(self, user_id, user_data):
         debug_print("cache_user called with:", {"user_id": user_id, "user_data": user_data})
         cache_key = self.get_cache_key(user_id)
-        cache.set(cache_key, user_data, timeout=3600)
+        cache.set(key=cache_key, value=user_data, timeout=3600)
 
     def cache_user_obj(self, user_id, obj_key, obj_val):
         debug_print("cache_user_obj called with:", {"user_id": user_id, "obj_key": obj_key, "obj_val": obj_val})
@@ -52,19 +58,19 @@ class CacheService:
         user_cache_obj.append(item_val)
         self.cache_user_obj(user_id=user_id, obj_key=obj_name, obj_val=user_cache_obj)
    
-    def clear_user_cache(self, user_id):
+    def delete_user_cache(self, user_id):
         debug_print("clear_user_cache called with:", {"user_id": user_id})
-        cache_key = self.get_cache_key(user_id)
-        cache.delete(cache_key)
+        cache_key = self.get_cache_key(user_id=user_id)
+        cache.delete(key=cache_key)
         
-    def clear_user_cache_obj(self, user_id, obj_name):
+    def delete_user_cache_obj(self, user_id, obj_name):
         debug_print("clear_user_cache_obj called with:", {"user_id": user_id, "obj_name": obj_name})
-        user_cache = self.get_user_cache(user_id)
+        user_cache = self.get_user_cache(user_id=user_id)
         user_cache.pop(obj_name, None)
         self.cache_user(user_id=user_id, user_data=user_cache)
   
-    def clear_user_cache_obj_item(self, user_id, obj_name, item_index):
+    def delete_user_cache_obj_item(self, user_id, obj_name, item_index):
         debug_print("clear_user_cache_obj_item called with:", {"user_id": user_id, "obj_name": obj_name, "item_index": item_index})
-        user_cache_obj = self.get_user_cache_obj(user_id, obj_name)
+        user_cache_obj = self.get_user_cache_obj(user_id=user_id, obj_name=obj_name)
         user_cache_obj.pop(item_index)
         self.cache_user_obj(user_id=user_id, obj_key=obj_name, obj_val=user_cache_obj)

@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from shared.logger import debug_print
-from explorer.services.snapshots_service import SnapshotsService
+from shared.services.snapshots_service import SnapshotsService
 
 
 class SnapshotsView(APIView):

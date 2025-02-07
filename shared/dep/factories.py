@@ -4,7 +4,7 @@ from shared.dep.google_sheets_repository import GoogleSheetsRepository
 from shared.dep.pandas_adapter import PandasAdapter
 
 from shared.dep.data_operations import DataOperationsService
-from explorer.services.cache_service import CacheManager
+from shared.services.cache_service import CacheManager
 from explorer.services.explorer_service import ExplorerService
 
 
