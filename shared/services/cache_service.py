@@ -36,7 +36,6 @@ class CacheService:
         debug_print("get_most_recent_user_cache_obj_item called with:", {"user_id": user_id, "obj_name": obj_name})
         user_cache_obj = self.get_user_cache_obj(user_id, obj_name)
         return user_cache_obj[-1]
-    
 
     def cache_user(self, user_id, user_data):
         debug_print("cache_user called with:", {"user_id": user_id, "user_data": user_data})
