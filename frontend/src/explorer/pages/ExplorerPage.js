@@ -1,17 +1,14 @@
 // src/pages/ExplorerPage.js
 import React, { useState, useEffect } from "react";
-import { Paper, Button, Modal, Box, Typography } from "@mui/material";
-import { Grid } from "@mui/material/Grid"; // If giving issues, try using Grid 2 from "@mui/material"
+import { Paper, Button, Modal, Box, Typography, Grid } from "@mui/material";
 import { useUser } from "../../UserContext";
 
-// Import our React services
-import explorerService from "../services/explorerService";
-import snapshotService from "../services/snapshotService";
-import cacheService from "../services/cacheService";
+// Import the unified explorer service
+import ExplorerService from "../services/ExplorerService";
 
-// Import UI components (these should be implemented separately)
+// Import UI components
 import DataTable from "../components/DataTable";
-import CategoricalFilter from "../../../dep - explorer/CategoricalFilter";
+import CategoricalFilter from "../components/CategoricalFilter"; 
 import DateFilter from "../components/DateFilter";
 import SubtextFilter from "../components/SubtextFilter";
 import TraversalOptions from "../components/TraversalOptions";
@@ -29,11 +26,10 @@ function ExplorerPage() {
 
   useEffect(() => {
     if (!userId) return;
-
     const fetchData = async () => {
       console.log("fetchData called for initUser with userId:", userId);
       try {
-        const response = await explorerService.initUser(userId);
+        const response = await ExplorerService.initUser(userId);
         console.log("initUser response:", response);
         setData(response.data);
         setColumns(Object.keys(response.data[0] || {}));
@@ -41,7 +37,6 @@ function ExplorerPage() {
         console.error("Error fetching initial data:", error);
       }
     };
-
     fetchData();
   }, [userId]);
 
@@ -49,7 +44,7 @@ function ExplorerPage() {
   const handleCategoricalFilter = async (column, value) => {
     console.log("handleCategoricalFilter called with:", { column, value });
     try {
-      const response = await explorerService.filterData(userId, column, value, "=");
+      const response = await ExplorerService.filterData(userId, column, value, "=");
       console.log("Categorical filter response:", response);
       setData(response.data);
     } catch (error) {
@@ -61,7 +56,8 @@ function ExplorerPage() {
   const handleDateFilter = async (date, condition) => {
     console.log("handleDateFilter called with:", { date, condition });
     try {
-      const response = await explorerService.dateFilter(userId, { date, condition });
+      // Assuming explorerService.dateFilter exists; adjust as needed.
+      const response = await ExplorerService.dateFilter(userId, { date, condition });
       console.log("Date filter response:", response);
       setData(response.data);
     } catch (error) {
@@ -73,7 +69,8 @@ function ExplorerPage() {
   const handleSubtextFilter = async (column, text) => {
     console.log("handleSubtextFilter called with:", { column, text });
     try {
-      const response = await explorerService.subtextFilter(userId, { column, text });
+      // Assuming explorerService.subtextFilter exists; adjust as needed.
+      const response = await ExplorerService.subtextFilter(userId, { column, text });
       console.log("Subtext filter response:", response);
       setData(response.data);
     } catch (error) {
@@ -85,8 +82,8 @@ function ExplorerPage() {
   const handleTraversal = async (direction) => {
     console.log("handleTraversal called with direction:", direction);
     try {
-      // Adjust the parameters as needed (e.g., startId can be part of operationParams)
-      const response = await explorerService.traverseData(userId, "someStartId", direction);
+      // Adjust the parameters as needed; using "someStartId" as a placeholder.
+      const response = await ExplorerService.traverseData(userId, "someStartId", direction);
       console.log("Traversal response:", response);
       setData(response.data);
     } catch (error) {
@@ -98,7 +95,7 @@ function ExplorerPage() {
   const handleSort = async (column, order) => {
     console.log("handleSort called with:", { column, order });
     try {
-      const response = await explorerService.sortData(userId, column, order);
+      const response = await ExplorerService.sortData(userId, column, order);
       console.log("Sort response:", response);
       setData(response.data);
     } catch (error) {
@@ -111,12 +108,11 @@ function ExplorerPage() {
     console.log("handleSave called with:", { saveType, alias });
     try {
       if (saveType === "temp") {
-        await explorerService.tempSave(userId, data, alias);
+        await ExplorerService.tempSave(userId, data, alias);
       } else if (saveType === "deep") {
-        await explorerService.deepSave(userId, data, alias);
+        await ExplorerService.deepSave(userId, data, alias);
       }
       console.log(`${saveType} save successful with alias:`, alias);
-      // Optionally update savedAliases state here.
       setSavedAliases([...savedAliases, alias]);
     } catch (error) {
       console.error(`Error during ${saveType} save:`, error);
@@ -127,7 +123,7 @@ function ExplorerPage() {
   const handleMultiDatasetOperation = async (operationType, params) => {
     console.log("handleMultiDatasetOperation called with:", { operationType, params });
     try {
-      const response = await explorerService.multiDatasetOperation(userId, operationType, params);
+      const response = await ExplorerService.multiDatasetOperation(userId, operationType, params);
       console.log("Multi-dataset operation response:", response);
       setData(response.data);
     } catch (error) {
@@ -219,7 +215,7 @@ function ExplorerPage() {
           <FieldsFilterModal
             onApply={(filterParams) => {
               console.log("Fields Filter applied with parameters:", filterParams);
-              // You could call explorerService.fieldsFilter(userId, filterParams) here.
+              // Here you could call explorerService.fieldsFilter(userId, filterParams) if defined.
               setShowFieldsModal(false);
             }}
           />
@@ -230,116 +226,3 @@ function ExplorerPage() {
 }
 
 export default ExplorerPage;
-
-
-// import React, { useState, useEffect, useRef } from "react";
-// import { useUser } from "../../UserContext";
-// import explorerService from "../services/explorerService";
-// import DataTable from "../components/DataTable";
-// import FilterPanel from "../components/FilterPanel";
-// import TraversalPanel from "../components/TraversalPanel";
-// import SortPanel from "../components/SortPanel";
-// import ActionBar from "../components/ActionBar";
-
-// function ExplorerPage() {
-//   const { userId } = useUser();
-//   const [data, setData] = useState([]);
-//   const [columns, setColumns] = useState([]);
-//   const [savedAliases, setSavedAliases] = useState([]); // Temp saves
-//   const isFetching = useRef(false);
-
-//   useEffect(() => {
-//     if (!userId) return;
-
-//     const fetchData = async () => {
-//       if (isFetching.current) return;
-//       isFetching.current = true;
-
-//       try {
-//         const response = await explorerService.initUser(userId);
-//         setData(response.data);
-//         setColumns(Object.keys(response.data[0] || {}));
-//       } catch (error) {
-//         console.error("Error fetching data:", error);
-//       } finally {
-//         isFetching.current = false;
-//       }
-//     };
-
-//     fetchData();
-//   }, [userId]);
-
-//   // Callbacks for ActionBar
-//   const handlePrevious = async () => {
-//     try {
-//       const response = await explorerService.previousData(userId);
-//       setData(response.data);
-//     } catch (error) {
-//       console.error("Error fetching previous dataset:", error);
-//     }
-//   };
-
-//   const handleTempSave = async () => {
-//     try {
-//       const alias = `Temp Save ${savedAliases.length + 1}`;
-//       await explorerService.tempSave(data, alias);
-//       setSavedAliases([...savedAliases, alias]); // Update saved aliases
-//     } catch (error) {
-//       console.error("Error saving dataset:", error);
-//     }
-//   };
-
-//   const handleUnion = async (alias) => {
-//     try {
-//       const response = await explorerService.unionData(userId, alias);
-//       setData(response.data);
-//     } catch (error) {
-//       console.error("Error performing union:", error);
-//     }
-//   };
-
-//   const handleDeepSave = async (alias) => {
-//     try {
-//       await explorerService.deepSave(data, alias);
-//       console.log("Dataset deep saved with alias:", alias);
-//     } catch (error) {
-//       console.error("Error deep saving dataset:", error);
-//     }
-//   };
-
-//   const handleSort = async (sortParams) => {
-//     try {
-//       const response = await explorerService.sortData(sortParams.columnName, sortParams.sortOrder);
-//       setData(response.data);
-//     } catch (error) {
-//       console.error("Error applying sort:", error);
-//     }
-//   };
-
-//   if (!userId) return <div>No User ID Provided</div>;
-
-//   return (
-//     <div>
-//       <h1>Explorer</h1>
-//       <div style={{ display: "flex", gap: "1rem" }}>
-//         <div style={{ flex: "1", maxWidth: "300px" }}>
-//           <FilterPanel onApplyFilter={(filter) => console.log("Filter applied:", filter)} columns={columns} />
-//           <TraversalPanel />
-//           <SortPanel onSort={handleSort} />
-//         </div>
-//         <div style={{ flex: "3" }}>
-//           <ActionBar
-//             onPrevious={handlePrevious}
-//             onTempSave={handleTempSave}
-//             onUnion={handleUnion}
-//             onDeepSave={handleDeepSave}
-//             savedAliases={savedAliases}
-//           />
-//           <DataTable data={data} columns={columns} />
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default ExplorerPage;

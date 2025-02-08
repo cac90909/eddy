@@ -1,21 +1,20 @@
 // src/components/CategoricalFilter.js
 import React, { useState, useEffect } from 'react';
 import { Box, TextField, MenuItem, Button } from '@mui/material';
-import explorerService from '../services/explorerService';
 
-function CategoricalFilter({ columns, onApply }) {
+function CategoricalFilter({ columns, onApply, onGetUniqueFilterOptions }) {
   const [selectedColumn, setSelectedColumn] = useState('');
   const [options, setOptions] = useState([]);
   const [selectedValue, setSelectedValue] = useState('');
 
-  // When the selected column changes, load unique options for that column
+  // When the selected column changes, load unique options for that column.
   useEffect(() => {
     if (selectedColumn) {
       console.log("Fetching unique options for column:", selectedColumn);
       const fetchOptions = async () => {
         try {
-          // Assumes explorerService.getUniqueFilterOptions exists and returns { data: [...] }
-          const response = await explorerService.getUniqueFilterOptions(selectedColumn);
+          // Call the method passed in as a prop rather than importing explorerService directly.
+          const response = await onGetUniqueFilterOptions(selectedColumn);
           console.log("Unique options for", selectedColumn, ":", response.data);
           setOptions(response.data);
           setSelectedValue(''); // Reset selected value when column changes
@@ -29,7 +28,7 @@ function CategoricalFilter({ columns, onApply }) {
       setOptions([]);
       setSelectedValue('');
     }
-  }, [selectedColumn]);
+  }, [selectedColumn, onGetUniqueFilterOptions]);
 
   const handleApplyFilter = () => {
     console.log("Apply filter clicked with:", { selectedColumn, selectedValue });
