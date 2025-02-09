@@ -70,7 +70,7 @@ class UniversalRepository:
             dict: A dictionary where each key is a JSON key and the value is a set of unique values for that key.
         """
         unique_values = {}
-        keys = self.get_unique_json_keys(user_data_queryset)
+        keys = UniversalRepository.get_unique_json_keys(user_data_queryset)
         for key in keys:
             key_values = (
                 user_data_queryset

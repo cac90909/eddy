@@ -1,4 +1,5 @@
 from django.http import JsonResponse
+from django.forms.models import model_to_dict
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -31,8 +32,8 @@ class ExplorerView(APIView):
                 operation_type=operation_type,
                 operation_params=operation_params
             )
-            row_count = len(result_data) if hasattr(result_data, "__len__") else 1
-            return Response({"data": result_data, "row_count": row_count}, status=status.HTTP_200_OK)
+            data_serializable = [model_to_dict(obj) for obj in result_data]
+            return Response({"data": data_serializable, "row_count": len(data_serializable)}, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:

@@ -24,6 +24,7 @@ def test_cors(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('explorer/', include('explorer.urls')),
+    path('dev-tools/', include('dev_tools.urls')),
     # path('dashboard/', include('dashboard.urls')),
     # path('metrics/', include('metrics.urls')),
     path('test-cors/', test_cors),

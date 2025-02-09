@@ -22,7 +22,7 @@ class ExplorerCacheService(CacheService):
 
     def cache_dataset_item(self, user_id, dataset):
         debug_print_vars(user_id=user_id, dataset=dataset)
-        datasets = self.get_cache_obj(user_id=user_id, obj_key="datasets")
+        datasets = self.get_user_cache_obj(user_id=user_id, obj_key="datasets")
         if len(datasets) >= self.MAX_CACHE_LEN:
             datasets.pop(0)
         datasets.append(dataset)
@@ -30,7 +30,7 @@ class ExplorerCacheService(CacheService):
 
     def cache_operation_item(self, user_id, operation):
         debug_print_vars(user_id=user_id, operation=operation)
-        operation_chain = self.get_cache_obj(user_id=user_id, obj_key="operation_chain")
+        operation_chain = self.get_user_cache_obj(user_id=user_id, obj_key="operation_chain")
         if len(operation_chain) >= self.MAX_CACHE_LEN:
             operation_chain.pop(0)
         operation_chain.append(operation)
