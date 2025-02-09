@@ -1,9 +1,10 @@
-from shared.logger import debug_print_vars
+from shared.util import log_vars_vals_cls, catch_exceptions_cls
 from shared.services.data_processing_service import DataProcessingService
 from explorer.services.explorer_cache_service import ExplorerCacheService
 from shared.services.snapshots_service import SnapshotsService
 
-
+@log_vars_vals_cls()
+@catch_exceptions_cls(exception_return_value="Error")
 class ExplorerService:
     def __init__(self):
         super().__init__()
@@ -12,7 +13,6 @@ class ExplorerService:
         self.data_processing_service = DataProcessingService()
 
     def handle_operation(self, user_id, operation_type, operation_params):
-        debug_print_vars(user_id=user_id, operation_type=operation_type, operation_params=operation_params)
         if operation_type == "init_user":
             user_data = self.data_processing_service.get_user_data(user_id=user_id)
             self.explorer_cache_service.create_empty_explorer_cache(user_id=user_id)
@@ -75,7 +75,6 @@ class ExplorerService:
 
     #Currently can return a list > max length allowed by the cache because we cache once, at the end, in handle_operation, not during each iteration of assemble_dataset_from_operation_chain
     def assemble_dataset_from_operation_chain(self, user_id, operation_chain):
-        debug_print_vars(user_id=user_id, operation_chain=operation_chain)
         current_data = self.data_processing_service.get_user_data(user_id=user_id)
         dataset_list = [current_data]
         # Process each subsequent operation in the chain
