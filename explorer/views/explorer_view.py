@@ -16,6 +16,7 @@ class ExplorerView(APIView):
     def get(self, request):
         try:
             # Log the full accessed URL
+            print()
             debug_print_vars(url=request.build_absolute_uri(), query_params=request.query_params.dict())
             user_id = request.query_params.get("user_id")
             operation_type = request.query_params.get("operation_type")
@@ -33,7 +34,7 @@ class ExplorerView(APIView):
                 operation_params=operation_params
             )
             data_serializable = [model_to_dict(obj) for obj in result_data]
-            return Response({"data": data_serializable, "row_count": len(data_serializable)}, status=status.HTTP_200_OK)
+            return Response({"row_count": len(data_serializable), "data": data_serializable}, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:

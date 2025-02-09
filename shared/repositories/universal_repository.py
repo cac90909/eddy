@@ -3,6 +3,8 @@ from shared.models import Universal
 from shared.logger import debug_print
 from django.db.models import Func, F, Value
 from django.db import connection
+from shared.util import log_vars_vals_cls, catch_exceptions_cls
+
 
 class UniversalRepository:
     """
