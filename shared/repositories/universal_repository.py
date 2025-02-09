@@ -18,7 +18,7 @@ class UniversalRepository:
 
     from django.db.models import Func, F
 
-    def get_unique_values_from_list_column(user_data_queryset, column_name):
+    def get_unique_values_from_list_column(self, user_data_queryset, column_name):
         """
         Retrieve unique values from a list-based column.
         
@@ -38,7 +38,8 @@ class UniversalRepository:
         )
         return set(values)
 
-    def get_unique_json_keys(self, user_data_queryset):
+    @staticmethod
+    def get_unique_json_keys(user_data_queryset):
         """
         Retrieve all unique keys from the 'fields' JSON column.
         
@@ -57,7 +58,8 @@ class UniversalRepository:
         )
         return set(keys)
 
-    def get_unique_json_values(self, user_data_queryset):
+    @staticmethod
+    def get_unique_json_values(user_data_queryset):
         """
         Retrieve unique values for each key in the 'fields' JSON column.
         
