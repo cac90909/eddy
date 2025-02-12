@@ -1,9 +1,10 @@
+from shared.logger import debug_print, debug_print_vars
 from shared.util import log_vars_vals_cls, catch_exceptions_cls
 from shared.services.data_processing_service import DataProcessingService
 from explorer.services.explorer_cache_service import ExplorerCacheService
 from shared.services.snapshots_service import SnapshotsService
 
-@log_vars_vals_cls()
+#@log_vars_vals_cls()
 @catch_exceptions_cls(exception_return_value="Error")
 class ExplorerService:
     def __init__(self):
@@ -13,18 +14,20 @@ class ExplorerService:
         self.data_processing_service = DataProcessingService()
 
     def handle_operation(self, user_id, operation_type, operation_params):
+        debug_print()
         if operation_type == "init_user":
-            user_data = self.data_processing_service.get_user_data(user_id=user_id)
+            debug_print(f"{operation_type}: get user data --> create empty explorer cache --> cache dataset item --> cache operation item")
+            user_data_queryset = self.data_processing_service.get_user_data(user_id=user_id)
             self.explorer_cache_service.create_empty_explorer_cache(user_id=user_id)
-            self.explorer_cache_service.cache_dataset_item(user_id=user_id, dataset=user_data)
+            self.explorer_cache_service.cache_dataset_item(user_id=user_id, dataset=user_data_queryset)
             self.explorer_cache_service.cache_operation_item(user_id=user_id, operation={"operation_type": "init_user", "operation_params": {}})
-            return user_data
+            return list(user_data_queryset)
         if operation_type == "filter": 
             user_data = self.explorer_cache_service.get_most_recent_dataset(user_id=user_id)
-            filtered_data = self.data_processing_service.apply_filter(user_id=user_id, user_data=user_data, **operation_params)
-            self.explorer_cache_service.cache_dataset_item(user_id=user_id, dataset=filtered_data)
+            filtered_data_queryset = self.data_processing_service.apply_filter(user_id=user_id, user_data=user_data, **operation_params)
+            self.explorer_cache_service.cache_dataset_item(user_id=user_id, dataset=filtered_data_queryset)
             self.explorer_cache_service.cache_operation_item(user_id=user_id, operation={"operation_type": "filter", "operation_params": operation_params})
-            return filtered_data
+            return list(filtered_data_queryset) 
         if operation_type == "traverse":
             user_data = self.explorer_cache_service.get_most_recent_dataset(user_id=user_id)
             traversed_data = self.data_processing_service.traverse_data(user_id=user_id, user_data=user_data, **operation_params)

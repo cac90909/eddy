@@ -1,7 +1,8 @@
 from shared.repositories.universal_repository import UniversalRepository
+from shared.logger import debug_print
 from shared.util import log_vars_vals_cls, catch_exceptions_cls
 
-@log_vars_vals_cls(exclude=None)
+#@log_vars_vals_cls(exclude=None)
 @catch_exceptions_cls(exception_return_value="Error", exclude=None)
 class DataProcessingService:
     def __init__(self):

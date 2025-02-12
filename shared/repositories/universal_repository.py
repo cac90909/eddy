@@ -16,7 +16,9 @@ class UniversalRepository:
         """
         Retrieve all data for a specific user.
         """
-        return Universal.objects.filter(user_id=user_id)
+        data = Universal.objects.filter(user_id=user_id)
+        debug_print(f'{data.count()} rows retrieved')
+        return data
 
     from django.db.models import Func, F
 
@@ -38,7 +40,9 @@ class UniversalRepository:
             .values_list("expanded_value", flat=True)
             .distinct()
         )
-        return set(values)
+        unique_values = set(values)
+        debug_print(f'{len(unique_values)} unique values')
+        return unique_values
 
     @staticmethod
     def get_unique_json_keys(user_data_queryset):
@@ -58,7 +62,9 @@ class UniversalRepository:
             .values_list("json_key", flat=True)
             .distinct()
         )
-        return set(keys)
+        unique_keys = set(keys)
+        debug_print(f'{len(unique_keys)} unique keys')
+        return unique_keys
 
     @staticmethod
     def get_unique_json_values(user_data_queryset):
@@ -72,6 +78,7 @@ class UniversalRepository:
             dict: A dictionary where each key is a JSON key and the value is a set of unique values for that key.
         """
         unique_values = {}
+        total_vals = 0
         keys = UniversalRepository.get_unique_json_keys(user_data_queryset)
         for key in keys:
             key_values = (
@@ -81,7 +88,10 @@ class UniversalRepository:
                 .values_list("value", flat=True)
                 .distinct()
             )
+            
             unique_values[key] = set(key_values)
+            total_vals += len(key_values)
+        debug_print(f'{total_vals} unique values, across {len(keys)} unique keys')
         return unique_values
 
 
@@ -238,7 +248,9 @@ class UniversalRepository:
         if filter_type in ['!=', 'array_not_contains']:
             return user_data_queryset.exclude(**filter_map[filter_type])
 
-        return user_data_queryset.filter(**filter_map[filter_type])
+        data = user_data_queryset.filter(**filter_map[filter_type])
+        debug_print(f'{user_data_queryset.count()} rows filtered to {data.count()} rows')
+        return data
 
 
     #TODO - get rid, react will handle sorting
@@ -295,7 +307,8 @@ class UniversalRepository:
                 related_ids = user_data_queryset.filter(id=current_id).values_list(column_name, flat=True).first()
                 if related_ids:
                     to_visit.extend(related_ids)
-
-        return list(visited)
+        related_nodes = list(visited)
+        debug_print(f'{len(related_nodes)} related nodes')
+        return related_nodes
 
 

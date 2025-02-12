@@ -1,5 +1,6 @@
 import functools
 import inspect
+import traceback
 
 def _get_function_context(func, args):
     """
@@ -43,6 +44,7 @@ def catch_exceptions_func(default=None):
                 return result
             except Exception as e:
                 print(f"[EXCEPTION] {class_name}.{func_name} (line {line_number}) | Exception: {e} | args: {args}, kwargs: {kwargs}")
+                print(traceback.format_exc())
                 return default
         return wrapper
     return decorator
