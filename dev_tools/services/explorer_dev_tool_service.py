@@ -32,15 +32,26 @@ class ExplorerDevToolService:
             return operation
         if operation_type == "get_row":
             user_data = self.explorer_cache_service.get_most_recent_dataset(user_id=user_id)
-            queryset = self.data_processing_service.apply_filter(user_id=user_id, user_data=user_data, column_name="id", filter_value=operation_params["id"], filter_type="=")
+            queryset = self.data_processing_service.filter_data(user_id=user_id, user_data=user_data, column_name="id", filter_value=operation_params["id"], filter_type="=")
             row = queryset[0]
             return row
         if operation_type == "get_value":
             user_data = self.explorer_cache_service.get_most_recent_dataset(user_id=user_id)
-            queryset = self.data_processing_service.apply_filter(user_id=user_id, user_data=user_data, column_name="id", filter_value=operation_params["id"], filter_type="=")
+            queryset = self.data_processing_service.filter_data(user_id=user_id, user_data=user_data, column_name="id", filter_value=operation_params["id"], filter_type="=")
             row = queryset[0]
             value = getattr(row, operation_params["column_name"])
             return value
         if operation_type == "get_cache_num_datasets":
             cache_datasets = self.explorer_cache_service.get_dataset_list(user_id=user_id)
-            return len(cache_datasets)
+            num_datasets = len(cache_datasets)
+            return num_datasets
+        if operation_type == "get_cache_datasets_row_nums":
+            cache_datasets = self.explorer_cache_service.get_dataset_list(user_id=user_id)
+            datasets_rows = [len(list(querylist)) for querylist in cache_datasets]
+            return datasets_rows
+        if operation_type == "get_num_snapshots":
+            snapshots = self.snapshot_service.get_all_snapshots(user_id=user_id)
+            return len(list(snapshots))
+        if operation_type == "get_snapshot":
+            snapshot = self.snapshot_service.get_snapshot(user_id=user_id, snapshot_id=operation_params["snapshot_id"])
+            return snapshot

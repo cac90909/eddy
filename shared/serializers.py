@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from shared.models import Universal  # adjust the import to your actual model location
+from shared.models import Universal, Snapshots  # adjust the import to your actual model location
 
 class UniversalSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,6 +15,12 @@ class OperationSerializer(serializers.Serializer):
 
 class OperationChainItemSerializer(serializers.Serializer):
     operation = OperationSerializer(many=True)
+
+class SnapshotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Snapshots
+        fields = "__all__"
+
 
 
 

@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from shared.logger import debug_print_vars, debug_print
 from dev_tools.services.explorer_dev_tool_service import ExplorerDevToolService
-from shared.serializers import UniversalSerializer, UniversalDatasetsSerializer, OperationSerializer, OperationChainItemSerializer
+from shared.serializers import UniversalSerializer, UniversalDatasetsSerializer, OperationSerializer, OperationChainItemSerializer, SnapshotSerializer
 from django.db.models.query import QuerySet
 from shared.util import catch_exceptions_cls
 
@@ -67,6 +67,15 @@ class ExplorerDevToolView(APIView):
             if operation_type == "get_cache_num_datasets":
                 debug_print(explorer_data)
                 return Response(explorer_data, status=status.HTTP_200_OK)
+            if operation_type == "get_cache_datasets_row_nums":
+                return Response(explorer_data, status=status.HTTP_200_OK)
+            if operation_type == "get_num_snapshots":
+                return Response(explorer_data, status=status.HTTP_200_OK)
+            if operation_type == "get_snapshot":
+                serializer = SnapshotSerializer(instance=explorer_data)
+                debug_print(f"{(serializer.data)} snapshot serialized")
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+
             else:
                 return Response({"error": f"Operation type '{operation_type}' not supported"}, status=status.HTTP_400_BAD_REQUEST)
         

@@ -29,7 +29,7 @@ class Snapshots(models.Model):
 
     # Foreign key to the User model.
     # Can access user snapshot data by user.snapshots.ACCESSOR -> ex: "user.snapshots.all()"
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="snapshots")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="snapshots")
 
     # A title that the user assigns to the dataset.
     title = models.CharField(max_length=255)
