@@ -1,5 +1,4 @@
 from django.http import JsonResponse
-from django.forms.models import model_to_dict
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -13,18 +12,16 @@ from shared.serializers import UniversalSerializer, SnapshotSerializer
 class ExplorerView(APIView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # Instantiate the service
         self.explorer_service = ExplorerService()
 
     def get(self, request):
         try:
-            # Log the full accessed URL
             print()
             debug_print(request.build_absolute_uri())
             debug_print(request.query_params.dict())
             user_id = request.query_params.get("user_id")
             operation_type = request.query_params.get("operation_type")
-            operation_params = request.query_params.get("operation_params")
+            operation_params = request.query_params.get("operation_params", "{}")
             operation_params = json.loads(operation_params)
             
             result_data = self.explorer_service.handle_operation(
@@ -37,14 +34,11 @@ class ExplorerView(APIView):
                 serializer = UniversalSerializer(instance=result_data, many=True)
                 debug_print(f"{len(serializer.data)} serialized response rows")
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
-            if operation_type in ["get_filter_values", "get_json_keys", "get_json_values"]:
+            if operation_type in ["get_unique_column_values", "get_unique_json_keys", "get_unique_json_values"]:
                 debug_print(f"{len(result_data)} serialized response rows")
                 return Response(data=result_data, status=status.HTTP_200_OK)
             if operation_type in ["get_all_snapshots"]:
-                serialized_snapshots = []
-                for snapshot in result_data:
-                    serializer = SnapshotSerializer(instance=snapshot)
-                    serialized_snapshots.append(serializer.data)
+                serialized_snapshots = [SnapshotSerializer(instance=snapshot).data for snapshot in result_data]
                 return Response(data=serialized_snapshots, status=status.HTTP_200_OK)
             if operation_type in ["load_snapshot"]:
                 serializer = UniversalSerializer(instance=result_data, many=True)
@@ -57,14 +51,15 @@ class ExplorerView(APIView):
 
     def post(self, request):
         try:
-            # Log the full accessed URL
             print()
             debug_print(request.build_absolute_uri())
-            debug_print(request.query_params.dict())
-            user_id = request.query_params.get("user_id")
-            operation_type = request.query_params.get("operation_type")
-            operation_params = request.query_params.get("operation_params")
-            operation_params = json.loads(operation_params)
+            debug_print(request.data)
+            user_id = request.data.get("user_id")
+            operation_type = request.data.get("operation_type")
+            operation_params = request.data.get("operation_params", "{}")
+            # If operation_params is a string, load it; otherwise assume it is already a dict.
+            if isinstance(operation_params, str):
+                operation_params = json.loads(operation_params)
             
             result_data = self.explorer_service.handle_operation(
                 user_id=user_id,
@@ -72,9 +67,9 @@ class ExplorerView(APIView):
                 operation_params=operation_params
             )
 
-            if operation_type in ["update_snapshot"]:
+            if operation_type in ["save_snapshot"]:
                 serializer = SnapshotSerializer(instance=result_data)
-                debug_print(f"{(serializer.data)} snapshot serialized")
+                debug_print(f"{serializer.data} snapshot serialized")
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -83,14 +78,14 @@ class ExplorerView(APIView):
 
     def put(self, request):
         try:
-            # Log the full accessed URL
             print()
             debug_print(request.build_absolute_uri())
-            debug_print(request.query_params.dict())
-            user_id = request.query_params.get("user_id")
-            operation_type = request.query_params.get("operation_type")
-            operation_params = request.query_params.get("operation_params")
-            operation_params = json.loads(operation_params)
+            debug_print(request.data)
+            user_id = request.data.get("user_id")
+            operation_type = request.data.get("operation_type")
+            operation_params = request.data.get("operation_params", "{}")
+            if isinstance(operation_params, str):
+                operation_params = json.loads(operation_params)
             
             result_data = self.explorer_service.handle_operation(
                 user_id=user_id,
@@ -100,7 +95,7 @@ class ExplorerView(APIView):
 
             if operation_type in ["update_snapshot"]:
                 serializer = SnapshotSerializer(instance=result_data)
-                debug_print(f"{(serializer.data)} snapshot serialized")
+                debug_print(f"{serializer.data} snapshot serialized")
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -109,14 +104,14 @@ class ExplorerView(APIView):
 
     def delete(self, request):
         try:
-            # Log the full accessed URL
             print()
             debug_print(request.build_absolute_uri())
-            debug_print(request.query_params.dict())
-            user_id = request.query_params.get("user_id")
-            operation_type = request.query_params.get("operation_type")
-            operation_params = request.query_params.get("operation_params")
-            operation_params = json.loads(operation_params)
+            debug_print(request.data)
+            user_id = request.data.get("user_id")
+            operation_type = request.data.get("operation_type")
+            operation_params = request.data.get("operation_params", "{}")
+            if isinstance(operation_params, str):
+                operation_params = json.loads(operation_params)
             
             result_data = self.explorer_service.handle_operation(
                 user_id=user_id,
@@ -128,10 +123,10 @@ class ExplorerView(APIView):
                 debug_print(f"{len(serializer.data)} serialized response rows")
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
             if operation_type in ["delete_snapshot"]:
-                debug_print(f'Deleted Snapshot {(operation_params["snapshot_id"])}')
+                debug_print(f'Deleted Snapshot {operation_params.get("snapshot_id")}')
                 return Response(status=status.HTTP_200_OK)
             if operation_type in ["end_explorer_session"]:
-                debug_print(f'Deleted Snapshot {(operation_params["snapshot_id"])}')
+                debug_print("Explorer session ended")
                 return Response(status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

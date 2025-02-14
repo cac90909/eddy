@@ -23,16 +23,16 @@ class DataProcessingService:
         return filtered_data
 
     #Supports a combination of horizontal, upwards, downwards for traversal type(s)
-    def traverse_data(self, user_id, user_data, start_id, traversal_types):
+    def traverse_data(self, user_id, user_data, start_id, traversal_directions):
         traversed_data = self.universal_repository.traverse_data(
             user_data_queryset=user_data,
             start_id=start_id,
-            traversal_types=traversal_types
+            traversal_directions=traversal_directions
         )
         return traversed_data
 
-    def get_unique_values_from_list_column(self, user_id, user_data, column_name):
-        unique_values = self.universal_repository.get_unique_values_from_list_column(
+    def get_unique_column_values(self, user_id, user_data, column_name):
+        unique_values = self.universal_repository.get_unique_column_values(
             user_data_queryset=user_data,
             column_name=column_name
         )

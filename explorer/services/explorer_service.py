@@ -41,19 +41,19 @@ class ExplorerService:
             self.explorer_cache_service.cache_dataset_item(user_id=user_id, dataset=traversed_data_queryset)
             self.explorer_cache_service.cache_operation_item(user_id=user_id, operation={"operation_type": "traverse", "operation_params": operation_params})
             return list(traversed_data_queryset)
-        if operation_type == "get_filter_values":
+        if operation_type == "get_unique_column_values":
             debug_print(f"{operation_type}: get most recent cache dataset --> get unique values of passed column") 
             user_data = self.explorer_cache_service.get_most_recent_dataset(user_id=user_id)
-            unique_values = self.data_processing_service.get_unique_values_from_list_column(user_id=user_id, user_data=user_data, **operation_params)
+            unique_values = self.data_processing_service.get_unique_column_values(user_id=user_id, user_data=user_data, **operation_params)
             return unique_values
-        if operation_type == "get_json_keys":
+        if operation_type == "get_unique_json_keys":
             debug_print(f"{operation_type}: get most recent cache dataset --> get unique keys from fields for all rows") 
             user_data = self.explorer_cache_service.get_most_recent_dataset(user_id=user_id)
             unique_keys = self.data_processing_service.get_unique_json_keys(user_id=user_id, user_data=user_data)
             return unique_keys
         #Currently returns a concatenated list of all json key value pairings
         #Correction: it returns "A dictionary where each key is a JSON key and the value is a set of unique values for that key."
-        if operation_type == "get_json_values":
+        if operation_type == "get_unique_json_values":
             debug_print(f"{operation_type}: get most recent cache dataset --> get unique values from fields for all rows") 
             user_data = self.explorer_cache_service.get_most_recent_dataset(user_id=user_id)
             unique_values = self.data_processing_service.get_unique_json_values(user_id=user_id, user_data=user_data)
