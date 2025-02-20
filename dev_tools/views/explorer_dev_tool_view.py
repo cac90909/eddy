@@ -1,84 +1,107 @@
-import json
+from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from shared.logger import debug_print_vars, debug_print
-from dev_tools.services.explorer_dev_tool_service import ExplorerDevToolService
-from shared.serializers import UniversalSerializer, UniversalDatasetsSerializer, OperationSerializer, OperationChainItemSerializer, SnapshotSerializer
-from django.db.models.query import QuerySet
+import json
 from shared.util import catch_exceptions_cls
+from shared.logger import debug_print_vars, debug_print
+from explorer.services.explorer_service import ExplorerService
+from shared.serializers import UniversalSerializer, SnapshotSerializer, FlexibleDictSerializer
 
-@catch_exceptions_cls(exception_return_value={"success": False, "error": "Unhandled exception"})
+@catch_exceptions_cls(exception_return_value="Error")
 class ExplorerDevToolView(APIView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.explorer_dev_tool_service = ExplorerDevToolService()
+        self.explorer_service = ExplorerService()
+        self.universal_serializer = UniversalSerializer()
+        self.snapshot_serializer = SnapshotSerializer()
+        print()
+        debug_print(self.request.build_absolute_uri())
+        debug_print(self.request.query_params.dict())
+
+    request_operation_type_handler_mapping = {
+        "explorer_raw" : ExplorerService.handle_universal_raw_operation,
+        "explorer_enrichment" : ExplorerService.handle_universal_enrichment_operation,
+        "explorer_metric" : ExplorerService.handle_universal_metric_operation,
+        "explorer_list" : ExplorerService.handle_universal_list_operation,
+        "explorer_state" : ExplorerService.handle_explorer_state_operation,
+        "snapshot" : ExplorerService.handle_snapshot_operation
+    }
+
+    response_data_type_serializer_mapping = {
+        "universal_raw" : lambda data : UniversalSerializer(instance=data, many=True),
+        "universal_enrichment" : lambda data : FlexibleDictSerializer(instance=data, many=True),
+        "universal_metric" : lambda data : data,
+        "universal_list" : lambda data : data,
+        "status" : lambda data : data,
+        "snapshot" : lambda snapshot : SnapshotSerializer(instance=snapshot),
+        "snapshot_list" : lambda snapshot_list : [SnapshotSerializer(instance=snapshot) for snapshot in snapshot_list]
+    }
 
     def get(self, request):
         try:
-            print()
-            debug_print(request.build_absolute_uri())
-            debug_print(request.query_params.dict())
-            user_id = request.query_params.get("user_id")
+            user_id = request.query.get("user_id")
             operation_type = request.query_params.get("operation_type")
-            operation_params = request.query_params.get("operation_params", {})
-     
-            operation_params = json.loads(operation_params)
+            operation_name = request.query_params.get("operation_name")
+            operation_params = json.loads(request.query_params.get("operation_params", "{}"))
 
-            explorer_data = self.explorer_dev_tool_service.handle_operation(
-                user_id=user_id,
-                operation_type=operation_type,
-                operation_params=operation_params
-            )
-            
-            
+            # result_data = self.request_operation_type_handler_mapping[operation_type](user_id=user_id, operation_name=operation_name, operation_params=operation_params)
 
-            if operation_type == "get_cache_datasets":
-                serialized_datasets = []
-                total_rows = 0
-                for dataset in explorer_data:
-                    serializer = UniversalSerializer(instance=dataset, many=True)
-                    serialized_datasets.append(serializer.data)
-                    total_rows += len(serializer.data)
-                debug_print(f"{len(serialized_datasets)} serialized datasets in response, with total rows {total_rows}")
-                return Response(serialized_datasets, status=status.HTTP_200_OK)
-            if operation_type == "get_most_recent_dataset":
-                serializer = UniversalSerializer(instance=explorer_data, many=True)
-                debug_print(f"{len(serializer.data)} rows in response")
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            if operation_type == "get_cache_operation_chain":
-                serialized_operation_chain = []
-                for operation in explorer_data:
-                    serializer = OperationSerializer(instance=operation)
-                    serialized_operation_chain.append(serializer.data)
-                debug_print(f"{len(serialized_operation_chain)} operations in chain")
-                return Response(serialized_operation_chain, status=status.HTTP_200_OK)
-            if operation_type == "get_most_recent_operation":
-                debug_print(explorer_data)
-                serializer = OperationSerializer(instance=explorer_data)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            if operation_type == "get_row":
-                debug_print(explorer_data)
-                serializer = UniversalSerializer(instance=explorer_data)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            if operation_type == "get_value":
-                debug_print(explorer_data)
-                return Response(explorer_data, status=status.HTTP_200_OK)
-            if operation_type == "get_cache_num_datasets":
-                debug_print(explorer_data)
-                return Response(explorer_data, status=status.HTTP_200_OK)
-            if operation_type == "get_cache_datasets_row_nums":
-                return Response(explorer_data, status=status.HTTP_200_OK)
-            if operation_type == "get_num_snapshots":
-                return Response(explorer_data, status=status.HTTP_200_OK)
-            if operation_type == "get_snapshot":
-                serializer = SnapshotSerializer(instance=explorer_data)
-                debug_print(f"{(serializer.data)} snapshot serialized")
-                return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-            else:
-                return Response({"error": f"Operation type '{operation_type}' not supported"}, status=status.HTTP_400_BAD_REQUEST)
+            # serialized_data = self.response_data_type_serializer_mapping[result_data["data_type"]](result_data["data"])
+            # return Response(data=serialized_data, status=status.HTTP_200_OK)
+            return Response(data="Not implemented", status=status.HTTP_501_NOT_IMPLEMENTED)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
+    def post(self, request):
+        try:
+            user_id = request.data.get("user_id")
+            operation_type = request.data.get("operation_type")
+            operation_name = request.data.get("operation_type")
+            operation_params = json.loads(request.query_params.get("operation_params", "{}"))
+
+            # result_data = self.request_operation_type_handler_mapping[operation_type](user_id=user_id, operation_name=operation_name, operation_params=operation_params)
+
+            # serialized_data = self.response_data_type_serializer_mapping[result_data["data_type"]](result_data["data"])
+            # return Response(data=serialized_data, status=status.HTTP_200_OK)
+            return Response(data="Not implemented", status=status.HTTP_501_NOT_IMPLEMENTED)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def put(self, request):
+        try:
+            user_id = request.data.get("user_id")
+            operation_type = request.data.get("operation_type")
+            operation_name = request.data.get("operation_type")
+            operation_params = json.loads(request.query_params.get("operation_params", "{}"))
+
+            # result_data = self.request_operation_type_handler_mapping[operation_type](user_id=user_id, operation_name=operation_name, operation_params=operation_params)
+
+            # serialized_data = self.response_data_type_serializer_mapping[result_data["data_type"]](result_data["data"])
+            #return Response(data=serialized_data, status=status.HTTP_200_OK)
+            return Response(data="Not implemented", status=status.HTTP_501_NOT_IMPLEMENTED)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def delete(self, request):
+        try:
+            user_id = request.data.get("user_id")
+            operation_type = request.data.get("operation_type")
+            operation_name = request.data.get("operation_type")
+            operation_params = json.loads(request.query_params.get("operation_params", "{}"))
+
+            # result_data = self.request_operation_type_handler_mapping[operation_type](user_id=user_id, operation_name=operation_name, operation_params=operation_params)
+
+            # serialized_data = self.response_data_type_serializer_mapping[result_data["data_type"]](result_data["data"])
+            # return Response(data=serialized_data, status=status.HTTP_200_OK)
+        
+            return Response(data="Not implemented", status=status.HTTP_501_NOT_IMPLEMENTED)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
