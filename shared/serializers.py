@@ -6,20 +6,26 @@ class UniversalSerializer(serializers.ModelSerializer):
         model = Universal
         fields = '__all__'  # or list the fields you want to expose
 
-class UniversalDatasetsSerializer(serializers.Serializer):
-    dataset = UniversalSerializer(many=True)
+# class UniversalDatasetsSerializer(serializers.Serializer):
+#     dataset = UniversalSerializer(many=True)
 
-class OperationSerializer(serializers.Serializer):
-    operation_type = serializers.CharField()
-    operation_params = serializers.DictField(child=serializers.JSONField(), required=False)
+# class OperationSerializer(serializers.Serializer):
+#     operation_type = serializers.CharField()
+#     operation_params = serializers.DictField(child=serializers.JSONField(), required=False)
 
-class OperationChainItemSerializer(serializers.Serializer):
-    operation = OperationSerializer(many=True)
+# class OperationChainItemSerializer(serializers.Serializer):
+#     operation = OperationSerializer(many=True)
 
 class SnapshotSerializer(serializers.ModelSerializer):
     class Meta:
         model = Snapshots
         fields = "__all__"
+
+class FlexibleDictSerializer(serializers.Serializer):
+    data = serializers.DictField(child=serializers.JSONField())
+
+    def to_representation(self, instance):
+        return instance
 
 
 

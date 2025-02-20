@@ -1,106 +1,78 @@
-import functools
-from shared.logger import debug_print_vars, debug_print  # (Assuming this is now used only internally by decorators)
-from shared.services.cache_service import CacheService
-
-# Assume these class-level decorators have been defined in your shared.utilities module:
-# They apply logging (log_values) and exception catching (catch_exceptions_class) to all methods.
+from django.core.cache import cache
+from shared.logger import debug_print_vars, debug_print
 from shared.util import log_vars_vals_cls, catch_exceptions_cls
 
-#@log_vars_vals_cls()  # By default, this applies to all callable methods (excluding special methods)
+
 @catch_exceptions_cls(exception_return_value={"success": False})
-class ExplorerCacheService(CacheService):
-    MAX_CACHE_LEN = 10  # Max items in a specific cache object for a user
+class ExplorerCacheService():
+    MAX_CACHE_LEN = 50  # Max items in a specific cache object for a user
 
     # Named variables for subcache keys
-    DATASETS_CACHE_KEY = "datasets"
+    UNIVERSAL_DATA_CACHE_KEY = "universal_data"
     OPERATION_CHAIN_CACHE_KEY = "operation_chain"
+    
+    def get_cache_key(self, user_id):
+        # Returns the cache key for a given user.
+        return f"{user_id}_cache"
+    
+    def get_user_cache(self, user_id):
+        cache_key = self.get_cache_key(user_id)
+        user_cache = cache.get(cache_key, {})
+        return user_cache
 
     def create_empty_explorer_cache(self, user_id):
-        debug_print("Check if user already has a cache --> cache an empty datasets list and operation list")
+        #Checking if User has Cache, and Creates One If Doesnt Already Exist
         if not self.get_user_cache(user_id=user_id):
             self.create_empty_user_cache(user_id=user_id)
-        self.cache_user_obj(user_id=user_id, obj_key=self.DATASETS_CACHE_KEY, obj_val=[])
-        self.cache_user_obj(user_id=user_id, obj_key=self.OPERATION_CHAIN_CACHE_KEY, obj_val=[])
+        user_cache = self.get_user_cache(user_id=user_id)
+        user_cache[self.UNIVERSAL_DATA_CACHE_KEY] = []
+        user_cache[self.OPERATION_CHAIN_CACHE_KEY] = []
+        cache.set(key=self.get_cache_key, value=user_cache, timeout=3600)
 
-    def cache_dataset_item(self, user_id, dataset):
-        debug_print()
-        datasets = self.get_user_cache_obj(user_id=user_id, obj_key=self.DATASETS_CACHE_KEY)
-        if len(datasets) >= self.MAX_CACHE_LEN:
-            datasets.pop(0)
-        datasets.append(dataset)
-        self.cache_user_obj(user_id=user_id, obj_key=self.DATASETS_CACHE_KEY, obj_val=datasets)
-
-    def cache_operation_item(self, user_id, operation):
-        debug_print()
-        operation_chain = self.get_user_cache_obj(user_id=user_id, obj_key=self.OPERATION_CHAIN_CACHE_KEY)
-        if len(operation_chain) >= self.MAX_CACHE_LEN:
-            operation_chain.pop(0)
-        operation_chain.append(operation)
-        self.cache_user_obj(user_id=user_id, obj_key=self.OPERATION_CHAIN_CACHE_KEY, obj_val=operation_chain)
-
-    def cache_dataset_list(self, user_id, dataset_list):
-        debug_print()
-        if len(dataset_list) > self.MAX_CACHE_LEN:
-            dataset_list = dataset_list[-self.MAX_CACHE_LEN:]
-        self.cache_user_obj(user_id=user_id, obj_key=self.DATASETS_CACHE_KEY, obj_val=dataset_list)
-
-    def cache_operation_chain(self, user_id, operation_chain):
-        debug_print()
-        if len(operation_chain) > self.MAX_CACHE_LEN:
-            operation_chain = operation_chain[-self.MAX_CACHE_LEN:]
-        self.cache_user_obj(user_id=user_id, obj_key=self.OPERATION_CHAIN_CACHE_KEY, obj_val=operation_chain)
-
-    def get_most_recent_dataset(self, user_id):
-        debug_print()
-        datasets = self.get_user_cache_obj(user_id=user_id, obj_key=self.DATASETS_CACHE_KEY)
-        most_recent_dataset = datasets[-1] if datasets else None
-        return most_recent_dataset
-    
-    def get_most_recent_operation(self, user_id):
-        debug_print()
-        operation_chain = self.get_user_cache_obj(user_id=user_id, obj_key=self.OPERATION_CHAIN_CACHE_KEY)
-        most_recent_operation = operation_chain[-1] if operation_chain else None
-        return most_recent_operation
-    
-    def get_dataset_list(self, user_id):
-        debug_print()
-        return self.get_user_cache_obj(user_id=user_id, obj_key=self.DATASETS_CACHE_KEY)
-
-    def get_operation_chain(self, user_id):
-        debug_print()
-        return self.get_user_cache_obj(user_id=user_id, obj_key=self.OPERATION_CHAIN_CACHE_KEY)
-
-    def clear_dataset_list(self, user_id):
-        debug_print()
-        self.cache_user_obj(user_id=user_id, obj_key=self.DATASETS_CACHE_KEY, obj_val=[])
-
-    def clear_operation_chain(self, user_id):
-        debug_print()
-        self.cache_user_obj(user_id=user_id, obj_key=self.OPERATION_CHAIN_CACHE_KEY, obj_val=[])
-
-    def delete_most_recent_dataset(self, user_id):
-        debug_print()
-        datasets = self.get_user_cache_obj(user_id=user_id, obj_key=self.DATASETS_CACHE_KEY)
-        if datasets:
-            datasets.pop()
-            self.cache_user_obj(user_id=user_id, obj_key=self.DATASETS_CACHE_KEY, obj_val=datasets)
+    def append_universal_data_and_operation_objs(self, user_id, universal_data_obj, operation_obj):
+        user_cache = self.get_user_cache(user_id=user_id)
+        universal_data_list, operation_chain_list = user_cache[self.UNIVERSAL_DATA_CACHE_KEY], user_cache[self.OPERATION_CHAIN_CACHE_KEY]
+        if len(universal_data_list) >= self.MAX_CACHE_LEN or len(operation_chain_list) >= self.MAX_CACHE_LEN:
+            return Exception (f"Exceeded Cache Limit: {self.MAX_CACHE_LEN}")
         else:
-            debug_print("No dataset to delete")
+            universal_data_list.append(universal_data_obj)
+            operation_chain_list.append(operation_obj)
 
+    def delete_most_recent_universal_data_and_operation_obj(self, user_id):
+        user_cache = self.get_user_cache(user_id=user_id)
+        universal_data_list, operation_chain_list = user_cache[self.UNIVERSAL_DATA_CACHE_KEY], user_cache[self.OPERATION_CHAIN_CACHE_KEY]
+        universal_data_list.pop(-1)
+        operation_chain_list.pop(-1)
+
+    def empty_explorer_cache(self, user_id):
+        self.create_empty_explorer_cache(self, user_id=user_id)
+
+    def get_universal_data_list(self, user_id):
+        user_cache = self.get_user_cache(user_id=user_id)
+        universal_data_list = user_cache[self.UNIVERSAL_DATA_CACHE_KEY]
+        return universal_data_list
+
+    def get_operation_chain_list(self, user_id):
+        user_cache = self.get_user_cache(user_id=user_id)
+        operation_chain_list = user_cache[self.OPERATION_CHAIN_CACHE_KEY]
+        return operation_chain_list
     
-    def delete_most_recent_operation(self, user_id):
-        debug_print()
-        operation_chain = self.get_user_cache_obj(user_id=user_id, obj_key=self.OPERATION_CHAIN_CACHE_KEY)
-        if operation_chain:
-            operation_chain.pop()
-            self.cache_user_obj(user_id=user_id, obj_key=self.OPERATION_CHAIN_CACHE_KEY, obj_val=operation_chain)
-        else:
-            debug_print("No operation to delete")
+    #NOTE: currently cannot operate on non raw universal data, so returning only raw objects
+    def get_most_recent_universal_raw_data_obj(self, user_id):
+        user_cache = self.get_user_cache(user_id=user_id)
+        universal_data_list = user_cache[self.UNIVERSAL_DATA_CACHE_KEY]
+        for universal_data_obj in universal_data_list[-1:-1:-1]:
+            if universal_data_obj["universal_raw"]:
+                return universal_data_obj
+        return None
 
-    def delete_dataset_list(self, user_id):
-        debug_print()
-        self.delete_user_cache_obj(user_id=user_id, obj_key=self.DATASETS_CACHE_KEY)
 
-    def delete_operation_chain(self, user_id):
-        debug_print()
-        self.delete_user_cache_obj(user_id=user_id, obj_key=self.OPERATION_CHAIN_CACHE_KEY)
+    def get_most_recent_operation_obj(self, user_id):
+        user_cache = self.get_user_cache(user_id=user_id)
+        operatin_chain_list = user_cache[self.OPERATION_CHAIN_CACHE_KEY]
+        return operatin_chain_list[-1] if operatin_chain_list else None
+
+    def delete_explorer_cache_objs(self, user_id):
+        user_cache = self.get_user_cache(user_id=user_id)
+        user_cache.pop(self.UNIVERSAL_DATA_CACHE_KEY)
+        user_cache.pop(self.OPERATION_CHAIN_CACHE_KEY)

@@ -6,71 +6,65 @@ import json
 from shared.util import catch_exceptions_cls
 from shared.logger import debug_print_vars, debug_print
 from explorer.services.explorer_service import ExplorerService
-from shared.serializers import UniversalSerializer, SnapshotSerializer
+from shared.serializers import UniversalSerializer, SnapshotSerializer, FlexibleDictSerializer
 
 @catch_exceptions_cls(exception_return_value="Error")
 class ExplorerView(APIView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.explorer_service = ExplorerService()
+        self.universal_serializer = UniversalSerializer()
+        self.snapshot_serializer = SnapshotSerializer()
+        print()
+        debug_print(self.request.build_absolute_uri())
+        debug_print(self.request.query_params.dict())
+
+    request_operation_type_handler_mapping = {
+        "explorer_raw" : ExplorerService.handle_universal_raw_operation,
+        "explorer_enrichment" : ExplorerService.handle_universal_enrichment_operation,
+        "explorer_metric" : ExplorerService.handle_universal_metric_operation,
+        "explorer_list" : ExplorerService.handle_universal_list_operation,
+        "explorer_state" : ExplorerService.handle_explorer_state_operation,
+        "snapshot" : ExplorerService.handle_snapshot_operation
+    }
+
+    response_data_type_serializer_mapping = {
+        "universal_raw" : lambda data : UniversalSerializer(instance=data, many=True),
+        "universal_enrichment" : lambda data : FlexibleDictSerializer(instance=data, many=True),
+        "universal_metric" : lambda data : data,
+        "universal_list" : lambda data : data,
+        "status" : lambda data : data,
+        "snapshot" : lambda snapshot : SnapshotSerializer(instance=snapshot),
+        "snapshot_list" : lambda snapshot_list : [SnapshotSerializer(instance=snapshot) for snapshot in snapshot_list]
+    }
 
     def get(self, request):
         try:
-            print()
-            debug_print(request.build_absolute_uri())
-            debug_print(request.query_params.dict())
-            user_id = request.query_params.get("user_id")
+            user_id = request.query.get("user_id")
             operation_type = request.query_params.get("operation_type")
-            operation_params = request.query_params.get("operation_params", "{}")
-            operation_params = json.loads(operation_params)
-            
-            result_data = self.explorer_service.handle_operation(
-                user_id=user_id,
-                operation_type=operation_type,
-                operation_params=operation_params
-            )
+            operation_name = request.query_params.get("operation_name")
+            operation_params = json.loads(request.query_params.get("operation_params", "{}"))
 
-            if operation_type in ["init_user", "filter", "traverse"]:
-                serializer = UniversalSerializer(instance=result_data, many=True)
-                debug_print(f"{len(serializer.data)} serialized response rows")
-                return Response(data=serializer.data, status=status.HTTP_200_OK)
-            if operation_type in ["get_unique_column_values", "get_unique_json_keys", "get_unique_json_values"]:
-                debug_print(f"{len(result_data)} serialized response rows")
-                return Response(data=result_data, status=status.HTTP_200_OK)
-            if operation_type in ["get_all_snapshots"]:
-                serialized_snapshots = [SnapshotSerializer(instance=snapshot).data for snapshot in result_data]
-                return Response(data=serialized_snapshots, status=status.HTTP_200_OK)
-            if operation_type in ["load_snapshot"]:
-                serializer = UniversalSerializer(instance=result_data, many=True)
-                debug_print(f"{len(result_data)} serialized response rows")
-                return Response(data=serializer.data, status=status.HTTP_200_OK)
+            result_data = self.request_operation_type_handler_mapping[operation_type](user_id=user_id, operation_name=operation_name, operation_params=operation_params)
+
+            serialized_data = self.response_data_type_serializer_mapping[result_data["data_type"]](result_data["data"])
+            return Response(data=serialized_data, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+        
     def post(self, request):
         try:
-            print()
-            debug_print(request.build_absolute_uri())
-            debug_print(request.data)
             user_id = request.data.get("user_id")
             operation_type = request.data.get("operation_type")
-            operation_params = request.data.get("operation_params", "{}")
-            # If operation_params is a string, load it; otherwise assume it is already a dict.
-            if isinstance(operation_params, str):
-                operation_params = json.loads(operation_params)
-            
-            result_data = self.explorer_service.handle_operation(
-                user_id=user_id,
-                operation_type=operation_type,
-                operation_params=operation_params
-            )
+            operation_name = request.data.get("operation_type")
+            operation_params = json.loads(request.query_params.get("operation_params", "{}"))
 
-            if operation_type in ["save_snapshot"]:
-                serializer = SnapshotSerializer(instance=result_data)
-                debug_print(f"{serializer.data} snapshot serialized")
-                return Response(data=serializer.data, status=status.HTTP_200_OK)
+            result_data = self.request_operation_type_handler_mapping[operation_type](user_id=user_id, operation_name=operation_name, operation_params=operation_params)
+
+            serialized_data = self.response_data_type_serializer_mapping[result_data["data_type"]](result_data["data"])
+            return Response(data=serialized_data, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -78,25 +72,15 @@ class ExplorerView(APIView):
 
     def put(self, request):
         try:
-            print()
-            debug_print(request.build_absolute_uri())
-            debug_print(request.data)
             user_id = request.data.get("user_id")
             operation_type = request.data.get("operation_type")
-            operation_params = request.data.get("operation_params", "{}")
-            if isinstance(operation_params, str):
-                operation_params = json.loads(operation_params)
-            
-            result_data = self.explorer_service.handle_operation(
-                user_id=user_id,
-                operation_type=operation_type,
-                operation_params=operation_params
-            )
+            operation_name = request.data.get("operation_type")
+            operation_params = json.loads(request.query_params.get("operation_params", "{}"))
 
-            if operation_type in ["update_snapshot"]:
-                serializer = SnapshotSerializer(instance=result_data)
-                debug_print(f"{serializer.data} snapshot serialized")
-                return Response(data=serializer.data, status=status.HTTP_200_OK)
+            result_data = self.request_operation_type_handler_mapping[operation_type](user_id=user_id, operation_name=operation_name, operation_params=operation_params)
+
+            serialized_data = self.response_data_type_serializer_mapping[result_data["data_type"]](result_data["data"])
+            return Response(data=serialized_data, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -104,30 +88,15 @@ class ExplorerView(APIView):
 
     def delete(self, request):
         try:
-            print()
-            debug_print(request.build_absolute_uri())
-            debug_print(request.data)
             user_id = request.data.get("user_id")
             operation_type = request.data.get("operation_type")
-            operation_params = request.data.get("operation_params", "{}")
-            if isinstance(operation_params, str):
-                operation_params = json.loads(operation_params)
-            
-            result_data = self.explorer_service.handle_operation(
-                user_id=user_id,
-                operation_type=operation_type,
-                operation_params=operation_params
-            )
-            if operation_type in ["undo_operation"]:
-                serializer = UniversalSerializer(instance=result_data, many=True)
-                debug_print(f"{len(serializer.data)} serialized response rows")
-                return Response(data=serializer.data, status=status.HTTP_200_OK)
-            if operation_type in ["delete_snapshot"]:
-                debug_print(f'Deleted Snapshot {operation_params.get("snapshot_id")}')
-                return Response(status=status.HTTP_200_OK)
-            if operation_type in ["end_explorer_session"]:
-                debug_print("Explorer session ended")
-                return Response(status=status.HTTP_200_OK)
+            operation_name = request.data.get("operation_type")
+            operation_params = json.loads(request.query_params.get("operation_params", "{}"))
+
+            result_data = self.request_operation_type_handler_mapping[operation_type](user_id=user_id, operation_name=operation_name, operation_params=operation_params)
+
+            serialized_data = self.response_data_type_serializer_mapping[result_data["data_type"]](result_data["data"])
+            return Response(data=serialized_data, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
