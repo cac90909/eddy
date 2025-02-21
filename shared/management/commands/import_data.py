@@ -1,7 +1,7 @@
 import os
 import csv
 from django.core.management.base import BaseCommand
-from shared.models import UserData
+from shared.models import Universal
 from datetime import datetime
 from django.contrib.auth import get_user_model
 
@@ -44,11 +44,11 @@ class Command(BaseCommand):
             with open(file_path, mode="r") as file:
                 reader = csv.DictReader(file)
                 # Delete existing data
-                UserData.objects.all().delete()
+                Universal.objects.all().delete()
                 # Get the default user only once before the loop
                 default_user = User.objects.get(pk=1)
                 for row in reader:
-                    UserData.objects.create(
+                    Universal.objects.create(
                         date=datetime.strptime(row['Date'], '%m/%d/%Y'),
                         functionalities=[fn.strip() for fn in row['Functionalities'].split(";") if fn],
                         subject_matters=[sm.strip() for sm in row['Subject Matters'].split(";") if sm] if row['Subject Matters'] else [],

@@ -1,3 +1,4 @@
+from shared.models import Snapshots
 from shared.logger import debug_print_vars
 from shared.repositories.snapshots_repository import SnapshotsRepository
 
@@ -7,10 +8,17 @@ class SnapshotsService:
 
     def get_all_snapshots(self, user_id):
         snapshots = self.snapshots_repository.get_all_snapshots(user_id=user_id)
+        # data_amount = snapshots.count()
+        # return snapshots, data_amount
         return snapshots
 
     def get_snapshot(self, user_id, snapshot_id):
         snapshot = self.snapshots_repository.get_snapshot(user_id=user_id, snapshot_id=snapshot_id)
+        # if snapshot.isinstance(Snapshots):
+        #     data_amount = "1 row"
+        #     return snapshot, data_amount
+        # else:
+        #     raise Exception("Received a non-Snapshots instance")
         return snapshot
 
     def create_snapshot(self, user_id, title, description, operation_chain):

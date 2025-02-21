@@ -27,12 +27,12 @@ class ExplorerView(APIView):
 
     response_data_type_serializer_mapping = {
         "universal_raw" : lambda universal_querylist : UniversalSerializer(instance=list(universal_querylist), many=True).data,
-        "universal_enrichment" : lambda data : FlexibleDictSerializer(instance=data, many=True),
+        "universal_enrichment" : lambda data : FlexibleDictSerializer(instance=data, many=True).data,
         "universal_metric" : lambda data : data,
         "universal_list" : lambda data : data,
         "status" : lambda data : data,
-        "snapshot" : lambda snapshot : SnapshotSerializer(instance=snapshot),
-        "snapshot_list" : lambda snapshot_list : [SnapshotSerializer(instance=snapshot) for snapshot in snapshot_list]
+        "snapshot" : lambda snapshot : SnapshotSerializer(instance=snapshot).data,
+        "snapshot_list" : lambda snapshot_list : [SnapshotSerializer(instance=snapshot).data for snapshot in snapshot_list]
     }
 
     def get(self, request):
@@ -46,7 +46,6 @@ class ExplorerView(APIView):
             operation_params = json.loads(request.query_params.get("operation_params", "{}"))
 
             result_data = self.request_operation_type_handler_mapping[operation_type](user_id=user_id, operation_name=operation_name, operation_params=operation_params)
-
             serialized_data = self.response_data_type_serializer_mapping[result_data["data_type"]](result_data["data"])
             return Response(data=serialized_data, status=status.HTTP_200_OK)
         except ValueError as e:

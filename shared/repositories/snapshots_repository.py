@@ -28,14 +28,15 @@ class SnapshotsRepository:
         Create a new snapshot for a given user.
         """
         user_instance = User.objects.get(pk=user_id)
-        debug_print(f"{Snapshots.objects.count()} snapshots in table")
+        before_count = Snapshots.objects.count()
         snapshot = Snapshots.objects.create(
             user=user_instance,
             title=title,
             description=description,
             operation_chain=operation_chain
         )
-        debug_print(f"{Snapshots.objects.count()} snapshots in table")
+        after_count = Snapshots.objects.count()
+        debug_print(f"{after_count - before_count} snapshot row(s) created")
         return snapshot
 
     def update_snapshot(self, user_id, snapshot_id, title=None, description=None, operation_chain=None):
@@ -58,7 +59,8 @@ class SnapshotsRepository:
         """
         Delete a snapshot for a given user.
         """
-        debug_print(f"{Snapshots.objects.count()} snapshots in table")
+        before_count = Snapshots.objects.count()
         snapshot = self.get_snapshot(user_id, snapshot_id)
         snapshot.delete()
-        debug_print(f"{Snapshots.objects.count()} snapshots in table")
+        after_count = Snapshots.objects.count()
+        debug_print(f"{before_count - after_count} snapshot row(s) deleted")

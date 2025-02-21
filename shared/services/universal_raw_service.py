@@ -10,7 +10,6 @@ class UniversalRawService:
 
     def init_data(self, user_id, data_source):
         user_data = self.universal_repository.get_user_data(user_id=user_id)
-        debug_print(user_data)
         data_amount = user_data.count()
         debug_print(f"{data_amount} rows retrieved")
         return user_data, data_amount
@@ -25,7 +24,6 @@ class UniversalRawService:
             filter_value=filter_value,
             filter_type=filter_type
         )
-        debug_print(filtered_data)
         data_amount = filtered_data.count()
         debug_print(f"{data_amount} rows retrieved")
         return filtered_data, data_amount
@@ -39,7 +37,6 @@ class UniversalRawService:
             start_id=start_id,
             traversal_directions=traversal_directions
         )
-        debug_print(traversed_data)
         data_amount = traversed_data.count()
         debug_print(f"{data_amount} rows retrieved")
         return traversed_data, data_amount

@@ -10,24 +10,29 @@ class UniversalMetricService:
     def __init__(self):
         self.universal_repository = UniversalRepository()
 
-    def get_count(self, user_data, column_name):
-        debug_print("Entering simple_count")
-        return self.universal_repository.count_data(user_data, column_name)
+    def get_count(self, data_source, column_name):
+        
+        count_data = self.universal_repository.count_data(data_source, column_name)
+        debug_print(f"Count: {count_data}")
+        return count_data
 
-    def get_average(self, user_data, column_name):
-        debug_print("Entering simple_average")
-        return self.universal_repository.average_data(user_data, column_name)
+    def get_average(self, data_source, column_name):
+        average_data = self.universal_repository.average_data(data_source, column_name)
+        debug_print(f"Average: {average_data}")
+        return average_data
 
-    def get_sum(self, user_data, column_name):
-        debug_print("Entering simple_sum")
-        return self.universal_repository.sum_data(user_data, column_name)
-
-    def get_min(self, user_data, column_name):
-        debug_print("Entering simple_min")
-        return self.universal_repository.min_data(user_data, column_name)
-
-    def get_max(self, user_data, column_name):
-        debug_print("Entering simple_max")
-        return self.universal_repository.max_data(user_data, column_name)
-
+    def get_sum(self, data_source, column_name):
+        sum_data = self.universal_repository.sum_data(data_source, column_name)
+        debug_print(f"Sum: {sum_data}")
+        return sum_data
+    
+    def get_min(self, data_source, column_name):
+        min_data = self.universal_repository.min_data(data_source, column_name)
+        debug_print(f"Min: {min_data}")
+        return min_data
+    
+    def get_max(self, data_source, column_name):
+        max_data = self.universal_repository.max_data(data_source, column_name)
+        debug_print(f"Max: {max_data}")
+        return max_data
     

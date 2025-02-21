@@ -20,7 +20,9 @@ class ExplorerDevToolView(APIView):
 
         self.request_operation_type_handler_mapping = {
             "cache_dynamic": self.explorer_dev_tool_service.handle_cache_dynamic_operation,
-            "cache_simple": self.explorer_dev_tool_service.handle_cache_simple_operation
+            "cache_simple": self.explorer_dev_tool_service.handle_cache_simple_operation,
+            "snapshot": self.explorer_dev_tool_service.handle_snapshot_operation,
+            "explorer_raw" : self.explorer_dev_tool_service.handle_universal_raw_operation,
             # "explorer_raw" : self.explorer_service.handle_universal_raw_operation,
             # "explorer_enrichment" : self.explorer_service.handle_universal_enrichment_operation,
             # "explorer_metric" : self.explorer_service.handle_universal_metric_operation,
@@ -30,7 +32,10 @@ class ExplorerDevToolView(APIView):
         }
 
     response_data_type_serializer_mapping = {
-        "cache_simple": lambda data: data
+        "cache_simple": lambda data: data,
+        "snapshot" : lambda snapshot : SnapshotSerializer(instance=snapshot).data,
+        "universal_raw" : lambda universal_querylist : UniversalSerializer(instance=list(universal_querylist), many=True).data,
+        "empty": lambda data: data,
         # "universal_raw" : lambda data : UniversalSerializer(instance=data, many=True),
         # "universal_enrichment" : lambda data : FlexibleDictSerializer(instance=data, many=True),
         # "universal_metric" : lambda data : data,

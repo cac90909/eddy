@@ -1,10 +1,36 @@
-from django.db.models import Q, Func, F, Value, Count, Avg, Sum, Min, Max
+# from django.db.models import Q, Func, F, Value, Count, Avg, Sum, Min, Max
+# from django.db.models import Q, F
+# from django.db.models import Count, Avg, Sum, Min, Max
+# from django.db import connection
+# from shared.models import Universal
+# from shared.logger import debug_print
+# from shared.util import log_vars_vals_cls, catch_exceptions_cls
+# from django.contrib.auth import get_user_model
+# from django.contrib.postgres.fields import ArrayField, JSONField
+# from django.db.models import F, Count, Avg, Sum, Min, Max, FloatField, DateField
+# from django.db.models.functions import Cast, Func
+# from datetime import datetime
+
+from django.db.models import Q, F
+from django.db.models import Func, Value
+from django.db.models import Count, Avg, Sum, Min, Max
+from django.db.models import FloatField, DateField
+from django.db.models.functions import Cast
+from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
+from django.db.models.fields.json import KeyTextTransform, KeyTransform
+
+
 from django.db import connection
+
+from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import ArrayField, JSONField
+
 from shared.models import Universal
 from shared.logger import debug_print
 from shared.util import log_vars_vals_cls, catch_exceptions_cls
-from django.contrib.auth import get_user_model
-from django.contrib.postgres.fields import ArrayField, JSONField
+
+from datetime import datetime
+
 
 User = get_user_model()
 
@@ -89,7 +115,7 @@ class UniversalRepository:
         else:
             values = user_data_queryset.values_list(column_name, flat=True).distinct()
         unique_values = set(values)
-        debug_print(f'{len(unique_values)} unique values')
+        debug_print('Query finished')
         return unique_values
 
     @staticmethod
@@ -104,7 +130,7 @@ class UniversalRepository:
             .distinct()
         )
         unique_keys = set(keys)
-        debug_print(f'{len(unique_keys)} unique keys')
+        debug_print('Query finished')
         return unique_keys
 
     @staticmethod
@@ -125,7 +151,7 @@ class UniversalRepository:
             )
             unique_values[key] = set(key_values)
             total_vals += len(key_values)
-        debug_print(f'{total_vals} unique values, across {len(keys)} unique keys')
+        debug_print('Query finished')
         return unique_values
 
     def filter_data(self, user_data_queryset, column_name, filter_value, filter_type):
@@ -190,8 +216,9 @@ class UniversalRepository:
     @staticmethod
     def group_by_data(user_data_queryset, group_column, aggregate_dict=None):
         """
-        Group data by group_column and annotate with aggregates.
-        If aggregate_dict is not provided, defaults to counting rows (alias "result").
+        Groups the queryset by the specified group_column.
+        If aggregate_dict is provided, annotates each group with that aggregate,
+        otherwise defaults to counting rows (alias "result").
         """
         qs = user_data_queryset.values(group_column)
         if aggregate_dict:
@@ -200,17 +227,73 @@ class UniversalRepository:
             qs = qs.annotate(result=Count(group_column))
         return qs
 
+    def perform_group_aggregate(self, user_data_queryset, group_column, aggregate_operation, target_column, frequency=None):
+        """
+        Groups the given queryset by group_column (optionally applying date truncation)
+        and annotates each group with the specified aggregate on target_column.
+        
+        Parameters:
+          - group_column: the column to group by (e.g., "date" or "Artist").
+          - frequency: if grouping by date, one of "daily", "weekly", "monthly", or "yearly".
+          - aggregate_operation: one of "count", "average", "sum", "min", "max".
+          - target_column: the column on which to perform the aggregation. If not a model field,
+                          it is assumed to be a key in the JSON "fields" container.
+        
+        Returns:
+          A QuerySet of dictionaries with the effective group column and an aggregate
+          value annotated as "result".
+        """
+        debug_print("Entering perform_group_aggregate")
+        # First, apply grouping to the data source. This handles date truncation and JSON key grouping.
+        qs_grouped, effective_group_column = self.prepare_data_for_grouping(user_data_queryset, group_column, frequency)
+        
+        # Prepare the target column for aggregation.
+        if is_json_field(target_column):
+            # If target_column is not "fields", use KeyTextTransform.
+            if target_column == "fields":
+                lookup = F("fields")
+            else:
+                lookup = KeyTextTransform(target_column, "fields")
+            # Here, we cast the value to a FloatField.
+            qs = qs_grouped.annotate(target_value=Cast(lookup, output_field=FloatField()))
+            target_for_agg = "target_value"
+        elif is_array_field(target_column):
+            qs = qs_grouped.annotate(target_value=Func(F(target_column), function="UNNEST"))
+            target_for_agg = "target_value"
+        else:
+            qs = qs_grouped
+            target_for_agg = target_column
+
+        # Define mapping for aggregates.
+        AGGREGATE_MAPPING = {
+            "count": lambda target: Count(target) if target else Count("id"),
+            "average": lambda target: Avg(target),
+            "sum": lambda target: Sum(target),
+            "min": lambda target: Min(target),
+            "max": lambda target: Max(target)
+        }
+        if aggregate_operation not in AGGREGATE_MAPPING:
+            raise ValueError(f"Unsupported aggregate operation: {aggregate_operation}. Available options: {list(AGGREGATE_MAPPING.keys())}")
+        agg_func = AGGREGATE_MAPPING[aggregate_operation](target_for_agg)
+        aggregate_dict = {"result": agg_func}
+        
+        grouped_data = self.group_by_data(qs, effective_group_column, aggregate_dict)
+        return grouped_data
+
     # ---------------------------------------------------
     # Helper Methods for Aggregates
 
-    def apply_grouping(self, user_data_queryset, group_column, frequency=None):
+    def prepare_data_for_grouping(self, user_data_queryset, group_column, frequency=None):
         """
-        If grouping on a date field and a frequency is provided,
-        apply the appropriate Trunc function to create a grouping field.
-        Returns a tuple: (annotated QuerySet, effective_group_column).
+        Prepares data for grouping by annotating the data with group relevant labels.
+        - If group_column is "date" and frequency is provided, it truncates the date accordingly.
+        - Otherwise, if group_column is a model field, it is used directly.
+        - If not, it is assumed to be a key in the JSON "fields" and annotated using KeyTextTransform.
+        
+        Returns a tuple: (annotated queryset, effective_group_column)
         """
+        # Handle date frequency truncation.
         if group_column == "date" and frequency:
-            from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
             frequency = frequency.lower()
             if frequency == "daily":
                 qs = user_data_queryset.annotate(group_field=TruncDay("date"))
@@ -224,7 +307,15 @@ class UniversalRepository:
                 raise ValueError("Unsupported frequency. Choose from: daily, weekly, monthly, yearly.")
             return qs, "group_field"
         else:
-            return user_data_queryset, group_column
+            # Try to see if the group_column exists as a top-level field.
+            try:
+                Universal._meta.get_field(group_column)
+                return user_data_queryset, group_column
+            except Exception:
+                # Not a top-level field; assume it's a key within the JSON "fields" container.
+                effective_group_column = f"json_{group_column}"
+                qs = user_data_queryset.annotate(**{effective_group_column: KeyTextTransform(group_column, "fields")})
+                return qs, effective_group_column
 
     def filter_aggregates(self, grouped_qs, operator, value, alias="result"):
         """
@@ -248,80 +339,137 @@ class UniversalRepository:
         list2 = list(queryset2.values())
         return list1 + list2
 
-    # ---------------------------------------------------
-    # Aggregation Methods (non-grouped)
+    
+    # ---------------Simple Aggregates------------------------
+
+    def _get_output_field_for_column(self, user_data_queryset, field_lookup):
+        """
+        Inspects one sample value from the queryset for the given field lookup.
+        If the sample appears to be a date string (using format "%m/%d/%Y"),
+        returns DateField; otherwise returns FloatField.
+        
+        If no sample is found, defaults to FloatField.
+        """
+        sample_value = user_data_queryset.values_list(field_lookup, flat=True).first()
+        if sample_value is None:
+            return FloatField()
+        # If sample_value is a string, try to parse it as a date.
+        if isinstance(sample_value, str):
+            try:
+                datetime.strptime(sample_value, "%m/%d/%Y")
+                return DateField()
+            except ValueError:
+                return FloatField()
+        # If sample_value is already a date or datetime, use DateField.
+        if isinstance(sample_value, (datetime, )):
+            return DateField()
+        # Otherwise, default to FloatField.
+        return FloatField()
+
 
     def count_data(self, user_data_queryset, column_name, alias="result"):
-        debug_print("Entering count_data")
-        qs = user_data_queryset
-        if is_json_field(column_name):
-            qs = qs.annotate(extracted=F("fields") if column_name == "fields" else F(column_name))
-            agg = qs.aggregate(**{alias: Count("extracted")})
-            return agg[alias]
-        elif is_array_field(column_name):
-            qs = qs.annotate(expanded=Func(F(column_name), function="UNNEST"))
-            agg = qs.aggregate(**{alias: Count("expanded")})
-            return agg[alias]
-        else:
-            agg = qs.aggregate(**{alias: Count(column_name)})
-            return agg[alias]
+        try:
+            Universal._meta.get_field(column_name)
+            actual_column = column_name
+        except Exception:
+            actual_column = "fields" if column_name == "fields" else f"fields__{column_name}"
+        agg = user_data_queryset.aggregate(**{alias: Count(actual_column)})
+        debug_print("Finished Query")
+        return agg[alias]
+
 
     def average_data(self, user_data_queryset, column_name, alias="result"):
-        debug_print("Entering average_data")
-        qs = user_data_queryset
         if is_json_field(column_name):
-            qs = qs.annotate(val=F("fields") if column_name == "fields" else F(column_name))
+            # If the column is not the entire JSON field, extract the key from 'fields'
+            if column_name == "fields":
+                lookup = F("fields")
+            else:
+                lookup = KeyTextTransform(column_name, "fields")
+            # Cast the extracted text to a float so AVG can operate on it.
+            qs = user_data_queryset.annotate(val=Cast(lookup, output_field=FloatField()))
             agg = qs.aggregate(**{alias: Avg("val")})
-            return agg[alias]
         elif is_array_field(column_name):
-            qs = qs.annotate(expanded=Func(F(column_name), function="UNNEST"))
+            qs = user_data_queryset.annotate(expanded=Func(F(column_name), function="UNNEST"))
             agg = qs.aggregate(**{alias: Avg("expanded")})
-            return agg[alias]
         else:
-            agg = qs.aggregate(**{alias: Avg(column_name)})
-            return agg[alias]
+            agg = user_data_queryset.aggregate(**{alias: Avg(column_name)})
+        debug_print("Finished Query")
+        return agg[alias]
+
 
     def sum_data(self, user_data_queryset, column_name, alias="result"):
-        debug_print("Entering sum_data")
-        qs = user_data_queryset
         if is_json_field(column_name):
-            qs = qs.annotate(val=F("fields") if column_name == "fields" else F(column_name))
+            # If the column is not the entire JSON field, extract the key from 'fields'
+            if column_name == "fields":
+                lookup = F("fields")
+            else:
+                lookup = KeyTextTransform(column_name, "fields")
+            # Cast the extracted text to a float so AVG can operate on it.
+            qs = user_data_queryset.annotate(val=Cast(lookup, output_field=FloatField()))
             agg = qs.aggregate(**{alias: Sum("val")})
-            return agg[alias]
         elif is_array_field(column_name):
-            qs = qs.annotate(expanded=Func(F(column_name), function="UNNEST"))
-            agg = qs.aggregate(**{alias: Sum("expanded")})
-            return agg[alias]
+                qs = user_data_queryset.annotate(expanded=Func(F(column_name), function="UNNEST"))
+                agg = qs.aggregate(**{alias: Sum("expanded")})
         else:
-            agg = qs.aggregate(**{alias: Sum(column_name)})
-            return agg[alias]
+                agg = user_data_queryset.aggregate(**{alias: Sum(column_name)})
+        debug_print("Finished Query")
+        return agg[alias]
+
 
     def min_data(self, user_data_queryset, column_name, alias="result"):
-        debug_print("Entering min_data")
-        qs = user_data_queryset
         if is_json_field(column_name):
-            qs = qs.annotate(val=F("fields") if column_name == "fields" else F(column_name))
+            # Use KeyTextTransform if not referencing the entire JSON field
+            if column_name == "fields":
+                lookup = F("fields")
+                field_lookup = "fields"
+            else:
+                lookup = KeyTextTransform(column_name, "fields")
+                field_lookup = f"fields__{column_name}"
+            # Grab a sample value from the lookup to decide on casting.
+            sample = user_data_queryset.values_list(field_lookup, flat=True).first()
+            # Try to parse the sample as a date using an expected format.
+            try:
+                # Change the format as needed.
+                datetime.strptime(sample, "%m/%d/%Y")
+                output_field = DateField()
+            except Exception:
+                output_field = FloatField()
+            qs = user_data_queryset.annotate(val=Cast(lookup, output_field=output_field))
             agg = qs.aggregate(**{alias: Min("val")})
-            return agg[alias]
         elif is_array_field(column_name):
-            qs = qs.annotate(expanded=Func(F(column_name), function="UNNEST"))
+            qs = user_data_queryset.annotate(expanded=Func(F(column_name), function="UNNEST"))
             agg = qs.aggregate(**{alias: Min("expanded")})
-            return agg[alias]
         else:
-            agg = qs.aggregate(**{alias: Min(column_name)})
-            return agg[alias]
+            agg = user_data_queryset.aggregate(**{alias: Min(column_name)})
+        debug_print("Finished Query")
+        return agg[alias]
+
 
     def max_data(self, user_data_queryset, column_name, alias="result"):
-        debug_print("Entering max_data")
-        qs = user_data_queryset
         if is_json_field(column_name):
-            qs = qs.annotate(val=F("fields") if column_name == "fields" else F(column_name))
+            # Use KeyTextTransform if not referencing the entire JSON field
+            if column_name == "fields":
+                lookup = F("fields")
+                field_lookup = "fields"
+            else:
+                lookup = KeyTextTransform(column_name, "fields")
+                field_lookup = f"fields__{column_name}"
+            # Grab a sample value from the lookup to decide on casting.
+            sample = user_data_queryset.values_list(field_lookup, flat=True).first()
+            # Try to parse the sample as a date using an expected format.
+            try:
+                # Change the format as needed.
+                datetime.strptime(sample, "%m/%d/%Y")
+                output_field = DateField()
+            except Exception:
+                output_field = FloatField()
+            qs = user_data_queryset.annotate(val=Cast(lookup, output_field=output_field))
             agg = qs.aggregate(**{alias: Max("val")})
-            return agg[alias]
         elif is_array_field(column_name):
-            qs = qs.annotate(expanded=Func(F(column_name), function="UNNEST"))
+            qs = user_data_queryset.annotate(expanded=Func(F(column_name), function="UNNEST"))
             agg = qs.aggregate(**{alias: Max("expanded")})
-            return agg[alias]
         else:
-            agg = qs.aggregate(**{alias: Max(column_name)})
-            return agg[alias]
+            agg = user_data_queryset.aggregate(**{alias: Max(column_name)})
+        debug_print("Finished Query")
+        return agg[alias]
+

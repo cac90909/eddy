@@ -1,5 +1,5 @@
 import csv
-from shared.models import UserData
+from shared.models import Universal
 
 # Define the path to your CSV file
 csv_file_path = "test_data.csv"
@@ -19,7 +19,7 @@ def load_test_data(file_path):
     """
     try:
         # Clear existing data from the table
-        UserData.objects.all().delete()
+        Universal.objects.all().delete()
         print("Existing data cleared.")
 
         # Open the CSV file
@@ -38,7 +38,7 @@ def load_test_data(file_path):
                 tags = parse_semicolon_separated(row['Tags'])
 
                 # Insert data into the database
-                UserData.objects.create(
+                Universal.objects.create(
                     date=row["Date"],  # Assuming the date is in the format recognized by Django
                     functionalities=functionalities,
                     subject_matters=subject_matters,
@@ -51,7 +51,7 @@ def load_test_data(file_path):
                     siblings=siblings,
                     fields=row["Fields"] or None,
                     entry_id=row["ID"],
-                    user_id=row["User ID"],
+                    #user_id=row["User ID"],
                 )
         print("Data successfully loaded.")
     except Exception as e:

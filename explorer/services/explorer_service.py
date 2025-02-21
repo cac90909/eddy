@@ -47,8 +47,7 @@ class ExplorerService:
         elif operation_name == "load_snapshot":
             self.explorer_cache_service.empty_explorer_cache(user_id=user_id)
             operation_chain = self.snapshot_service.get_snapshot(user_id=user_id, snapshot_id=operation_params["snapshot_id"]).operation_chain
-            data_resp = operation_map[operation_name](user_id=user_id, operation_chain=operation_chain, **operation_params)
-            return data_resp
+            result_data, data_amount = operation_map[operation_name](user_id=user_id, operation_chain=operation_chain, **operation_params)
         data_resp = {"data" : result_data, "data_type": result_data_type, "data_amount" : f'{data_amount} rows'}
         if operation_name not in ["load_snapshot", "undo_operation"]:
             self.explorer_cache_service.append_universal_data_and_operation_objs(user_id=user_id, universal_data_obj=data_resp, operation_obj=operation_obj)
@@ -60,10 +59,10 @@ class ExplorerService:
         operation_obj = {"operation_name": operation_name, "operation_type": result_data_type, "operation_params":operation_params}
         operation_map = {
             "group_aggregate": self.universal_enrichment_service.group_aggregate_data,
-            "filter_group_aggregate" : self.universal_enrichment_service.filter_grouped_aggregate_data
+            "filter_grouped_aggregate" : self.universal_enrichment_service.filter_grouped_aggregate_data
         }
         data_source = self.explorer_cache_service.get_most_recent_universal_raw_data_obj(user_id=user_id)
-        result_data, data_amount = operation_map[operation_name](data_source=data_source, **operation_params)
+        result_data, data_amount = operation_map[operation_name](user_id=user_id, data_source=data_source, **operation_params)
         data_resp = {"data" : result_data, "data_type": result_data_type, "data_amount" : data_amount}
         self.explorer_cache_service.append_universal_data_and_operation_objs(user_id=user_id, universal_data_obj=data_resp, operation_obj=operation_obj)
         return data_resp
@@ -80,8 +79,8 @@ class ExplorerService:
             "get_max": self.universal_metric_service.get_max,
         }
         data_source = self.explorer_cache_service.get_most_recent_universal_raw_data_obj(user_id=user_id)
-        result_data, data_amount = operation_map[operation_name](data_source=data_source, **operation_params)
-        data_resp = {"data" : result_data, "data_type": result_data_type, "data_amount" : data_amount}
+        result_data= operation_map[operation_name](data_source=data_source, **operation_params)
+        data_resp = {"data" : result_data, "data_type": result_data_type, "data_amount" : "1 value"}
         self.explorer_cache_service.append_universal_data_and_operation_objs(user_id=user_id, universal_data_obj=data_resp, operation_obj=operation_obj)
         return data_resp
     
@@ -90,15 +89,16 @@ class ExplorerService:
         result_data_type = "universal_list"
         operation_obj = {"operation_name": operation_name, "operation_type": result_data_type, "operation_params":operation_params}
         operation_map = {
-            "unique_column_values": self.universal_list_service.get_unique_column_values,
-            "unique_json_keys" : self.universal_list_service.get_unique_json_keys,
-            "unique_json_values" : self.universal_list_service.get_unique_json_values
+            "get_unique_column_values": self.universal_list_service.get_unique_column_values,
+            "get_unique_json_keys" : self.universal_list_service.get_unique_json_keys,
+            "get_unique_json_values" : self.universal_list_service.get_unique_json_values
         }
         data_source = self.explorer_cache_service.get_most_recent_universal_raw_data_obj(user_id=user_id)
         result_data, data_amount = operation_map[operation_name](data_source=data_source, **operation_params)
         data_resp = {"data" : result_data, "data_type": result_data_type, "data_amount" : data_amount}
-        if not operation_params["filter_values"]:
+        if operation_params["filter_options_call"] is False:
             self.explorer_cache_service.append_universal_data_and_operation_objs(user_id=user_id, universal_data_obj=data_resp, operation_obj=operation_obj)
+        debug_print(data_resp)
         return data_resp
     
     def handle_explorer_state_operation(self, user_id, operation_name, operation_params):
@@ -123,6 +123,8 @@ class ExplorerService:
             "save_snapshot" : self.snapshot_service.create_snapshot,
             "get_all_snapshots" : self.snapshot_service.get_all_snapshots
         }
+        if operation_name == "save_snapshot":
+            operation_params["operation_chain"] = self.explorer_cache_service.get_operation_chain_list(user_id=user_id)
         result_data = operation_map[operation_name](user_id=user_id, **operation_params)
         data_resp = {"data" : result_data, "data_type" : result_data_type}
         return data_resp
@@ -131,7 +133,7 @@ class ExplorerService:
 
 
     #Most Recent Raw Data Instance Is Always the Data Source
-    def assemble_dataset_list_from_operation_chain(self, user_id, operation_chain):
+    def assemble_dataset_list_from_operation_chain(self, user_id, snapshot_id, operation_chain):
         debug_print()
         operation_type_handler_mapping = {
             "universal_raw" : self.handle_universal_raw_operation,
@@ -144,4 +146,4 @@ class ExplorerService:
             operation_type, operation_name, operation_params = operation_obj["operation_type"], operation_obj["operation_name"], operation_obj["operation_params"]
             operation_type_handler_mapping[operation_type](user_id=user_id, operation_name=operation_name, operation_params=operation_params)
         most_recent_raw_universal_data = self.explorer_cache_service.get_most_recent_universal_raw_data_obj(user_id=user_id)
-        return most_recent_raw_universal_data
+        return most_recent_raw_universal_data, most_recent_raw_universal_data.count()
