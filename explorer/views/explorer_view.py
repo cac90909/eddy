@@ -15,21 +15,18 @@ class ExplorerView(APIView):
         self.explorer_service = ExplorerService()
         self.universal_serializer = UniversalSerializer()
         self.snapshot_serializer = SnapshotSerializer()
-        print()
-        debug_print(self.request.build_absolute_uri())
-        debug_print(self.request.query_params.dict())
 
-    request_operation_type_handler_mapping = {
-        "explorer_raw" : ExplorerService.handle_universal_raw_operation,
-        "explorer_enrichment" : ExplorerService.handle_universal_enrichment_operation,
-        "explorer_metric" : ExplorerService.handle_universal_metric_operation,
-        "explorer_list" : ExplorerService.handle_universal_list_operation,
-        "explorer_state" : ExplorerService.handle_explorer_state_operation,
-        "snapshot" : ExplorerService.handle_snapshot_operation
-    }
+        self.request_operation_type_handler_mapping = {
+            "explorer_raw" : self.explorer_service.handle_universal_raw_operation,
+            "explorer_enrichment" : self.explorer_service.handle_universal_enrichment_operation,
+            "explorer_metric" : self.explorer_service.handle_universal_metric_operation,
+            "explorer_list" : self.explorer_service.handle_universal_list_operation,
+            "explorer_state" : self.explorer_service.handle_explorer_state_operation,
+            "snapshot" : self.explorer_service.handle_snapshot_operation
+        }
 
     response_data_type_serializer_mapping = {
-        "universal_raw" : lambda data : UniversalSerializer(instance=data, many=True),
+        "universal_raw" : lambda universal_querylist : UniversalSerializer(instance=list(universal_querylist), many=True).data,
         "universal_enrichment" : lambda data : FlexibleDictSerializer(instance=data, many=True),
         "universal_metric" : lambda data : data,
         "universal_list" : lambda data : data,
@@ -40,7 +37,10 @@ class ExplorerView(APIView):
 
     def get(self, request):
         try:
-            user_id = request.query.get("user_id")
+            print()
+            debug_print(request.build_absolute_uri())
+            debug_print(request.query_params.dict())
+            user_id = request.query_params.get("user_id")
             operation_type = request.query_params.get("operation_type")
             operation_name = request.query_params.get("operation_name")
             operation_params = json.loads(request.query_params.get("operation_params", "{}"))
@@ -56,10 +56,13 @@ class ExplorerView(APIView):
         
     def post(self, request):
         try:
+            print()
+            debug_print(request.build_absolute_uri())
+            debug_print(request.data)
             user_id = request.data.get("user_id")
             operation_type = request.data.get("operation_type")
-            operation_name = request.data.get("operation_type")
-            operation_params = json.loads(request.query_params.get("operation_params", "{}"))
+            operation_name = request.data.get("operation_name")
+            operation_params = json.loads(request.data.get("operation_params", "{}"))
 
             result_data = self.request_operation_type_handler_mapping[operation_type](user_id=user_id, operation_name=operation_name, operation_params=operation_params)
 
@@ -72,10 +75,13 @@ class ExplorerView(APIView):
 
     def put(self, request):
         try:
+            print()
+            debug_print(request.build_absolute_uri())
+            debug_print(request.data)
             user_id = request.data.get("user_id")
             operation_type = request.data.get("operation_type")
-            operation_name = request.data.get("operation_type")
-            operation_params = json.loads(request.query_params.get("operation_params", "{}"))
+            operation_name = request.data.get("operation_name")
+            operation_params = json.loads(request.data.get("operation_params", "{}"))
 
             result_data = self.request_operation_type_handler_mapping[operation_type](user_id=user_id, operation_name=operation_name, operation_params=operation_params)
 
@@ -88,9 +94,12 @@ class ExplorerView(APIView):
 
     def delete(self, request):
         try:
-            user_id = request.data.get("user_id")
-            operation_type = request.data.get("operation_type")
-            operation_name = request.data.get("operation_type")
+            print()
+            debug_print(request.build_absolute_uri())
+            debug_print(request.query_params.dict())
+            user_id = request.query_params.get("user_id")
+            operation_type = request.query_params.get("operation_type")
+            operation_name = request.query_params.get("operation_name")
             operation_params = json.loads(request.query_params.get("operation_params", "{}"))
 
             result_data = self.request_operation_type_handler_mapping[operation_type](user_id=user_id, operation_name=operation_name, operation_params=operation_params)

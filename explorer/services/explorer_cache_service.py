@@ -19,6 +19,11 @@ class ExplorerCacheService():
         cache_key = self.get_cache_key(user_id)
         user_cache = cache.get(cache_key, {})
         return user_cache
+    
+    def create_empty_user_cache(self, user_id):
+        cache_key = self.get_cache_key(user_id=user_id)
+        cache.set(key=cache_key, value={}, timeout=3600)
+        return True
 
     def create_empty_explorer_cache(self, user_id):
         #Checking if User has Cache, and Creates One If Doesnt Already Exist
@@ -27,7 +32,8 @@ class ExplorerCacheService():
         user_cache = self.get_user_cache(user_id=user_id)
         user_cache[self.UNIVERSAL_DATA_CACHE_KEY] = []
         user_cache[self.OPERATION_CHAIN_CACHE_KEY] = []
-        cache.set(key=self.get_cache_key, value=user_cache, timeout=3600)
+        cache.set(key=self.get_cache_key(user_id=user_id), value=user_cache, timeout=3600)
+        return True
 
     def append_universal_data_and_operation_objs(self, user_id, universal_data_obj, operation_obj):
         user_cache = self.get_user_cache(user_id=user_id)
@@ -37,33 +43,46 @@ class ExplorerCacheService():
         else:
             universal_data_list.append(universal_data_obj)
             operation_chain_list.append(operation_obj)
+        user_cache[self.UNIVERSAL_DATA_CACHE_KEY] = universal_data_list
+        user_cache[self.OPERATION_CHAIN_CACHE_KEY] = operation_chain_list
+        cache.set(key=self.get_cache_key(user_id=user_id), value=user_cache, timeout=3600)
 
     def delete_most_recent_universal_data_and_operation_obj(self, user_id):
         user_cache = self.get_user_cache(user_id=user_id)
         universal_data_list, operation_chain_list = user_cache[self.UNIVERSAL_DATA_CACHE_KEY], user_cache[self.OPERATION_CHAIN_CACHE_KEY]
         universal_data_list.pop(-1)
         operation_chain_list.pop(-1)
+        user_cache[self.UNIVERSAL_DATA_CACHE_KEY] = universal_data_list
+        user_cache[self.OPERATION_CHAIN_CACHE_KEY] = operation_chain_list
+        cache.set(key=self.get_cache_key(user_id=user_id), value=user_cache, timeout=3600)
+        return True
 
     def empty_explorer_cache(self, user_id):
-        self.create_empty_explorer_cache(self, user_id=user_id)
+        if not self.get_user_cache(user_id=user_id):
+            self.create_empty_user_cache(user_id=user_id)
+        user_cache = self.get_user_cache(user_id=user_id)
+        user_cache[self.UNIVERSAL_DATA_CACHE_KEY] = []
+        user_cache[self.OPERATION_CHAIN_CACHE_KEY] = []
+        cache.set(key=self.get_cache_key(user_id=user_id), value=user_cache, timeout=3600)
+        return True
 
     def get_universal_data_list(self, user_id):
         user_cache = self.get_user_cache(user_id=user_id)
-        universal_data_list = user_cache[self.UNIVERSAL_DATA_CACHE_KEY]
+        universal_data_list = user_cache.get(self.UNIVERSAL_DATA_CACHE_KEY, [])
         return universal_data_list
 
     def get_operation_chain_list(self, user_id):
         user_cache = self.get_user_cache(user_id=user_id)
-        operation_chain_list = user_cache[self.OPERATION_CHAIN_CACHE_KEY]
+        operation_chain_list = user_cache.get(self.OPERATION_CHAIN_CACHE_KEY, [])
         return operation_chain_list
     
     #NOTE: currently cannot operate on non raw universal data, so returning only raw objects
     def get_most_recent_universal_raw_data_obj(self, user_id):
         user_cache = self.get_user_cache(user_id=user_id)
         universal_data_list = user_cache[self.UNIVERSAL_DATA_CACHE_KEY]
-        for universal_data_obj in universal_data_list[-1:-1:-1]:
-            if universal_data_obj["universal_raw"]:
-                return universal_data_obj
+        for universal_data_obj in universal_data_list[::-1]:
+            if universal_data_obj["data_type"] == "universal_raw":
+                return universal_data_obj["data"]
         return None
 
 
@@ -76,3 +95,5 @@ class ExplorerCacheService():
         user_cache = self.get_user_cache(user_id=user_id)
         user_cache.pop(self.UNIVERSAL_DATA_CACHE_KEY)
         user_cache.pop(self.OPERATION_CHAIN_CACHE_KEY)
+        cache.set(key=self.get_cache_key(user_id=user_id), value=user_cache, timeout=3600)
+        return True
