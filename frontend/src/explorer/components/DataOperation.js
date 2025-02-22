@@ -7,128 +7,215 @@ import {
   MenuItem,
   Select,
   TextField,
-  Checkbox,
-  FormControlLabel,
   Grid,
   Typography,
 } from "@mui/material";
 import ExplorerService from "../services/ExplorerService";
+import RawOperationsConfig from "./RawOperationsConfig";
+import MetricOperationsConfig from "./MetricOperationsConfig";
+import ListOperationsConfig from "./ListOperationsConfig";
+import EnrichmentOperationsConfig from "./EnrichmentOperationsConfig";
 
-// Define categorical columns that should use unique filter values.
-const categoricalColumns = [
-  "functionalities",
-  "subject matters",
-  "general categories",
-  "tags",
-  "parents_ids",
-  "children_ids",
-  "siblings_ids",
-];
-
-const operationTypes = ["filter", "traverse", "sort", "union"];
-
-const filterOperatorsByColumn = {
-  id: ["=", "!="],
-  entry_id: ["=", "!="],
-  date: [">", "<", "=", "!="],
-  title: ["string_contains"],
-  text: ["string_contains"],
-  functionalities: ["array_contains", "array_not_contains"],
-  "subject matters": ["array_contains", "array_not_contains"],
-  "general categories": ["array_contains", "array_not_contains"],
-  tags: ["array_contains", "array_not_contains"],
-  parents_ids: ["array_contains", "array_not_contains"],
-  children_ids: ["array_contains", "array_not_contains"],
-  siblings_ids: ["array_contains", "array_not_contains"],
+// Define operation categories with their labels, operations, and configuration.
+const operationCategories = {
+  raw: {
+    label: "Raw",
+    operations: Object.keys(RawOperationsConfig),
+    config: RawOperationsConfig,
+  },
+  enriched: {
+    label: "Enriched",
+    operations: Object.keys(EnrichmentOperationsConfig),
+    config: EnrichmentOperationsConfig,
+  },
+  metric: {
+    label: "Metric",
+    operations: Object.keys(MetricOperationsConfig),
+    config: MetricOperationsConfig,
+  },
+  list: {
+    label: "List",
+    operations: Object.keys(ListOperationsConfig),
+    config: ListOperationsConfig,
+  },
 };
 
 const DataOperation = ({ userId, onApplyOperation }) => {
-  const [operationType, setOperationType] = useState("");
-  const [column, setColumn] = useState("");
-  const [operator, setOperator] = useState("");
-  const [value, setValue] = useState("");
-  const [jsonKey, setJsonKey] = useState("");
-  const [availableOperators, setAvailableOperators] = useState([]);
-  const [traverseOptions, setTraverseOptions] = useState({
-    horizontal: false,
-    upwards: false,
-    downwards: false,
+  const [selectedCategory, setSelectedCategory] = useState("raw");
+  const [selectedOperation, setSelectedOperation] = useState("");
+  const [formData, setFormData] = useState({});
+  const [currentConfig, setCurrentConfig] = useState(null);
+  // currentData holds dynamic options (e.g., unique JSON keys, unique column values, entry IDs)
+  const [currentData, setCurrentData] = useState({
+    uniqueJsonKeys: [],
+    uniqueColumnValues: [],
+    uniqueEntryIds: [],
   });
-  const [sortOrder, setSortOrder] = useState("asc");
-  const [uniqueJsonKeys, setUniqueJsonKeys] = useState([]);
-  const [uniqueColumnValues, setUniqueColumnValues] = useState([]);
 
-  // For traverse: store unique entry_ids and the chosen start_id.
-  const [uniqueEntryIds, setUniqueEntryIds] = useState([]);
-  const [startId, setStartId] = useState("");
-
+  // Load configuration when category or operation changes.
   useEffect(() => {
-    if (operationType === "filter") {
-      setValue("");
-      setUniqueColumnValues([]);
-      if (column === "fields") {
-        ExplorerService.getUniqueJsonKeys(userId)
-          .then((keys) => setUniqueJsonKeys(keys))
-          .catch((err) => console.error("Error fetching JSON keys:", err));
-      } else if (categoricalColumns.includes(column)) {
-        ExplorerService.getUniqueColumnValues(userId, column)
-          .then((values) => setUniqueColumnValues(values))
-          .catch((err) => console.error("Error fetching unique column values:", err));
+    if (
+      selectedCategory &&
+      selectedOperation &&
+      operationCategories[selectedCategory]
+    ) {
+      const config =
+        operationCategories[selectedCategory].config[selectedOperation];
+      setCurrentConfig(config);
+      setFormData({});
+    }
+  }, [selectedCategory, selectedOperation]);
+
+  // Fetch dynamic data for raw, metric, list, and enriched operations.
+  useEffect(() => {
+    if (selectedCategory === "raw") {
+      if (selectedOperation === "filter") {
+        if (formData.column) {
+          if (formData.column === "fields") {
+            ExplorerService.getUniqueJsonKeys(userId)
+              .then((keys) =>
+                setCurrentData((prev) => ({ ...prev, uniqueJsonKeys: keys }))
+              )
+              .catch((err) => console.error("Error fetching JSON keys:", err));
+          } else {
+            const categoricalColumns = [
+              "functionalities",
+              "subject matters",
+              "general categories",
+              "tags",
+              "parents_ids",
+              "children_ids",
+              "siblings_ids",
+            ];
+            if (categoricalColumns.includes(formData.column)) {
+              ExplorerService.getUniqueColumnValues(userId, formData.column)
+                .then((values) =>
+                  setCurrentData((prev) => ({
+                    ...prev,
+                    uniqueColumnValues: values,
+                  }))
+                )
+                .catch((err) =>
+                  console.error("Error fetching unique column values:", err)
+                );
+            }
+          }
+        }
+      } else if (selectedOperation === "traverse") {
+        ExplorerService.getUniqueColumnValues(userId, "entry_id")
+          .then((ids) =>
+            setCurrentData((prev) => ({ ...prev, uniqueEntryIds: ids }))
+          )
+          .catch((err) =>
+            console.error("Error fetching unique entry IDs:", err)
+          );
       }
-      setAvailableOperators(filterOperatorsByColumn[column] || ["=", "!="]);
+    } else if (selectedCategory === "metric") {
+      if (formData.column === "fields") {
+        ExplorerService.getUniqueJsonKeys(userId)
+          .then((keys) =>
+            setCurrentData((prev) => ({ ...prev, uniqueJsonKeys: keys }))
+          )
+          .catch((err) => console.error("Error fetching JSON keys:", err));
+      }
+    } else if (selectedCategory === "list") {
+      if (formData.column === "fields") {
+        ExplorerService.getUniqueJsonKeys(userId)
+          .then((keys) =>
+            setCurrentData((prev) => ({ ...prev, uniqueJsonKeys: keys }))
+          )
+          .catch((err) => console.error("Error fetching JSON keys:", err));
+      } else if (formData.column && formData.column !== "fields") {
+        ExplorerService.getUniqueColumnValues(userId, formData.column)
+          .then((values) =>
+            setCurrentData((prev) => ({ ...prev, uniqueColumnValues: values }))
+          )
+          .catch((err) =>
+            console.error("Error fetching unique column values:", err)
+          );
+      }
+    } else if (selectedCategory === "enriched") {
+      // For group_aggregate, if group_column or target_column is "fields", fetch JSON keys.
+      if (selectedOperation === "group_aggregate") {
+        if (
+          (formData.group_column && formData.group_column === "fields") ||
+          (formData.target_column && formData.target_column === "fields")
+        ) {
+          ExplorerService.getUniqueJsonKeys(userId)
+            .then((keys) =>
+              setCurrentData((prev) => ({ ...prev, uniqueJsonKeys: keys }))
+            )
+            .catch((err) => console.error("Error fetching JSON keys:", err));
+        }
+      }
     }
-  }, [operationType, column, userId]);
+  }, [selectedCategory, selectedOperation, formData.column, formData.group_column, formData.target_column, userId]);
 
-  useEffect(() => {
-    if (operationType === "traverse") {
-      ExplorerService.getUniqueColumnValues(userId, "entry_id")
-        .then((ids) => setUniqueEntryIds(ids))
-        .catch((err) => console.error("Error fetching unique entry_ids:", err));
+  const handleFieldChange = (key, value) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // Render a form field based on the current configuration.
+  const renderField = (field) => {
+    if (field.displayCondition && !field.displayCondition(formData)) return null;
+    const fieldType =
+      typeof field.type === "function" ? field.type(formData) : field.type;
+    let options = [];
+    if (fieldType === "select" || fieldType === "multiselect") {
+      options =
+        typeof field.options === "function"
+          ? field.options(formData, currentData)
+          : field.options;
     }
-  }, [operationType, userId]);
+    return (
+      <Grid item xs={12} sm={6} key={field.key}>
+        {fieldType === "select" || fieldType === "multiselect" ? (
+          <FormControl fullWidth>
+            <InputLabel>{field.label}</InputLabel>
+            <Select
+              value={
+                formData[field.key] ||
+                (fieldType === "multiselect" ? [] : "")
+              }
+              label={field.label}
+              onChange={(e) => handleFieldChange(field.key, e.target.value)}
+              multiple={fieldType === "multiselect"}
+            >
+              {options.map((opt) => (
+                <MenuItem key={opt} value={opt}>
+                  {opt}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        ) : (
+          <TextField
+            fullWidth
+            label={field.label}
+            value={formData[field.key] || ""}
+            onChange={(e) => handleFieldChange(field.key, e.target.value)}
+          />
+        )}
+      </Grid>
+    );
+  };
 
   const isApplyEnabled = () => {
-    if (!operationType) return false;
-    if (operationType === "filter") {
-      if (!column || !operator) return false;
-      if (categoricalColumns.includes(column)) return value !== "";
-      if (column === "fields") return jsonKey !== "" && value !== "";
-      return value !== "";
-    } else if (operationType === "traverse") {
-      return startId !== "" && Object.values(traverseOptions).some((v) => v);
-    } else if (operationType === "sort") {
-      if (!column) return false;
-      if (column === "fields") return jsonKey !== "";
-      return true;
-    } else if (operationType === "union") {
-      return true;
-    }
-    return false;
+    // Basic validation: must have an operation selected and a config loaded.
+    if (!selectedOperation || !currentConfig) return false;
+    // You may add further field-specific validations here.
+    return true;
   };
 
   const handleApply = async () => {
-    let params = {};
-    if (operationType === "filter") {
-      params = column === "fields" 
-        ? { column_name: column, json_key: jsonKey, filter_value: value, filter_type: operator }
-        : { column_name: column, filter_value: value, filter_type: operator };
-    } else if (operationType === "traverse") {
-      const traversal_directions = Object.keys(traverseOptions).filter((dir) => traverseOptions[dir]);
-      if (traversal_directions.length === 0) {
-        alert("Please select at least one traversal direction.");
-        return;
-      }
-      params = { start_id: startId, traversal_directions: traversal_directions };
-    } else if (operationType === "sort") {
-      params = { column_name: column, sort_order: sortOrder };
-      if (column === "fields") {
-        params.json_key = jsonKey;
-      }
-    } else if (operationType === "union") {
-      params = { note: "union operation not implemented" };
-    }
+    if (!currentConfig) return;
     try {
-      const result = await ExplorerService.handleOperation(userId, operationType, params);
+      const result = await ExplorerService.handleOperation({
+        userId,
+        operation_type: selectedCategory, // serves as the expected return type
+        operation_name: selectedOperation,
+        operation_params: formData,
+      });
       onApplyOperation(result);
     } catch (error) {
       console.error("Error applying operation:", error);
@@ -141,23 +228,37 @@ const DataOperation = ({ userId, onApplyOperation }) => {
         Data Operation
       </Typography>
       <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
+        {/* Operation Category Selection */}
+        <Grid item xs={12} sm={4}>
           <FormControl fullWidth>
-            <InputLabel id="operation-type-label">Operation Type</InputLabel>
+            <InputLabel>Operation Category</InputLabel>
             <Select
-              labelId="operation-type-label"
-              value={operationType}
-              label="Operation Type"
+              value={selectedCategory}
+              label="Operation Category"
               onChange={(e) => {
-                setOperationType(e.target.value);
-                setColumn("");
-                setOperator("");
-                setValue("");
-                setJsonKey("");
-                setStartId("");
+                setSelectedCategory(e.target.value);
+                setSelectedOperation("");
+                setFormData({});
               }}
             >
-              {operationTypes.map((op) => (
+              {Object.keys(operationCategories).map((cat) => (
+                <MenuItem key={cat} value={cat}>
+                  {operationCategories[cat].label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        {/* Operation Name Selection */}
+        <Grid item xs={12} sm={4}>
+          <FormControl fullWidth>
+            <InputLabel>Operation</InputLabel>
+            <Select
+              value={selectedOperation}
+              label="Operation"
+              onChange={(e) => setSelectedOperation(e.target.value)}
+            >
+              {operationCategories[selectedCategory].operations.map((op) => (
                 <MenuItem key={op} value={op}>
                   {op.charAt(0).toUpperCase() + op.slice(1)}
                 </MenuItem>
@@ -165,248 +266,20 @@ const DataOperation = ({ userId, onApplyOperation }) => {
             </Select>
           </FormControl>
         </Grid>
-        {operationType === "filter" && (
-          <>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel id="filter-column-label">Filter Column</InputLabel>
-                <Select
-                  labelId="filter-column-label"
-                  value={column}
-                  label="Filter Column"
-                  onChange={(e) => {
-                    setColumn(e.target.value);
-                    setOperator("");
-                    setValue("");
-                    setJsonKey("");
-                  }}
-                >
-                  {[
-                    "id",
-                    "entry_id",
-                    "date",
-                    "title",
-                    "text",
-                    "functionalities",
-                    "subject matters",
-                    "general categories",
-                    "tags",
-                    "parents_ids",
-                    "children_ids",
-                    "siblings_ids",
-                    "fields",
-                  ].map((col) => (
-                    <MenuItem key={col} value={col}>
-                      {col}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            {column === "fields" && (
-              <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel id="json-key-label">JSON Key</InputLabel>
-                  <Select
-                    labelId="json-key-label"
-                    value={jsonKey}
-                    label="JSON Key"
-                    onChange={(e) => {
-                      setJsonKey(e.target.value);
-                      setAvailableOperators(["string_contains", "=", "!="]);
-                    }}
-                  >
-                    {uniqueJsonKeys.map((key) => (
-                      <MenuItem key={key} value={key}>
-                        {key}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-            )}
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel id="filter-operator-label">Operator</InputLabel>
-                <Select
-                  labelId="filter-operator-label"
-                  value={operator}
-                  label="Operator"
-                  onChange={(e) => setOperator(e.target.value)}
-                >
-                  {availableOperators.map((op) => (
-                    <MenuItem key={op} value={op}>
-                      {op}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              {categoricalColumns.includes(column) && uniqueColumnValues.length ? (
-                <FormControl fullWidth>
-                  <InputLabel id="filter-value-label">Select Value</InputLabel>
-                  <Select
-                    labelId="filter-value-label"
-                    value={value}
-                    label="Select Value"
-                    onChange={(e) => setValue(e.target.value)}
-                  >
-                    {uniqueColumnValues.map((opt) => (
-                      <MenuItem key={opt} value={opt}>
-                        {opt}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              ) : (
-                <>
-                  {column === "date" ? (
-                    <TextField
-                      fullWidth
-                      label="Enter Date (YYYY-MM-DD)"
-                      value={value}
-                      onChange={(e) => setValue(e.target.value)}
-                    />
-                  ) : (
-                    <TextField
-                      fullWidth
-                      label="Filter Value"
-                      value={value}
-                      onChange={(e) => setValue(e.target.value)}
-                    />
-                  )}
-                </>
-              )}
-            </Grid>
-          </>
-        )}
-        {operationType === "traverse" && (
-          <>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel id="traverse-start-id-label">Start ID</InputLabel>
-                <Select
-                  labelId="traverse-start-id-label"
-                  value={startId}
-                  label="Start ID"
-                  onChange={(e) => setStartId(e.target.value)}
-                  MenuProps={{
-                    PaperProps: { style: { maxHeight: 200 } },
-                  }}
-                >
-                  {uniqueEntryIds.map((id) => (
-                    <MenuItem key={id} value={id}>
-                      {id}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <Typography variant="subtitle1">Select Traversal Directions</Typography>
-              {["horizontal", "upwards", "downwards"].map((dir) => (
-                <FormControlLabel
-                  key={dir}
-                  control={
-                    <Checkbox
-                      checked={traverseOptions[dir]}
-                      onChange={(e) =>
-                        setTraverseOptions({ ...traverseOptions, [dir]: e.target.checked })
-                      }
-                    />
-                  }
-                  label={dir.charAt(0).toUpperCase() + dir.slice(1)}
-                />
-              ))}
-            </Grid>
-          </>
-        )}
-        {operationType === "sort" && (
-          <>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel id="sort-column-label">Sort Column</InputLabel>
-                <Select
-                  labelId="sort-column-label"
-                  value={column}
-                  label="Sort Column"
-                  onChange={(e) => {
-                    setColumn(e.target.value);
-                    setJsonKey("");
-                    if (e.target.value === "fields") {
-                      ExplorerService.getUniqueJsonKeys(userId)
-                        .then((keys) => setUniqueJsonKeys(keys))
-                        .catch((err) => console.error("Error fetching JSON keys:", err));
-                    }
-                  }}
-                >
-                  {[
-                    "id",
-                    "entry_id",
-                    "date",
-                    "title",
-                    "text",
-                    "functionalities",
-                    "subject matters",
-                    "general categories",
-                    "tags",
-                    "parents_ids",
-                    "children_ids",
-                    "siblings_ids",
-                    "fields",
-                  ].map((col) => (
-                    <MenuItem key={col} value={col}>
-                      {col}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            {column === "fields" && (
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel id="sort-json-key-label">JSON Key</InputLabel>
-                  <Select
-                    labelId="sort-json-key-label"
-                    value={jsonKey}
-                    label="JSON Key"
-                    onChange={(e) => setJsonKey(e.target.value)}
-                  >
-                    {uniqueJsonKeys.map((key) => (
-                      <MenuItem key={key} value={key}>
-                        {key}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-            )}
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel id="sort-order-label">Sort Order</InputLabel>
-                <Select
-                  labelId="sort-order-label"
-                  value={sortOrder}
-                  label="Sort Order"
-                  onChange={(e) => setSortOrder(e.target.value)}
-                >
-                  <MenuItem value="asc">Ascending</MenuItem>
-                  <MenuItem value="desc">Descending</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </>
-        )}
-        {operationType === "union" && (
-          <Grid item xs={12}>
-            <Typography variant="subtitle1">
-              Union operation is currently a placeholder.
-            </Typography>
-          </Grid>
-        )}
+        {/* Render dynamic fields for categories that have a config */}
+        {(selectedCategory === "raw" ||
+          selectedCategory === "metric" ||
+          selectedCategory === "list" ||
+          selectedCategory === "enriched") &&
+          currentConfig &&
+          currentConfig.fields.map(renderField)}
         <Grid item xs={12}>
-          <Button variant="contained" color="primary" onClick={handleApply} disabled={!isApplyEnabled()}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleApply}
+            disabled={!isApplyEnabled()}
+          >
             Apply
           </Button>
         </Grid>

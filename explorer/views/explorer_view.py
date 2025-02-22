@@ -32,7 +32,8 @@ class ExplorerView(APIView):
         "universal_list" : lambda data : data,
         "status" : lambda data : data,
         "snapshot" : lambda snapshot : SnapshotSerializer(instance=snapshot).data,
-        "snapshot_list" : lambda snapshot_list : [SnapshotSerializer(instance=snapshot).data for snapshot in snapshot_list]
+        "snapshot_list" : lambda snapshot_list : [SnapshotSerializer(instance=snapshot).data for snapshot in snapshot_list],
+        "operation_chain" : lambda operation_chain : operation_chain,
     }
 
     def get(self, request):
@@ -47,7 +48,8 @@ class ExplorerView(APIView):
 
             result_data = self.request_operation_type_handler_mapping[operation_type](user_id=user_id, operation_name=operation_name, operation_params=operation_params)
             serialized_data = self.response_data_type_serializer_mapping[result_data["data_type"]](result_data["data"])
-            return Response(data=serialized_data, status=status.HTTP_200_OK)
+            result_data["data"] = serialized_data #TODO: standardize this change
+            return Response(data=result_data, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:

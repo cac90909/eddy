@@ -107,10 +107,15 @@ class ExplorerService:
         operation_obj = {"operation_name": operation_name, "operation_type": result_data_type, "operation_params":operation_params}
         operation_map = {
             "end_explorer_session" : self.explorer_cache_service.delete_explorer_cache_objs, 
-            "start_explorer_session" : self.explorer_cache_service.create_empty_explorer_cache
+            "start_explorer_session" : self.explorer_cache_service.create_empty_explorer_cache,
+            "get_operation_chain" : self.explorer_cache_service.get_operation_chain_list
         }
         result_data = operation_map[operation_name](user_id=user_id)
-        data_resp = {"data" : result_data, "data_type": "status"}
+        if operation_name == "get_operation_chain":
+            result_data_type = "operation_chain"
+        else:
+            result_data_type = "status"
+        data_resp = {"data" : result_data, "data_type": result_data_type}
         return data_resp
         
     def handle_snapshot_operation(self, user_id, operation_name, operation_params):
