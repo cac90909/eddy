@@ -5,7 +5,6 @@ from shared.util import log_vars_vals_cls, catch_exceptions_cls
 #@log_vars_vals_cls(exclude=None)
 @catch_exceptions_cls(exception_return_value={"success": False})
 class CacheService:
-    MAX_CACHE_LEN = 10  # Max items in a specific cache object for a user
 
     def __init__(self):
         pass

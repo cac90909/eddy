@@ -8,23 +8,23 @@ class UniversalListService:
     def __init__(self):
         self.universal_repository = UniversalRepository()
 
-    def get_unique_column_values(self, data_source, column_name, filter_options_call):
-        unique_values = self.universal_repository.get_unique_column_values(
+    def get_unique_column_values(self, data_source, column_name):
+        list_res = self.universal_repository.get_unique_column_values(
             user_data_queryset=data_source,
             column_name=column_name
         )
-        return unique_values, len(unique_values)
+        return list_res
 
-    def get_unique_json_keys(self, data_source, filter_options_call):
-        unique_keys = self.universal_repository.get_unique_json_keys(
+    def get_unique_json_keys(self, data_source):
+        list_res = self.universal_repository.get_unique_fields_keys(
             user_data_queryset=data_source
         )
-        return unique_keys, len(unique_keys)
+        return list_res
 
-    def get_unique_json_values(self, data_source, filter_options_call):
-        unique_values = self.universal_repository.get_unique_json_values(
+    def get_unique_json_values(self, data_source):
+        list_res = self.universal_repository.get_unique_fields_key_values(
             user_data_queryset=data_source
         )
-        return unique_values, len(unique_values)
+        return list_res
     
 

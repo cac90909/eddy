@@ -5,7 +5,7 @@ from shared.services.snapshots_service import SnapshotsService
 from shared.serializers import SnapshotSerializer
 
 from shared.services.universal_raw_service import UniversalRawService
-from shared.services.universal_enrichment_service import UniversalEnrichmentService
+from shared.services.universal_enriched_service import UniversalEnrichmentService
 from shared.services.universal_metric_service import UniversalMetricService
 from shared.services.universal_list_service import UniversalListService
 

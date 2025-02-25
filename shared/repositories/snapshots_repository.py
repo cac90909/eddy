@@ -11,7 +11,7 @@ class SnapshotsRepository:
         """
         user_instance = User.objects.get(pk=user_id)
         snapshots = Snapshots.objects.filter(user=user_instance)
-        debug_print(f"{snapshots.count()} snapshot rows retrieved")
+        debug_print("Query Finished")
         return snapshots
 
     def get_snapshot(self, user_id, snapshot_id):
@@ -20,7 +20,7 @@ class SnapshotsRepository:
         """
         user_instance = User.objects.get(pk=user_id)
         snapshot = Snapshots.objects.get(user=user_instance, snapshot_id=snapshot_id)
-        debug_print(f"{snapshot} retrieved")
+        debug_print("Query Finished")
         return snapshot
 
     def create_snapshot(self, user_id, title, description, operation_chain):
@@ -28,15 +28,13 @@ class SnapshotsRepository:
         Create a new snapshot for a given user.
         """
         user_instance = User.objects.get(pk=user_id)
-        before_count = Snapshots.objects.count()
         snapshot = Snapshots.objects.create(
             user=user_instance,
             title=title,
             description=description,
             operation_chain=operation_chain
         )
-        after_count = Snapshots.objects.count()
-        debug_print(f"{after_count - before_count} snapshot row(s) created")
+        debug_print("Query Finished")
         return snapshot
 
     def update_snapshot(self, user_id, snapshot_id, title=None, description=None, operation_chain=None):
@@ -52,15 +50,13 @@ class SnapshotsRepository:
         if operation_chain is not None:
             snapshot.operation_chain = operation_chain
         snapshot.save()
-        debug_print(f"{snapshot} updated")
+        debug_print("Query Finished")
         return snapshot
 
     def delete_snapshot(self, user_id, snapshot_id):
         """
         Delete a snapshot for a given user.
         """
-        before_count = Snapshots.objects.count()
         snapshot = self.get_snapshot(user_id, snapshot_id)
         snapshot.delete()
-        after_count = Snapshots.objects.count()
-        debug_print(f"{before_count - after_count} snapshot row(s) deleted")
+        debug_print("Query Finished")
