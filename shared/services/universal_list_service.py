@@ -16,14 +16,14 @@ class UniversalListService:
         return list_res
 
     def get_unique_json_keys(self, data_source):
-        list_res = self.universal_repository.get_unique_fields_keys(
+        list_res = self.universal_repository.get_unique_json_keys(
             user_data_queryset=data_source
         )
         return list_res
 
-    def get_unique_json_values(self, data_source):
-        list_res = self.universal_repository.get_unique_fields_key_values(
-            user_data_queryset=data_source
+    def get_unique_json_key_values(self, data_source, json_key):
+        list_res = self.universal_repository.get_unique_json_key_values(
+            user_data_queryset=data_source, json_key=json_key
         )
         return list_res
     

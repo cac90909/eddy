@@ -20,7 +20,7 @@ from explorer.domain.operation import (
     GroupAggregateOperation,
     GetUniqueColumnValuesOperation,
     GetUniqueJsonKeysOperation,
-    GetUniqueJsonValuesOperation,
+    GetUniqueJsonKeyValuesOperation,
     GetCountOperation,
     GetAverageOperation,
     GetSumOperation,
@@ -44,7 +44,7 @@ operation_types = ["universal", "state", "snapshot"]
 
 universal_operation_names = ["initalize_user", "reset" "filter", "traverse", "undo", "load_snapshot", 
                           "group_aggregate", 
-                          "get_unique_column_values", "get_unique_json_keys", "get_unique_json_values", "get_count", "get_average", "get_sum", "get_min", "get_max"]
+                          "get_unique_column_values", "get_unique_json_keys", "get_unique_json_key_values", "get_count", "get_average", "get_sum", "get_min", "get_max"]
 state_operation_names = ["start_explorer_session", "end_explorer_session", "reset"]
 snapshot_operation_names = ["create_snapshot", "delete_snapshot", "update_snapshot", "get_snapshot", "get_all_snapshots"]
 
@@ -64,7 +64,7 @@ def attach_operation_handler(operation):
             "group_aggregate": UniversalEnrichedService.group_aggregate,
             "get_unique_column_values": UniversalListService.get_unique_column_values,
             "get_unique_json_keys": UniversalListService.get_unique_json_keys,
-            "get_unique_json_values": UniversalListService.get_unique_json_values,
+            "get_unique_json_values": UniversalListService.get_unique_json_key_values,
             "get_count": UniversalMetricService.get_count,
             "get_average": UniversalMetricService.get_average,
             "get_sum": UniversalMetricService.get_sum,
@@ -171,7 +171,7 @@ def create_operation_instance(operation_name, operation_arguments):
     "group_aggregate": GroupAggregateOperation,
     "get_unique_column_values": GetUniqueColumnValuesOperation,
     "get_unique_json_keys": GetUniqueJsonKeysOperation,
-    "get_unique_json_values": GetUniqueJsonValuesOperation,
+    "get_unique_json_values": GetUniqueJsonKeyValuesOperation,
     "get_count": GetCountOperation,
     "get_average": GetAverageOperation,
     "get_sum": GetSumOperation,

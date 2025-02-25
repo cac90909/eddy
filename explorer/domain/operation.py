@@ -108,16 +108,16 @@ class GetUniqueColumnValuesOperation(Operation):
     operation_name = "get_unique_column_values"
     operation_type = "universal"
 
-class GetUniqueFieldsKeysOperation(Operation):
+class GetUniqueJsonKeysOperation(Operation):
     required_arguments = ["user_id", "options_call"]
     result_data_type = "list"
-    operation_name = "get_unique_fields_keys"
+    operation_name = "get_unique_json_keys"
     operation_type = "universal"
 
-class GetUniqueFieldsKeyValuesValuesOperation(Operation):
-    required_arguments = ["user_id", "options_call"]
+class GetUniqueJsonKeyValuesOperation(Operation):
+    required_arguments = ["user_id", "json_key", "options_call"]
     result_data_type = "list"
-    operation_name = "get_unique_fields_key_values"
+    operation_name = "get_unique_json_key_values"
     operation_type = "universal"
 
 class GetCountOperation(Operation):

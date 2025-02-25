@@ -80,7 +80,7 @@ class UniversalRepository:
         debug_print("Query finished")
         return set(values)
 
-    def get_unique_fields_keys(self, user_data_queryset):
+    def get_unique_json_keys(self, user_data_queryset):
         """
         Retrieve all unique keys from the JSON column "fields".
         """
@@ -88,7 +88,7 @@ class UniversalRepository:
         debug_print("Query finished")
         return unique_keys
 
-    def get_unique_fields_key_values(self, user_data_queryset, json_key):
+    def get_unique_json_key_values(self, user_data_queryset, json_key):
         """
         Retrieve unique values for a specific key in the JSON column "fields".
         """
