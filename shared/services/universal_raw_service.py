@@ -1,5 +1,5 @@
 from shared.repositories.universal_repository import UniversalRepository
-from shared.logger import debug_print
+from shared.logger import debug_print, debug_print_vars
 from shared.util import log_vars_vals_cls, catch_exceptions_cls
 from shared.repositories.universal_repository import UniversalRepository
 

@@ -24,12 +24,14 @@ class Operation(ABC):
     def validate_result(self, expected_result_data_type):
         # if self.result["data_type"] != expected_result_data_type:
         #     raise ValueError(f"Result data type {self.result['data_type']} does not match expected type {expected_result_data_type}")
-        self.result["data_type"] = expected_result_data_type
+        try:
+            self.result["data_type"] = expected_result_data_type
+        except Exception as e:
+            debug_print(f"Error validating result: {e}")
 
     def execute(self, user_id, handler, data_source=None):
         if data_source is not None:
             self.operation_arguments["data_source"] = data_source
-        debug_print(self.operation_arguments)
         try:
             result_data = handler(user_id=user_id, **self.operation_arguments) #NOTE: handlers in config lambda are preconfigured with user id argument
             self.result["data"] = result_data
@@ -55,5 +57,22 @@ class Operation(ABC):
 
     def log_info(self):
         debug_print(f"operation_name: {self.operation_name}, operation_type: {self.operation_type}, operation_arguments: {self.operation_arguments}")
+
+    def __repr__(self):
+        return (
+            f"Operation(id={self.id}, operation_name={self.operation_name}, "
+            f"operation_type={self.operation_type}, operation_arguments={self.operation_arguments}, "
+            f"app={self.app}, created_at={self.created_at}, result={self.result})"
+        )
+
+    def __str__(self):
+        return self.__repr__()
+    
+    def create_error_result(self, error_message):
+        self.result = {
+            "data_type": "error",
+            "data": error_message
+        }
+        return self.result
 
 

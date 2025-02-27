@@ -23,9 +23,10 @@ class ExplorerView(APIView):
             user_id = request.query_params.get("user_id")
             operation_name = request.query_params.get("operation_name")
             operation_arguments = json.loads(request.query_params.get("operation_arguments", "{}"))
-            result_data = self.explorer_service.handle_operation(user_id=user_id, operation_name=operation_name, operation_arguments=operation_arguments)
-            serialized_result_data = serialize_result_data(result_data=result_data["data"], result_data_type=result_data["data_type"])
-            return Response(data=serialized_result_data, status=status.HTTP_200_OK)
+            result = self.explorer_service.handle_operation(user_id=user_id, operation_name=operation_name, operation_arguments=operation_arguments)
+            serialized_result_data = serialize_result_data(result_data=result["data"], result_data_type=result["data_type"])
+            result["data"] = serialized_result_data
+            return Response(data=result, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -39,9 +40,10 @@ class ExplorerView(APIView):
             user_id = request.data.get("user_id")
             operation_name = request.data.get("operation_name")
             operation_arguments = json.loads(request.query_params.get("operation_arguments", "{}"))
-            result_data = self.explorer_service.handle_operation(user_id=user_id, operation_name=operation_name, operation_arguments=operation_arguments)
-            serialized_result_data = serialize_result_data(result_data=result_data["data"], result_data_type=result_data["data_type"])
-            return Response(data=serialized_result_data, status=status.HTTP_200_OK)
+            result = self.explorer_service.handle_operation(user_id=user_id, operation_name=operation_name, operation_arguments=operation_arguments)
+            serialized_result_data = serialize_result_data(result_data=result["data"], result_data_type=result["data_type"])
+            result["data"] = serialized_result_data
+            return Response(data=result, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -55,9 +57,10 @@ class ExplorerView(APIView):
             user_id = request.data.get("user_id")
             operation_name = request.data.get("operation_name")
             operation_arguments = json.loads(request.query_params.get("operation_arguments", "{}"))
-            result_data = self.explorer_service.handle_operation(user_id=user_id, operation_name=operation_name, operation_arguments=operation_arguments)
-            serialized_result_data = serialize_result_data(result_data=result_data["data"], result_data_type=result_data["data_type"])
-            return Response(data=serialized_result_data, status=status.HTTP_200_OK)
+            result = self.explorer_service.handle_operation(user_id=user_id, operation_name=operation_name, operation_arguments=operation_arguments)
+            serialized_result_data = serialize_result_data(result_data=result["data"], result_data_type=result["data_type"])
+            result["data"] = serialized_result_data
+            return Response(data=result, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -71,9 +74,10 @@ class ExplorerView(APIView):
             user_id = request.query_params.get("user_id")
             operation_name = request.query_params.get("operation_name")
             operation_arguments = json.loads(request.query_params.get("operation_arguments", "{}"))
-            result_data = self.explorer_service.handle_operation(user_id=user_id, operation_name=operation_name, operation_arguments=operation_arguments)
-            serialized_result_data = serialize_result_data(result_data=result_data["data"], result_data_type=result_data["data_type"])
-            return Response(data=serialized_result_data, status=status.HTTP_200_OK)
+            result = self.explorer_service.handle_operation(user_id=user_id, operation_name=operation_name, operation_arguments=operation_arguments)
+            serialized_result_data = serialize_result_data(result_data=result["data"], result_data_type=result["data_type"])
+            result["data"] = serialized_result_data
+            return Response(data=result, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:

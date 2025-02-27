@@ -45,8 +45,8 @@ class ExplorerCacheService(CacheService):
     def get_most_recent_operation_chain_raw_data_result(self, user_id):
         operation_chain = self.get_operation_chain(user_id=user_id)
         for operation in operation_chain[::-1]:
-            if operation["result"]["data_type"] == "raw":
-                return operation["result"]["data"]
+            if operation.result["data_type"] == "raw":
+                return operation.result["data"]
         return None
 
     # ---- Modification Methods (Adding/Removing Operations) ----
