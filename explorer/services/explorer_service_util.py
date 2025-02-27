@@ -1,239 +1,65 @@
 from shared.logger import debug_print
 
-from shared.services.universal_raw_service import UniversalRawService
-from shared.services.universal_enriched_service import UniversalEnrichedService
-from shared.services.universal_metric_service import UniversalMetricService
-from shared.services.universal_list_service import UniversalListService
-
-from explorer_cache_service import ExplorerCacheService
-from shared.services.snapshots_service import SnapshotsService
-from explorer.services.explorer_service import ExplorerService
-
-from explorer.domain.operation import (
-    #Universal Operations
-    InitUserOperation,
-    ResetOperation,
-    FilterOperation,
-    TraverseOperation,
-    UndoOperation,
-    LoadSnapshotOperation,
-    GroupAggregateOperation,
-    GetUniqueColumnValuesOperation,
-    GetUniqueJsonKeysOperation,
-    GetUniqueJsonKeyValuesOperation,
-    GetCountOperation,
-    GetAverageOperation,
-    GetSumOperation,
-    GetMinOperation,
-    GetMaxOperation,
-    #State Operations
-    StartExplorerSessionOperation,
-    EndExplorerSessionOperation,
-    GetOperationChainOperation,
-    GetOperationChainOperationsOperation,
-    GetOperationChainResultsOperation,
-    #Snapshot Operations
-    CreateSnapshotOperation,
-    DeleteSnapshotOperation,
-    UpdateSnapshotOperation,
-    GetSnapshotOperation,
-    GetAllSnapshotsOperation
-)
-operation_apps = ["explorer"]
-operation_types = ["universal", "state", "snapshot"]
-
-universal_operation_names = ["initalize_user", "reset" "filter", "traverse", "undo", "load_snapshot", 
-                          "group_aggregate", 
-                          "get_unique_column_values", "get_unique_json_keys", "get_unique_json_key_values", "get_count", "get_average", "get_sum", "get_min", "get_max"]
-state_operation_names = ["start_explorer_session", "end_explorer_session", "reset"]
-snapshot_operation_names = ["create_snapshot", "delete_snapshot", "update_snapshot", "get_snapshot", "get_all_snapshots"]
-
-operation_result_data_types = ["raw", "enriched", "list", "metric", "status", "snapshot", "operations_list", "results_list", "operation_chain"]
-
-@staticmethod
-def attach_operation_handler(operation):
-        operation_name = operation["operation_name"]
-        service_operation_name_mapping = {
-            #Universal Operations
-            "init_user": UniversalRawService.get_user_universal,
-            "reset": UniversalRawService.get_user_universal,
-            "filter": UniversalRawService.filter,
-            "traverse": UniversalRawService.traverse,
-            "undo" : ExplorerCacheService.get_most_recent_operation_chain_raw_data_result,
-            "load_snapshot" : assemble_dataset_list_from_operation_chain,
-            "group_aggregate": UniversalEnrichedService.group_aggregate,
-            "get_unique_column_values": UniversalListService.get_unique_column_values,
-            "get_unique_json_keys": UniversalListService.get_unique_json_keys,
-            "get_unique_json_values": UniversalListService.get_unique_json_key_values,
-            "get_count": UniversalMetricService.get_count,
-            "get_average": UniversalMetricService.get_average,
-            "get_sum": UniversalMetricService.get_sum,
-            "get_min": UniversalMetricService.get_min,
-            "get_max": UniversalMetricService.get_max,
-            #State Operations
-            "start_explorer_session": ExplorerCacheService.create_empty_operation_chain_cache,
-            "end_explorer_session": ExplorerCacheService.delete_operation_chain_cache,
-            "get_operation_chain": ExplorerCacheService.get_operation_chain,
-            "get_operation_chain_operations": ExplorerCacheService.extract_operation_chain_operations,
-            "get_operation_chain_results": ExplorerCacheService.extract_operation_chain_result_data,
-            #Snapshot Operations
-            "create_snapshot": SnapshotsService.create_snapshot,
-            "delete_snapshot": SnapshotsService.delete_snapshot,
-            "update_snapshot": SnapshotsService.update_snapshot,
-            "get_snapshot": SnapshotsService.get_snapshot,
-            "get_all_snapshots": SnapshotsService.get_all_snapshots
-
-        }
-        operation_func = service_operation_name_mapping.get(operation_name)
-        if operation_func is None:
-            raise Exception(f"Operation {operation_name} not found")
-        operation["handler"] = operation_func
-        debug_print("Operation Handler Attached")
-        return True
-
-@staticmethod
-def validate_operation(operation):
-     operation.validate()
-     debug_print("Operation Validated")
-     return True
-
-@staticmethod
-def attach_operation_data_source(user_id, operation):
-    operation_type, operation_name = operation["operation_type"], operation["operation_name"]
-    if operation_type == "universal":
-        if operation_name in ["init_user", "reset"]:
-            data_source = None
-        if operation_name == "load_snapshot":
-            snapshots_service = SnapshotsService()
-            snapshot = snapshots_service.get_snapshot(user_id=user_id, snapshot_id=operation["operation_arguments"]["snapshot_id"])
-            operation_chain = snapshot.get("operation_chain")
-            operation.operation_arguments["data_source"] = operation_chain
-            debug_print("Data Source Attached")
-        else:
-            explorer_cache_service = ExplorerCacheService()
-            most_recent_operation_chain_raw_data_result = explorer_cache_service.get_most_recent_operation_chain_raw_data_result(user_id=user_id)
-            data_source = most_recent_operation_chain_raw_data_result
-            operation.operation_arguments["data_source"] = operation_chain
-            debug_print("Data Source Attached")
-    else:
-         pass
-    return True
-
-      
-@staticmethod
-def handle_operation_setup(user_id, operation):
-    operation_name = operation["operation_name"]
-    explorer_cache_service = ExplorerCacheService()
-    if operation_name in ["init_user", "reset"]:
-        explorer_cache_service.create_empty_operation_chain_cache(user_id=user_id)
-    if operation_name == "load_snapshot":
-        explorer_cache_service.empty_operation_chain(user_id=user_id)
-    if operation_name == "undo":
-        explorer_cache_service.delete_most_recent_operation_from_chain(user_id=user_id)
-    else:
-        pass
-    debug_print("Operation Setup Complete")
-    return True
-
-@staticmethod
-def execute_operation(operation):
-    try:
-        operation.execute()
-        debug_print("Operation Executed")
-        return True
-    except Exception as e:
-        debug_print(f"Error executing operation: {e}")
-        return False
-    
-
-
-
 @staticmethod
 def assemble_dataset_list_from_operation_chain(user_id, operation_chain):
-        debug_print()
-        explorer_service = ExplorerService()
-        for operation in operation_chain:
-            operation_name, operation_arguments = operation["operation_name"], operation["operation_arguments"]
-            result = explorer_service.handle_operation(user_id=user_id, operation_name=operation_name, operation_arguments=operation_arguments)
-        return result
-            
-
-@staticmethod
-def create_operation_instance(operation_name, operation_arguments):
-    operation_mapping = {
-    #Universal Operations
-    "init_user": InitUserOperation,
-    "reset": ResetOperation,
-    "filter": FilterOperation,
-    "traverse": TraverseOperation,
-    "undo": UndoOperation,
-    "load_snapshot": LoadSnapshotOperation,
-    "group_aggregate": GroupAggregateOperation,
-    "get_unique_column_values": GetUniqueColumnValuesOperation,
-    "get_unique_json_keys": GetUniqueJsonKeysOperation,
-    "get_unique_json_values": GetUniqueJsonKeyValuesOperation,
-    "get_count": GetCountOperation,
-    "get_average": GetAverageOperation,
-    "get_sum": GetSumOperation,
-    "get_min": GetMinOperation,
-    "get_max": GetMaxOperation,
-    #State Operations
-    "start_explorer_session": StartExplorerSessionOperation,
-    "end_explorer_session": EndExplorerSessionOperation,
-    "get_operation_chain": GetOperationChainOperation,
-    "get_operation_chain_operations": GetOperationChainOperationsOperation,
-    "get_operation_chain_results": GetOperationChainResultsOperation,
-    #Snapshot Operations
-    "create_snapshot": CreateSnapshotOperation,
-    "delete_snapshot": DeleteSnapshotOperation,
-    "update_snapshot": UpdateSnapshotOperation,
-    "get_snapshot": GetSnapshotOperation,
-    "get_all_snapshots": GetAllSnapshotsOperation
-    }
-    operation_instance = operation_mapping.get(operation_name)(operation_name=operation_name, operation_arguments=operation_arguments)
-    debug_print("Operation Instance Created")
-    return operation_instance
-
-@staticmethod
-def handle_operation_caching(user_id, operation):
-    operation_type, operation_name, operation_result_data_type = operation["operation_type"], operation["operation_name"], operation.result["data_type"]
-    explorer_cache_service = ExplorerCacheService()
-    if operation_type == "universal": 
-        if operation_name in ["undo", "load_snapshot"]: #These are already cached
-            pass
-        if operation_result_data_type == "list" and operation.operation_arguments["options_call"] == True: #This is the client getting filter options, no need to cache
-            pass
-        else:
-            explorer_cache_service.cache_operation_onto_chain(user_id=user_id, operation=operation)
-            debug_print("Operation Cached")
-    else:
-        pass
-    return True
-
+    from explorer.services.explorer_service import ExplorerService  # local import to avoid circular dependency
+    explorer_service = ExplorerService()
+    result = None
+    for op in operation_chain:
+        # Assume each operation in the chain is a dict with keys "operation_name" and "operation_arguments"
+        op_name = op.get("operation_name")
+        op_args = op.get("operation_arguments")
+        try:
+            result = explorer_service.handle_operation(user_id, op_name, op_args)
+        except Exception as e:
+            debug_print(f"Error executing operation {op_name}: {e}")
+            return
+    return result
+        
 @staticmethod
 def attach_data_overview(operation):
-    operation_type, operation_result_data_type = operation.operation_type, operation.result["data_type"]
-    if operation_type == "universal":
-        if operation_result_data_type in ["raw", "enriched"]:
-            operation.result.data_overview = {
-                "num_rows": operation.result["data"].count(),
-                "num_columns" : len(operation.result["data"].count()),
-                "num_values" : operation.result["data"].count() * len(operation.result["data"].count())
-            }
-        if operation_result_data_type == "list":
-            operation.result.data_overview = {
-                "num_values": len(operation.result["data"])
-            }
-        if operation_result_data_type == "metric":
-            operation.result.data_overview = {
-                "num_values": 1
-            }
-        debug_print("Data Overview Attached")
-    else:
-        pass
-    return True
+    try:
+        operation_type, operation_result_data_type, operation_result_data = operation.operation_type, operation.result["data_type"], operation.result["data"]
+        if operation_type == "universal":
+            if operation_result_data_type in ["raw", "enriched"]:
+                print(operation.result["data"])
+                print(operation.to_dict())
+                num_rows = len(operation_result_data)
+                # Try to get the number of fields from the first instance's _meta (if available)
+                try:
+                    num_columns = len(operation_result_data[0]._meta.fields)
+                except AttributeError:
+                    # If it's not a Django model instance, fallback (NOTE: this would apply to enriched):
+                    num_columns = len(operation_result_data[0]) if isinstance(operation_result_data[0], (dict, list)) else 1
+                    num_values = num_rows * num_columns
+                else:
+                    num_rows = num_columns = num_values = 0
+                operation.result["data_overview"] = {
+                    "num_rows": num_rows,
+                    "num_columns": num_columns,
+                    "num_values": num_values
+                }
+                # operation.result.data_overview = {
+                #     "num_rows": operation.result["data"].count(),
+                #     "num_columns" : len(operation.result["data"].count()),
+                #     "num_values" : operation.result["data"].count() * len(operation.result["data"].count())
+                # }
+            if operation_result_data_type == "list":
+                operation.result.data_overview = {
+                    "num_values": len(operation.result["data"])
+                }
+            if operation_result_data_type == "metric":
+                operation.result.data_overview = {
+                    "num_values": 1
+                }
+            debug_print("Data Overview Attached")
+        else:
+            pass
+        return True
+    except Exception as e:
+        debug_print(f"Error attaching data overview: {e}")
+        return False
         
-
 @staticmethod
 def prepare_operation_result(operation):
     operation_result = operation.result

@@ -13,6 +13,11 @@ class SnapshotsService:
     def get_snapshot(self, user_id, snapshot_id):
         snapshot_ins = self.snapshots_repository.get_snapshot(user_id=user_id, snapshot_id=snapshot_id)
         return snapshot_ins
+    
+    def get_snapshot_operation_chain(self, user_id, snapshot_id):
+        snapshot_ins = self.snapshots_repository.get_snapshot(user_id=user_id, snapshot_id=snapshot_id)
+        operation_chain = snapshot_ins.operation_chain
+        return operation_chain
 
     def create_snapshot(self, user_id, title, description, operation_chain):
         snapshot_ins = self.snapshots_repository.create_snapshot(

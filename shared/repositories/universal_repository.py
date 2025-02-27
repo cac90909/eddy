@@ -1,5 +1,5 @@
 from shared.logger import debug_print
-from universal_repository_util import (
+from shared.repositories.universal_repository_util import (
     is_json_field,
     is_array_field,
     get_nested_json_column_type,
@@ -23,7 +23,7 @@ class UniversalRepository:
 
     # -------------------- Data Retrieval --------------------
 
-    def get_user_data(user_id):
+    def get_user_data(self, user_id):
         """Retrieve all data for a specific user."""
         user_instance = User.objects.get(pk=user_id)
         data = Universal.objects.filter(user=user_instance)

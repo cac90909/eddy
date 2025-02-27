@@ -5,7 +5,7 @@ from shared.services.snapshots_service import SnapshotsService
 from shared.serializers import SnapshotSerializer
 
 from shared.services.universal_raw_service import UniversalRawService
-from shared.services.universal_enriched_service import UniversalEnrichmentService
+from shared.services.universal_enriched_service import UniversalEnrichedService
 from shared.services.universal_metric_service import UniversalMetricService
 from shared.services.universal_list_service import UniversalListService
 
@@ -17,7 +17,7 @@ class ExplorerDevToolService:
         self.explorer_cache_service = ExplorerCacheService()
         self.snapshot_service = SnapshotsService()
         self.universal_raw_service = UniversalRawService()
-        self.universal_enrichment_service = UniversalEnrichmentService()
+        self.universal_enriched_service = UniversalEnrichedService()
         self.universal_metric_service = UniversalMetricService()
         self.universal_list_service = UniversalListService()
 

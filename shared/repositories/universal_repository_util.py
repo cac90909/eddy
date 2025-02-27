@@ -1,6 +1,6 @@
 from datetime import datetime
-from django.db.models import F, FloatField, DateField, Count, Avg, Sum, Min, Max
-from django.db.models.functions import Cast, Func, TruncDay, TruncWeek, TruncMonth, TruncYear
+from django.db.models import F, Func, FloatField, DateField, Count, Avg, Sum, Min, Max
+from django.db.models.functions import Cast, TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.db.models.fields.json import KeyTextTransform
 from django.contrib.postgres.fields import ArrayField
 from shared.models import Universal
