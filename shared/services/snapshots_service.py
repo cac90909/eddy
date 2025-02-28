@@ -1,5 +1,5 @@
 from shared.models import Snapshots
-from shared.logger import debug_print_vars
+from shared.logger import debug_print_vars, debug_print
 from shared.repositories.snapshots_repository import SnapshotsRepository
 
 class SnapshotsService:
@@ -20,6 +20,7 @@ class SnapshotsService:
         return operation_chain
 
     def create_snapshot(self, user_id, title, description, operation_chain):
+        debug_print(operation_chain)
         snapshot_ins = self.snapshots_repository.create_snapshot(
             user_id=user_id, title=title, description=description, operation_chain=operation_chain
         )

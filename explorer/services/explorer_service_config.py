@@ -4,7 +4,7 @@ from shared.services.universal_enriched_service import UniversalEnrichedService
 from shared.services.universal_metric_service import UniversalMetricService
 from shared.services.universal_list_service import UniversalListService
 from shared.services.snapshots_service import SnapshotsService
-from explorer import services as explorer_service_util
+from explorer.services import explorer_service_util
 
 OPERATION_DEFINITIONS = {
     # Universal Operations
@@ -72,7 +72,7 @@ OPERATION_DEFINITIONS = {
     },
     "group_aggregate": {
         "operation_type": "universal",
-        "operation_expected_arguments": ["user_id", "group_column", "aggregate_operation", "target_column"],
+        "operation_expected_arguments": ["user_id", "group_columns", "aggregate_operation", "target_column"],
         "operation_expected_result_data_type": "enriched",
         "handler": lambda user_id, **kwargs: UniversalEnrichedService().group_aggregate(user_id=user_id, **kwargs),
         "cache_policy": True,
@@ -93,6 +93,15 @@ OPERATION_DEFINITIONS = {
         "operation_expected_arguments": ["user_id", "options_call"],
         "operation_expected_result_data_type": "list",
         "handler": lambda user_id, **kwargs: UniversalListService().get_unique_json_keys(user_id=user_id, **kwargs),
+        "cache_policy": lambda op: not op.operation_arguments.get("options_call", False),
+        "data_source": lambda user_id, op: ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id),
+        "setup": None
+    },
+    "get_unique_json_values": {
+        "operation_type": "universal",
+        "operation_expected_arguments": ["user_id", "options_call"],
+        "operation_expected_result_data_type": "list",
+        "handler": lambda user_id, **kwargs: UniversalListService().get_unique_json_values(user_id=user_id, **kwargs),
         "cache_policy": lambda op: not op.operation_arguments.get("options_call", False),
         "data_source": lambda user_id, op: ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id),
         "setup": None
@@ -202,11 +211,11 @@ OPERATION_DEFINITIONS = {
     # Snapshot Operations
     "create_snapshot": {
         "operation_type": "snapshot",
-        "operation_expected_arguments": ["user_id", "snapshot_name"],
+        "operation_expected_arguments": ["user_id", "title"],
         "operation_expected_result_data_type": "snapshot",
-        "handler": lambda user_id, **kwargs: SnapshotsService().create_snapshot(user_id=user_id, **kwargs),
+        "handler": lambda user_id, data_source, **kwargs: SnapshotsService().create_snapshot(user_id=user_id, operation_chain=data_source, **kwargs),
         "cache_policy": False,
-        "data_source": lambda user_id, op: None,
+        "data_source": lambda user_id, op: ExplorerCacheService().extract_operation_chain_operations(user_id=user_id),
         "setup": None
     },
     "delete_snapshot": {

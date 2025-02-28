@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 from abc import ABC, abstractmethod
 from shared.logger import debug_print
+from explorer.services.explorer_service_config import OPERATION_DEFINITIONS
 
 class Operation(ABC):
     def __init__(self, operation_name, operation_type, operation_arguments):
@@ -17,8 +18,9 @@ class Operation(ABC):
     def validate_args(self, expected_arguments):
         for arg in expected_arguments:
             if arg not in self.operation_arguments and arg != "user_id": #Suspending check on user_id for right now
-                raise ValueError(f"Argument {arg} is required for operation {self.operation_name}")
+                return False, f"Missing argument {arg}"
         debug_print("Valid")
+        return True, None
 
     #TODO - Incorporate this (right now we assign the expected type, assuming it is the right type)
     def validate_result(self, expected_result_data_type):

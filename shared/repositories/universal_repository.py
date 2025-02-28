@@ -13,6 +13,7 @@ from shared.repositories.universal_repository_util import (
     generate_ids_in_traversal,
     get_unique_json_keys,
     get_unique_json_key_values,
+    get_unique_json_values,
     get_column_data_type
 )
 from django.contrib.auth import get_user_model
@@ -27,7 +28,7 @@ class UniversalRepository:
         """Retrieve all data for a specific user."""
         user_instance = User.objects.get(pk=user_id)
         data = Universal.objects.filter(user=user_instance)
-        debug_print('Finished Query')
+        debug_print(f"Finished Query: {data.count()} rows, {type(data)} type")
         return data
 
     def filter_data(self, user_data_queryset, column_name, filter_value, filter_type):
@@ -43,7 +44,7 @@ class UniversalRepository:
             data = user_data_queryset.exclude(**filter_condition) 
         else:
             data = user_data_queryset.filter(**filter_condition)
-        debug_print("Finished Query")
+        debug_print(f"Finished Query: {data.count()} rows, {type(data)} type")
         return data
     
     @staticmethod
@@ -61,7 +62,7 @@ class UniversalRepository:
         traversal_columns = {direction: traversal_mapping[direction] for direction in traversal_directions if direction in traversal_mapping}
         visited_ids = generate_ids_in_traversal(user_data_queryset, start_id, traversal_columns)
         full_rows = user_data_queryset.filter(entry_id__in=visited_ids)
-        debug_print("Finished Query")
+        debug_print(f"Finished Query: {full_rows.count()} rows, {type(full_rows)} type")
         return full_rows
     
     # -------------------- Unique Value Extraction --------------------
@@ -71,21 +72,22 @@ class UniversalRepository:
         Retrieve unique values from a column (non-"fields" column).
         """
         column_type = get_column_data_type(user_data_queryset, column_name)
-        if column_type == "array":  # Unnest array field and retrieve unique values
+        if column_type == "arrayfield":  # Unnest array field and retrieve unique values
             queryset = create_unnested_list_column(user_data_queryset, column_name, new_column_name="unnested_value")
             values = queryset.values_list("unnested_value", flat=True).distinct()
         else:  # Retrieve distinct values directly
             values = user_data_queryset.values_list(column_name, flat=True).distinct()
+        unique_values = set(values)
+        debug_print(f"Finished Query: {len(unique_values)} rows, {type(unique_values)} type")
+        return unique_values
 
-        debug_print("Query finished")
-        return set(values)
-
+    #NOTE: rows can currently have the same key names (ex: restaurnts and albums both have a ratings key), handle this later
     def get_unique_json_keys(self, user_data_queryset):
         """
         Retrieve all unique keys from the JSON column "fields".
         """
         unique_keys = get_unique_json_keys(user_data_queryset)
-        debug_print("Query finished")
+        debug_print(f"Finished Query: {len(unique_keys)} rows, {type(unique_keys)} type")
         return unique_keys
 
     def get_unique_json_key_values(self, user_data_queryset, json_key):
@@ -93,8 +95,16 @@ class UniversalRepository:
         Retrieve unique values for a specific key in the JSON column "fields".
         """
         unique_key_values = get_unique_json_key_values(user_data_queryset, json_key)
-        debug_print("Query finished")
+        debug_print(f"Finished Query: {len(unique_key_values)} rows, {type(unique_key_values)} type")
         return unique_key_values
+    
+    def get_unique_json_values(self, user_data_queryset):
+        """
+        Retrieve all unique values from the JSON column "fields".
+        """
+        unique_values = get_unique_json_values(user_data_queryset)
+        debug_print(f"Finished Query: {len(unique_values)} rows, {type(unique_values)} type")
+        return unique_values
 
     # -------------------- Aggregation --------------------
 
@@ -110,12 +120,12 @@ class UniversalRepository:
         if is_json_field(column_name):
             output_field_type = get_nested_json_column_type(user_data_queryset, column_name)
             queryset = create_casted_nested_json_column(queryset=user_data_queryset, original_column_name=column_name, new_column_name="temp", output_field=output_field_type)
-            aggregation_result = perform_aggregation_on_column(queryset=queryset, column_name="temp", agg_func=aggregation_type)
+            aggregation_result = perform_aggregation_on_column(queryset=queryset, column_name="temp", aggregation_type=aggregation_type)
         elif is_array_field(column_name):
             queryset = create_unnested_list_column(queryset=user_data_queryset, original_column_name=column_name, new_column_name="temp")
-            aggregation_result = perform_aggregation_on_column(queryset=queryset, column_name="temp", agg_func=aggregation_type)
+            aggregation_result = perform_aggregation_on_column(queryset=queryset, column_name="temp", aggregation_type=aggregation_type)
         else:
-            aggregation_result = perform_aggregation_on_column(queryset=user_data_queryset, column_name=column_name, agg_func=aggregation_type)
+            aggregation_result = perform_aggregation_on_column(queryset=user_data_queryset, column_name=column_name, aggregation_type=aggregation_type)
         debug_print("Query finished")
         return aggregation_result
     

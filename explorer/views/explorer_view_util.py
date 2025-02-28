@@ -2,6 +2,7 @@ from shared.logger import debug_print
 from shared.serializers import UniversalSerializer, SnapshotSerializer, FlexibleDictSerializer
 
 def serialize_result_data(result_data, result_data_type):
+    debug_print(f"Result data type: {result_data_type}")
     if result_data_type not in result_data_type_serializer_mapping:
         raise ValueError("Invalid response data type: {}".format(result_data_type))
     try:
@@ -19,7 +20,7 @@ result_data_type_serializer_mapping = {
         "snapshot" : lambda snapshot_data : SnapshotSerializer(instance=snapshot_data).data,
         "snapshot_list" : lambda snapshot_list : [SnapshotSerializer(instance=snapshot).data for snapshot in snapshot_list],
         "operation_chain" : lambda operation_chain : serialize_operation_chain(operation_chain),
-        "operations_list" : lambda operations_list : operations_list,
+        "operations_list" : lambda operations_list : serialize_operations_list(operations_list),
         "results_list" : lambda results_list : serialize_results_list(results_list),
         "error" : lambda error_data : error_data
     }
@@ -51,3 +52,10 @@ def serialize_results_list(results_list):
         return results_list
     except Exception as e:
         raise ValueError("Error serializing results list: {}".format(e))
+    
+def serialize_operations_list(operations_list):
+    for op in operations_list:
+        op_args = op["operation_arguments"]
+        if "data_source" in op_args:
+            op_args.pop("data_source")
+    return operations_list

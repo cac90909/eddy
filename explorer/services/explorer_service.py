@@ -18,8 +18,14 @@ class ExplorerService:
             return {"data": "Operation not found", "data_type": "error"}
         op_def = OPERATION_DEFINITIONS[operation_name]
         operation = Operation(operation_name=operation_name, operation_arguments=operation_arguments, operation_type=op_def["operation_type"])
-        operation.validate_args(expected_arguments=op_def["operation_expected_arguments"])
         
+        status, msg = operation.validate_args(expected_arguments=op_def["operation_expected_arguments"])
+        if status is False:
+            return {"data": msg, "data_type": "error"}
+        status, msg = explorer_service_util.verify_operation_preconditions(user_id=user_id, operation=operation) #Move this logic to operation config at some point
+        if status is False:
+            return {"data": msg, "data_type": "error"}
+
         setup_method = op_def.get("setup")
         if setup_method:
             setup_method(user_id, operation)
@@ -33,6 +39,7 @@ class ExplorerService:
             debug_print(f"Error executing operation {operation_name}: {e}")
             return {"data": "Error executing operation", "data_type": "error"}
         
+
         operation.validate_result(expected_result_data_type=op_def["operation_expected_result_data_type"])
         cache_policy = op_def.get("cache_policy") 
         should_cache = cache_policy(operation) if callable(cache_policy) else cache_policy

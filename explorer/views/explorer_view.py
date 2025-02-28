@@ -39,7 +39,7 @@ class ExplorerView(APIView):
             debug_print(request.query_params.dict())
             user_id = request.data.get("user_id")
             operation_name = request.data.get("operation_name")
-            operation_arguments = json.loads(request.query_params.get("operation_arguments", "{}"))
+            operation_arguments = json.loads(request.data.get("operation_arguments", "{}"))
             result = self.explorer_service.handle_operation(user_id=user_id, operation_name=operation_name, operation_arguments=operation_arguments)
             serialized_result_data = serialize_result_data(result_data=result["data"], result_data_type=result["data_type"])
             result["data"] = serialized_result_data

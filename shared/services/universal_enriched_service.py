@@ -11,7 +11,7 @@ class UniversalEnrichedService:
         self.universal_repository = UniversalRepository()
 
     # --- Grouped Aggregation Methods ---
-    def group_aggregate(self, user_id, data_source, group_column, aggregate_operation, target_column, frequency=None):
+    def group_aggregate(self, user_id, data_source, group_columns, aggregate_operation, target_column, frequency=None):
             """
             Delegates the group-aggregate operation to the repository.
             Expects data_source to be a QuerySet.
@@ -19,7 +19,8 @@ class UniversalEnrichedService:
             Returns a tuple: (grouped_data, data_amount), where grouped_data is the grouped and annotated QuerySet
             and data_amount is the count of groups.
             """
-            queryset_res = self.universal_repository.perform_group_aggregate(data_source, group_column, aggregate_operation, target_column, frequency)
+            queryset_res = self.universal_repository.perform_group_aggregate(user_data_queryset=data_source, group_columns=group_columns, 
+                                                                             aggregate_operation=aggregate_operation, target_column=target_column, frequency=frequency)
             return queryset_res
 
 

@@ -1,9 +1,11 @@
+from shared.logger import debug_print
 from datetime import datetime
-from django.db.models import F, Func, FloatField, DateField, Count, Avg, Sum, Min, Max
-from django.db.models.functions import Cast, TruncDay, TruncWeek, TruncMonth, TruncYear
+from django.db.models import F, Func, FloatField, DateField, CharField, TextField, Count, Avg, Sum, Min, Max, Value
+from django.db.models.functions import Cast, TruncDay, TruncWeek, TruncMonth, TruncYear, Lower
 from django.db.models.fields.json import KeyTextTransform
 from django.contrib.postgres.fields import ArrayField
 from shared.models import Universal
+from django.db import connection
 
 # ----------------- Type Mappings -----------------
 
@@ -61,6 +63,8 @@ def get_nested_json_column_type(queryset, column_name):
         return DateField()
     except Exception:
         return FloatField()
+    
+# ----------------- Connection Cursor Helpers -----------------
 
 # ----------------- Lookup & Expression Building -----------------
 
@@ -115,6 +119,9 @@ def generate_ids_in_traversal(user_data_queryset, start_id, traversal_columns):
 
     return visited
 
+def get_unique_id_list(user_data_queryset):
+    return list(user_data_queryset.values_list('id', flat=True))
+
 # ----------------- Aggregation -----------------
 
 def perform_aggregation_on_column(queryset, column_name, aggregation_type):
@@ -150,6 +157,16 @@ def create_unnested_list_column(queryset, original_column_name, new_column_name)
     Annotates a queryset with an unnested array field.
     """
     return queryset.annotate(**{new_column_name: Func(F(original_column_name), function="UNNEST")})
+# def create_unnested_list_column(queryset, original_column_name, new_column_name):
+#     """
+#     Annotates a queryset with an unnested JSONB array field,
+#     converting each element to text.
+#     """
+#     return queryset.annotate(
+#         **{new_column_name: Func(F(original_column_name),
+#                                  function="jsonb_array_elements_text",
+#                                  output_field=CharField())}
+#     )
 
 def create_json_grouping_column(queryset, column_name):
     """
@@ -174,7 +191,7 @@ def create_grouping_columns(queryset, group_columns, frequency_type=None):
     for col in group_columns:
         column_type = get_column_data_type(queryset, col)
 
-        if column_type == "date" and frequency_type:
+        if column_type == "datefield" and frequency_type:
             qs, new_field = create_date_frequency_label_column(qs, col, frequency_type)
         elif column_type == "list":
             qs = create_unnested_list_column(qs, col, new_column_name=f"unnested_{col}")
@@ -233,3 +250,25 @@ def get_unique_json_key_values(user_data_queryset, json_key):
     Retrieve unique values for a specific key in the JSON column "fields".
     """
     return set(user_data_queryset.filter(**{"fields__has_key": json_key}).annotate(value=F(f"fields__{json_key}")).values_list("value", flat=True).distinct())
+
+def get_unique_json_values(user_data_queryset):
+    """
+    Retrieve all unique values from the JSON column "fields",
+    regardless of the key they are associated with.
+    This implementation uses a raw SQL query with a LATERAL join.
+    """
+    # Get IDs from the queryset to limit our raw query to the same set of rows.
+    ids = get_unique_id_list(user_data_queryset)
+
+    sql = f"""
+        SELECT DISTINCT j.value
+        FROM universal,
+             LATERAL jsonb_each_text(universal.fields::jsonb) AS j(key, value)
+        WHERE universal.id IN %s
+    """
+    #NOTE: we pass represent literals with %s and pass the values in a list in execute (this is for hardcoded values)
+    #Passing values manually in the sql statement using {} is not good practice bc of security, and using execute assists with proper datatype formatting (ex: putting quotes around strings)
+    with connection.cursor() as cursor:
+        cursor.execute(sql, [tuple(ids)])
+        rows = cursor.fetchall()
+    return set(row[0] for row in rows)
