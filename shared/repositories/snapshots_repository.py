@@ -18,10 +18,13 @@ class SnapshotsRepository:
         """
         Retrieve a single snapshot for a given user by its snapshot_id.
         """
-        user_instance = User.objects.get(pk=user_id)
-        snapshot = Snapshots.objects.get(user=user_instance, snapshot_id=snapshot_id)
-        debug_print("Query Finished")
-        return snapshot
+        try:
+            user_instance = User.objects.get(pk=user_id)
+            snapshot = Snapshots.objects.get(user=user_instance, snapshot_id=snapshot_id)
+            debug_print("Query Finished")
+            return snapshot
+        except Exception as e:
+            raise e
 
     def create_snapshot(self, user_id, title, description, operation_chain):
         """
@@ -58,5 +61,5 @@ class SnapshotsRepository:
         Delete a snapshot for a given user.
         """
         snapshot = self.get_snapshot(user_id, snapshot_id)
-        snapshot.delete()
+        deleted_info = snapshot.delete() # Returns a tuple (deleted_count, {model_name: {deleted_count}}) -> eventually use this info for operation validation
         debug_print("Query Finished")

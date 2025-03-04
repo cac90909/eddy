@@ -1,4 +1,3 @@
-from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -6,8 +5,7 @@ import json
 from shared.util import catch_exceptions_cls
 from shared.logger import debug_print_vars, debug_print
 from explorer.services.explorer_service import ExplorerService
-from shared.serializers import UniversalSerializer, SnapshotSerializer, FlexibleDictSerializer
-from explorer.views.explorer_view_util import serialize_result_data
+from explorer.config.operation_result_config import OPERATION_RESULT_DEFINITIONS
 
 @catch_exceptions_cls(exception_return_value="Error")
 class ExplorerView(APIView):
@@ -24,7 +22,7 @@ class ExplorerView(APIView):
             operation_name = request.query_params.get("operation_name")
             operation_arguments = json.loads(request.query_params.get("operation_arguments", "{}"))
             result = self.explorer_service.handle_operation(user_id=user_id, operation_name=operation_name, operation_arguments=operation_arguments)
-            serialized_result_data = serialize_result_data(result_data=result["data"], result_data_type=result["data_type"])
+            serialized_result_data = OPERATION_RESULT_DEFINITIONS[result["meta"]["data_type"]]["serialization"](result["data"])
             result["data"] = serialized_result_data
             return Response(data=result, status=status.HTTP_200_OK)
         except ValueError as e:
@@ -41,7 +39,7 @@ class ExplorerView(APIView):
             operation_name = request.data.get("operation_name")
             operation_arguments = json.loads(request.data.get("operation_arguments", "{}"))
             result = self.explorer_service.handle_operation(user_id=user_id, operation_name=operation_name, operation_arguments=operation_arguments)
-            serialized_result_data = serialize_result_data(result_data=result["data"], result_data_type=result["data_type"])
+            serialized_result_data = OPERATION_RESULT_DEFINITIONS[result["meta"]["data_type"]]["serialization"](result["data"])
             result["data"] = serialized_result_data
             return Response(data=result, status=status.HTTP_200_OK)
         except ValueError as e:
@@ -58,7 +56,7 @@ class ExplorerView(APIView):
             operation_name = request.data.get("operation_name")
             operation_arguments = json.loads(request.query_params.get("operation_arguments", "{}"))
             result = self.explorer_service.handle_operation(user_id=user_id, operation_name=operation_name, operation_arguments=operation_arguments)
-            serialized_result_data = serialize_result_data(result_data=result["data"], result_data_type=result["data_type"])
+            serialized_result_data = OPERATION_RESULT_DEFINITIONS[result["meta"]["data_type"]]["serialization"](result["data"])
             result["data"] = serialized_result_data
             return Response(data=result, status=status.HTTP_200_OK)
         except ValueError as e:
@@ -75,7 +73,7 @@ class ExplorerView(APIView):
             operation_name = request.query_params.get("operation_name")
             operation_arguments = json.loads(request.query_params.get("operation_arguments", "{}"))
             result = self.explorer_service.handle_operation(user_id=user_id, operation_name=operation_name, operation_arguments=operation_arguments)
-            serialized_result_data = serialize_result_data(result_data=result["data"], result_data_type=result["data_type"])
+            serialized_result_data = OPERATION_RESULT_DEFINITIONS[result["meta"]["data_type"]]["serialization"](result["data"])
             result["data"] = serialized_result_data
             return Response(data=result, status=status.HTTP_200_OK)
         except ValueError as e:

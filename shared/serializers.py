@@ -4,7 +4,8 @@ from shared.models import Universal, Snapshots  # adjust the import to your actu
 class UniversalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Universal
-        fields = '__all__'  # or list the fields you want to expose
+        #fields = '__all__'  # or list the fields you want to expose
+        exclude = ('user',)
 
 # class UniversalDatasetsSerializer(serializers.Serializer):
 #     dataset = UniversalSerializer(many=True)

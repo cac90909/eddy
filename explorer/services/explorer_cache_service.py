@@ -11,16 +11,19 @@ class ExplorerCacheService(CacheService):
 
     # Named variables for subcache keys
     OPERAION_CHAIN_KEY = "OPERATION_CHAIN"
+    OPERAION_CHAIN_METADATA_KEY = "OPERATION_CHAIN_METADATA"
 
     # ---- Initialization & Cache Setup Methods ----
     def create_empty_operation_chain_cache(self, user_id):
         if not self.get_user_cache(user_id=user_id):
             self.create_empty_user_cache(user_id=user_id)
         self.cache_user_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_KEY, obj_val=[])
+        self.cache_user_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_METADATA_KEY, obj_val={})
         return "Success"
 
     def empty_operation_chain(self, user_id):
         self.cache_user_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_KEY, obj_val=[])
+        self.cache_user_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_METADATA_KEY, obj_val={})
         return "Success"
 
     # ---- Retrieval Methods ----
@@ -45,10 +48,18 @@ class ExplorerCacheService(CacheService):
     def get_most_recent_operation_chain_raw_data_result(self, user_id):
         operation_chain = self.get_operation_chain(user_id=user_id)
         for operation in operation_chain[::-1]:
-            if operation.result["data_type"] == "raw":
-                return operation.result["data"]
+            if operation.result_data_type == "raw":
+                return operation.result_data
         return None
-
+    
+    def get_operation_chain_metadata(self, user_id):
+        operation_chain_metadata = self.get_user_cache_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_METADATA_KEY)
+        return operation_chain_metadata
+    
+    def get_operation_chain_metadata_key(self, user_id, metadata_key):
+        operation_chain_metadata = self.get_operation_chain_metadata(user_id=user_id)
+        return operation_chain_metadata.get(metadata_key, None)
+    
     # ---- Modification Methods (Adding/Removing Operations) ----
     def cache_operation_onto_chain(self, user_id, operation):
         operation_chain = self.get_operation_chain(user_id=user_id)
@@ -58,6 +69,12 @@ class ExplorerCacheService(CacheService):
 
     def cache_operation_chain(self, user_id, operation_chain):
         self.cache_user_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_KEY, obj_val=operation_chain)
+        return "Success"
+    
+    def cache_operation_chain_metadata(self, user_id, metadata_key, metadata_value):
+        metadata = self.get_operation_chain_metadata(user_id=user_id)
+        metadata[metadata_key] = metadata_value
+        self.cache_user_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_METADATA_KEY, obj_val=metadata)
         return "Success"
 
     def delete_operation_chain_cache(self, user_id):
@@ -87,6 +104,6 @@ class ExplorerCacheService(CacheService):
         operation_chain = self.get_operation_chain(user_id=user_id)
         operation_chain_operations = []
         for operation in operation_chain:
-            operation_chain_operations.append(operation.result)
+            operation_chain_operations.append(operation.result_data)
         return operation_chain_operations
     
