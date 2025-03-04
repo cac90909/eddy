@@ -11,10 +11,10 @@ import {
   Typography,
 } from "@mui/material";
 import ExplorerService from "../services/ExplorerService";
-import RawOperationsConfig from "./RawOperationsConfig";
-import MetricOperationsConfig from "./MetricOperationsConfig";
-import ListOperationsConfig from "./ListOperationsConfig";
-import EnrichmentOperationsConfig from "./EnrichmentOperationsConfig";
+import RawOperationsConfig from "./operation_configs/RawOperationsConfig";
+import MetricOperationsConfig from "./operation_configs/MetricOperationsConfig";
+import ListOperationsConfig from "./operation_configs/ListOperationsConfig";
+import EnrichedOperationsConfig from "./operation_configs/EnrichedOperationsConfig";
 
 // Define operation categories with their labels, operations, and configuration.
 const operationCategories = {
@@ -25,8 +25,8 @@ const operationCategories = {
   },
   enriched: {
     label: "Enriched",
-    operations: Object.keys(EnrichmentOperationsConfig),
-    config: EnrichmentOperationsConfig,
+    operations: Object.keys(EnrichedOperationsConfig),
+    config: EnrichedOperationsConfig,
   },
   metric: {
     label: "Metric",

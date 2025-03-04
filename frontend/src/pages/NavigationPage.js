@@ -1,12 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Box, Typography } from "@mui/material";
 import { useUser } from "../UserContext";
 
 function NavigationPage() {
-console.log("NavigationPage")
   const { userId } = useUser(); // Access userId from context
   const navigate = useNavigate();
+
+  // If there's no userId (e.g. after a refresh clears state), redirect to sign in
+  useEffect(() => {
+    if (!userId) {
+      navigate("/");
+    }
+  }, [userId, navigate]);
 
   const handleNavigate = (path) => {
     navigate(path); // Navigate to the selected page

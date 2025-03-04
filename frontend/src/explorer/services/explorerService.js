@@ -8,9 +8,8 @@ const ExplorerService = {
    *
    * This function now accepts an object with:
    * - userId: the user id
-   * - operation_type: the expected return type (e.g., "explorer_raw", "explorer_metric", "explorer_enrichment", "explorer_list", "explorer_state", or "snapshot")
    * - operation_name: the specific operation (e.g., "filter", "traverse", "init", etc.)
-   * - operation_params: the parameters for the operation (default is an empty object)
+   * - operation_arguments: the parameters for the operation (default is an empty object)
    * - method: HTTP method ("GET", "POST", "PUT", "DELETE"; default is "GET")
    *
    * For GET and DELETE, parameters are sent as query parameters.
@@ -18,44 +17,40 @@ const ExplorerService = {
    */
   handleOperation: async ({
     userId,
-    operation_type,
     operation_name,
-    operation_params = {},
+    operation_arguments = {},
     method = "GET",
   }) => {
     console.log("ExplorerService.handleOperation called with:", {
       userId,
-      operation_type,
       operation_name,
       method,
-      operation_params,
+      operation_arguments,
     });
     method = method.toUpperCase();
-    const opParams = JSON.stringify(operation_params || {});
+    const opArgs = JSON.stringify(operation_arguments || {});
     const config = {
       headers: {
         "Content-Type": "application/json",
       },
     };
     let response;
-
+    console.log(userId, operation_name, opArgs);
     if (method === "GET") {
       response = await axios.get(`${EXPLORER_BASE_URL}/`, {
         params: {
           user_id: userId,
-          operation_type: operation_type,
           operation_name: operation_name,
-          operation_params: opParams,
-        },
+          operation_arguments: opArgs,
+        }
       });
     } else if (method === "POST") {
       response = await axios.post(
         `${EXPLORER_BASE_URL}/`,
         {
           user_id: userId,
-          operation_type: operation_type,
           operation_name: operation_name,
-          operation_params: opParams,
+          operation_arguments: opArgs,
         },
         config
       );
@@ -64,26 +59,25 @@ const ExplorerService = {
         `${EXPLORER_BASE_URL}/`,
         {
           user_id: userId,
-          operation_type: operation_type,
           operation_name: operation_name,
-          operation_params: opParams,
+          operation_arguments: opArgs,
         },
         config
       );
     } else if (method === "DELETE") {
-      // DELETE now passes parameters via query params
+      // DELETE now passes parameters via query opArgs
       response = await axios.delete(`${EXPLORER_BASE_URL}/`, {
         params: {
           user_id: userId,
-          operation_type: operation_type,
           operation_name: operation_name,
-          operation_params: opParams,
+          operation_arguments: opArgs,
         },
         ...config,
       });
     }
-    console.log("ExplorerService.handleOperation response:", response.data);
-    return response.data;
+    const responseData = response && response.data ? response.data : {};
+    console.log("ExplorerService.handleOperation response:", responseData);
+    return responseData;
   },
 
   // Raw operations
@@ -91,9 +85,17 @@ const ExplorerService = {
     console.log("ExplorerService.initUser called with userId:", userId);
     return await ExplorerService.handleOperation({
       userId: userId,
-      operation_type: "explorer_raw",
-      operation_name: "init",
-      operation_params: {},
+      operation_name: "init_user",
+      operation_arguments: {},
+    });
+  },
+
+  reset: async (userId) => {
+    console.log("ExplorerService.initUser called with userId:", userId);
+    return await ExplorerService.handleOperation({
+      userId: userId,
+      operation_name: "reset",
+      operation_arguments: {},
     });
   },
 
@@ -104,57 +106,62 @@ const ExplorerService = {
       filterValue,
       filterType,
     });
-    const params = { column_name: columnName, filter_value: filterValue, filter_type: filterType };
+    const opArgs = { column_name: columnName, filter_value: filterValue, filter_type: filterType };
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "explorer_raw",
+      userId: userId, 
       operation_name: "filter",
-      operation_params: params,
+      operation_arguments: opArgs,
     });
   },
 
   traverseData: async (userId, startId, traversalDirections) => {
     console.log("ExplorerService.traverseData called with:", { userId, startId, traversalDirections });
-    const params = { start_id: startId, traversal_directions: traversalDirections };
+    const opArgs = { start_id: startId, traversal_directions: traversalDirections };
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "explorer_raw",
+      userId: userId, 
       operation_name: "traverse",
-      operation_params: params,
+      operation_arguments: opArgs,
     });
   },
 
   // List operations
-  getUniqueColumnValues: async (userId, columnName, filterOptionsCall = false) => {
-    console.log("ExplorerService.getUniqueColumnValues called with:", { userId, columnName, filterOptionsCall });
-    const params = { column_name: columnName, filter_options_call: filterOptionsCall };
+  getUniqueColumnValues: async (userId, columnName, optionsCall = false) => {
+    console.log("ExplorerService.getUniqueColumnValues called with:", { userId, columnName, optionsCall });
+    const opArgs = { column_name: columnName, filter_options_call: optionsCall };
     return await ExplorerService.handleOperation({
       userId: userId,
-      operation_type: "explorer_list",
       operation_name: "get_unique_column_values",
-      operation_params: params,
+      operation_arguments: opArgs,
     });
   },
 
-  getUniqueJsonKeys: async (userId, filterOptionsCall = false) => {
-    console.log("ExplorerService.getUniqueJsonKeys called with:", { userId, filterOptionsCall });
-    const params = { filter_options_call: filterOptionsCall };
+  getUniqueJsonKeys: async (userId, optionsCall = false) => {
+    console.log("ExplorerService.getUniqueJsonKeys called with:", { userId, optionsCall });
+    const opArgs = { filter_options_call: optionsCall };
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "explorer_list",
+      userId: userId, 
       operation_name: "get_unique_json_keys",
-      operation_params: params,
+      operation_arguments: opArgs,
     });
   },
 
-  getUniqueJsonValues: async (userId, filterOptionsCall = false) => {
-    console.log("ExplorerService.getUniqueJsonValues called with:", { userId, filterOptionsCall });
-    const params = { filter_options_call: filterOptionsCall };
+  getUniqueJsonKeyValues: async (userId, optionsCall = false) => {
+    console.log("ExplorerService.getUniqueJsonValues called with:", { userId, optionsCall });
+    const opArgs = { filter_options_call: optionsCall };
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "explorer_list",
+      userId: userId, 
+      operation_name: "get_unique_json_key_values",
+      operation_arguments: opArgs,
+    });
+  },
+
+  getUniqueJsonValues: async (userId, optionsCall = false) => {
+    console.log("ExplorerService.getUniqueJsonValues called with:", { userId, optionsCall });
+    const opArgs = { filter_options_call: optionsCall };
+    return await ExplorerService.handleOperation({
+      userId: userId, 
       operation_name: "get_unique_json_values",
-      operation_params: params,
+      operation_arguments: opArgs,
     });
   },
 
@@ -162,10 +169,9 @@ const ExplorerService = {
   undoOperation: async (userId) => {
     console.log("ExplorerService.undoOperation called with userId:", userId);
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "explorer_raw",
+      userId: userId, 
       operation_name: "undo_operation",
-      operation_params: {},
+      operation_arguments: {},
       method: "DELETE",
     });
   },
@@ -173,145 +179,148 @@ const ExplorerService = {
   endSession: async (userId) => {
     console.log("ExplorerService.endSession called with userId:", userId);
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "explorer_state",
+      userId: userId, 
       operation_name: "end_explorer_session",
-      operation_params: {},
+      operation_arguments: {},
       method: "DELETE",
     });
   },
   getOperationChain: async (userId) => {
     console.log("ExplorerService.getOperationChain called with userId:", userId);
     return await ExplorerService.handleOperation({
-      userId,
-      operation_type: "explorer_state",
+      userId, 
       operation_name: "get_operation_chain",
-      operation_params: {},
+      operation_arguments: {},
+    });
+  },
+  getOperationChainOperations: async (userId) => {
+    console.log("ExplorerService.getOperationChainOperations called with userId:", userId);
+    return await ExplorerService.handleOperation({
+      userId,
+      operation_name: "get_operation_chain_operations",
+      operation_arguments: {},
+    });
+  },
+  getOperationChainResults: async (userId) => {
+    console.log("ExplorerService.getOperationChainOperations called with userId:", userId);
+    return await ExplorerService.handleOperation({
+      userId,
+      operation_name: "get_operation_chain_results",
+      operation_arguments: {},
     });
   },
 
   // Snapshot operations (type "snapshot")
   deleteSnapshot: async (userId, snapshotId) => {
     console.log("ExplorerService.deleteSnapshot called with:", { userId, snapshotId });
-    const params = { snapshot_id: snapshotId };
+    const opArgs = { snapshot_id: snapshotId };
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "snapshot",
+      userId: userId, 
       operation_name: "delete_snapshot",
-      operation_params: params,
+      operation_arguments: opArgs,
       method: "DELETE",
     });
   },
 
   updateSnapshot: async (userId, snapshotId, title, description) => {
     console.log("ExplorerService.updateSnapshot called with:", { userId, snapshotId, title, description });
-    const params = { snapshot_id: snapshotId, title, description };
+    const opArgs = { snapshot_id: snapshotId, title, description };
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "snapshot",
+      userId: userId, 
       operation_name: "update_snapshot",
-      operation_params: params,
+      operation_arguments: opArgs,
       method: "PUT",
     });
   },
 
   saveSnapshot: async (userId, title, description) => {
     console.log("ExplorerService.saveSnapshot called with:", { userId, title, description });
-    const params = { title, description };
+    const opArgs = { title, description };
     return await ExplorerService.handleOperation({
       userId: userId,
-      operation_type: "snapshot",
       operation_name: "save_snapshot",
-      operation_params: params,
+      operation_arguments: opArgs,
       method: "POST",
     });
   },
 
   loadSnapshot: async (userId, snapshotId) => {
     console.log("ExplorerService.loadSnapshot called with:", { userId, snapshotId });
-    const params = { snapshot_id: snapshotId };
+    const opArgs = { snapshot_id: snapshotId };
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "explorer_raw",
+      userId: userId, 
       operation_name: "load_snapshot",
-      operation_params: params,
+      operation_arguments: opArgs,
     });
   },
 
   getAllSnapshots: async (userId) => {
     console.log("ExplorerService.getAllSnapshots called with userId:", userId);
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "snapshot",
+      userId: userId, 
       operation_name: "get_all_snapshots",
-      operation_params: {},
+      operation_arguments: {},
     });
   },
 
   // Metric operations
   getCount: async (userId, columnName) => {
     console.log("ExplorerService.getCount called with:", { userId, columnName });
-    const params = { column_name: columnName };
+    const opArgs = { column_name: columnName };
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "explorer_metric",
+      userId: userId, 
       operation_name: "get_count",
-      operation_params: params,
+      operation_arguments: opArgs,
     });
   },
 
   getAverage: async (userId, columnName) => {
     console.log("ExplorerService.getAverage called with:", { userId, columnName });
-    const params = { column_name: columnName };
+    const opArgs = { column_name: columnName };
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "explorer_metric",
+      userId: userId, 
       operation_name: "get_average",
-      operation_params: params,
+      operation_arguments: opArgs,
     });
   },
 
   getSum: async (userId, columnName) => {
     console.log("ExplorerService.getSum called with:", { userId, columnName });
-    const params = { column_name: columnName };
+    const opArgs = { column_name: columnName };
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "explorer_metric",
+      userId: userId, 
       operation_name: "get_sum",
-      operation_params: params,
+      operation_arguments: opArgs,
     });
   },
 
   getMax: async (userId, columnName) => {
     console.log("ExplorerService.getMax called with:", { userId, columnName });
-    const params = { column_name: columnName };
+    const opArgs = { column_name: columnName };
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "explorer_metric",
+      userId: userId, 
       operation_name: "get_max",
-      operation_params: params,
+      operation_arguments: opArgs,
     });
   },
 
   getMin: async (userId, columnName) => {
     console.log("ExplorerService.getMin called with:", { userId, columnName });
-    const params = { column_name: columnName };
+    const opArgs = { column_name: columnName };
     return await ExplorerService.handleOperation({
-      userId: userId,
-      operation_type: "explorer_metric",
+      userId: userId, 
       operation_name: "get_min",
-      operation_params: params,
+      operation_arguments: opArgs,
     });
   },
 
   //Enrichment Operations
-  groupAggregate: async (userId, params) => {
-    console.log("ExplorerService.groupAggregate called with:", { userId, params });
+  groupAggregate: async (userId, opArgs) => {
+    console.log("ExplorerService.groupAggregate called with:", { userId, opArgs });
     return await ExplorerService.handleOperation({
-      userId,
-      operation_type: "explorer_enrichment",
+      userId, 
       operation_name: "group_aggregate",
-      operation_params: params,
+      operation_arguments: opArgs,
     });
   },
 

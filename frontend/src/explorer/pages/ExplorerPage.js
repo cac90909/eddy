@@ -12,7 +12,8 @@ function ExplorerPage() {
   const { userId } = useUser();
   const [data, setData] = useState([]);
   const [dataType, setDataType] = useState("universal_raw");
-  const [dataAmount, setDataAmount] = useState(null);
+  const [dataOverview, setDataOverview] = useState(null);
+  const [operationsHistory, setOperationsHistory] = useState([]);
   const [columns, setColumns] = useState([]);
   const [resetKey, setResetKey] = useState(0);
 
@@ -21,10 +22,12 @@ function ExplorerPage() {
     const fetchData = async () => {
       try {
         const response = await ExplorerService.initUser(userId);
-        // Expect response to be in the structure { data, data_type, data_amount }
+        // Expect response to be in the structure: 
+        // { data, data_type, data_overview, operations_history }
         setData(response.data);
         setDataType(response.data_type);
-        setDataAmount(response.data_amount);
+        setDataOverview(response.data_overview);
+        setOperationsHistory(response.operations_history || []);
         setColumns(Object.keys(response.data[0] || {}));
       } catch (error) {
         console.error("Error fetching initial data:", error);
@@ -34,18 +37,21 @@ function ExplorerPage() {
   }, [userId]);
 
   const handleOperationApply = (result) => {
-    // Expect result to have { data, data_type, data_amount }
+    // Expect result to have { data, data_type, data_overview, operations_history }
     setData(result.data);
     setDataType(result.data_type);
-    setDataAmount(result.data_amount);
+    setDataOverview(result.data_overview);
+    setOperationsHistory(result.operations_history || []);
     setColumns(Object.keys(result.data[0] || {}));
     setResetKey((prev) => prev + 1);
   };
 
   const handleSnapshotReset = (newData) => {
+    // Expect newData to have { data, data_type, data_overview, operations_history }
     setData(newData.data);
     setDataType(newData.data_type);
-    setDataAmount(newData.data_amount);
+    setDataOverview(newData.data_overview);
+    setOperationsHistory(newData.operations_history || []);
     setColumns(Object.keys(newData.data[0] || {}));
     setResetKey((prev) => prev + 1);
   };
@@ -103,7 +109,7 @@ function ExplorerPage() {
           </Box>
           {/* Operation History Component */}
           <Box sx={{ flex: 1, marginTop: "1rem" }}>
-            <OperationHistory userId={userId} refreshKey={resetKey} />
+            <OperationHistory operationsHistory={operationsHistory} />
           </Box>
         </Paper>
 
@@ -133,7 +139,7 @@ function ExplorerPage() {
               padding: "0.5rem",
             }}
           >
-            <DataOverview dataType={dataType} dataAmount={dataAmount} />
+            <DataOverview dataType={dataType} dataOverview={dataOverview} />
           </Box>
         </Paper>
       </Box>

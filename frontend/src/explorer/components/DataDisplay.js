@@ -1,18 +1,18 @@
 import React from "react";
-import RawDisplay from "./RawDisplay";
-import EnrichedDisplay from "./EnrichedDisplay";
-import MetricDisplay from "./MetricDisplay";
-import ListDisplay from "./ListDisplay";
+import RawDisplay from "./data_displays/RawDisplay";
+import EnrichedDisplay from "./data_displays/EnrichedDisplay";
+import MetricDisplay from "./data_displays/MetricDisplay";
+import ListDisplay from "./data_displays/ListDisplay";
 
 const DataDisplay = ({ data, dataType }) => {
   switch (dataType) {
-    case "universal_metric":
+    case "metric":
       return <MetricDisplay data={data} />;
-    case "universal_list":
+    case "list":
       return <ListDisplay data={data} />;
-    case "universal_enrichment":
+    case "enriched":
       return <EnrichedDisplay data={data} />;
-    case "universal_raw":
+    case "raw":
     default:
       return <RawDisplay data={data} />;
   }

@@ -17,7 +17,7 @@ const modalStyle = {
   position: "absolute",
   top: "50%",
   left: "50%",
-  transform: "translate(-50%, -50%)",
+  transform: "translate(-50%, -50%)",   
   width: 400,
   bgcolor: "background.paper",
   p: 4,
@@ -97,7 +97,7 @@ const SnapshotManager = ({ userId, onSnapshotLoad, onReset }) => {
 
   const handleReset = async () => {
     try {
-      const initData = await ExplorerService.initUser(userId);
+      const initData = await ExplorerService.reset(userId);
       onReset(initData);
     } catch (error) {
       console.error("Error resetting snapshot data:", error);

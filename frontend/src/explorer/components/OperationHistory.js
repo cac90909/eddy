@@ -1,27 +1,9 @@
-// OperationHistory.js
-import React, { useEffect, useState } from "react";
-import { Box, Typography, List, ListItem, ListItemText, Paper } from "@mui/material";
-import ExplorerService from "../services/ExplorerService";
+import React from "react";
+import { Paper, Typography, List, ListItem, ListItemText } from "@mui/material";
 
-const OperationHistory = ({ userId, refreshKey }) => {
-  const [operationChain, setOperationChain] = useState([]);
-
-  useEffect(() => {
-    if (!userId) return;
-    const fetchChain = async () => {
-      try {
-        const response = await ExplorerService.getOperationChain(userId);
-        // Assuming the response structure is { data: [ { operation_name, ... }, ... ] }
-        setOperationChain(response.data || []);
-      } catch (error) {
-        console.error("Error fetching operation chain:", error);
-      }
-    };
-    fetchChain();
-  }, [userId, refreshKey]);
-
+const OperationHistory = ({ operationsHistory }) => {
   return (
-    <Paper 
+    <Paper
       style={{
         height: "100%",
         overflowY: "auto",
@@ -34,11 +16,15 @@ const OperationHistory = ({ userId, refreshKey }) => {
         Operation History
       </Typography>
       <List>
-        {operationChain.map((op, index) => (
-          <ListItem key={index} dense>
-            <ListItemText primary={op.operation_name} />
-          </ListItem>
-        ))}
+        {operationsHistory && operationsHistory.length > 0 ? (
+          operationsHistory.map((op, index) => (
+            <ListItem key={index} dense>
+              <ListItemText primary={op.operation_name} />
+            </ListItem>
+          ))
+        ) : (
+          <Typography variant="body2">No operations performed yet</Typography>
+        )}
       </List>
     </Paper>
   );
