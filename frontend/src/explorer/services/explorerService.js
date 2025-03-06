@@ -125,9 +125,9 @@ const ExplorerService = {
   },
 
   // List operations
-  getUniqueColumnValues: async (userId, columnName, optionsCall = false) => {
-    console.log("ExplorerService.getUniqueColumnValues called with:", { userId, columnName, optionsCall });
-    const opArgs = { column_name: columnName, filter_options_call: optionsCall };
+  getUniqueColumnValues: async (userId, columnName) => {
+    console.log("ExplorerService.getUniqueColumnValues called with:", { userId, columnName });
+    const opArgs = { column_name: columnName };
     return await ExplorerService.handleOperation({
       userId: userId,
       operation_name: "get_unique_column_values",
@@ -135,9 +135,9 @@ const ExplorerService = {
     });
   },
 
-  getUniqueJsonKeys: async (userId, optionsCall = false) => {
-    console.log("ExplorerService.getUniqueJsonKeys called with:", { userId, optionsCall });
-    const opArgs = { filter_options_call: optionsCall };
+  getUniqueJsonKeys: async (userId) => {
+    console.log("ExplorerService.getUniqueJsonKeys called with:", { userId });
+    const opArgs = {};
     return await ExplorerService.handleOperation({
       userId: userId, 
       operation_name: "get_unique_json_keys",
@@ -145,9 +145,9 @@ const ExplorerService = {
     });
   },
 
-  getUniqueJsonKeyValues: async (userId, optionsCall = false) => {
-    console.log("ExplorerService.getUniqueJsonValues called with:", { userId, optionsCall });
-    const opArgs = { filter_options_call: optionsCall };
+  getUniqueJsonKeyValues: async (userId) => {
+    console.log("ExplorerService.getUniqueJsonValues called with:", { userId });
+    const opArgs = {};
     return await ExplorerService.handleOperation({
       userId: userId, 
       operation_name: "get_unique_json_key_values",
@@ -155,12 +155,52 @@ const ExplorerService = {
     });
   },
 
-  getUniqueJsonValues: async (userId, optionsCall = false) => {
-    console.log("ExplorerService.getUniqueJsonValues called with:", { userId, optionsCall });
-    const opArgs = { filter_options_call: optionsCall };
+  getUniqueJsonValues: async (userId) => {
+    console.log("ExplorerService.getUniqueJsonValues called with:", { userId });
+    const opArgs = {};
     return await ExplorerService.handleOperation({
       userId: userId, 
       operation_name: "get_unique_json_values",
+      operation_arguments: opArgs,
+    });
+  },
+
+  getUniqueColumnValuesFilterOptions: async (userId, columnName) => {
+    console.log("ExplorerService.getUniqueColumnValuesFilterOptions called with:", { userId, columnName });
+    const opArgs = { column_name: columnName };
+    return await ExplorerService.handleOperation({
+      userId: userId,
+      operation_name: "get_unique_column_values_filter_options",
+      operation_arguments: opArgs,
+    });
+  },
+
+  getUniqueJsonKeyFilterOptionss: async (userId) => {
+    console.log("ExplorerService.getUniqueJsonKeysFilterOptions called with:", { userId });
+    const opArgs = {};
+    return await ExplorerService.handleOperation({
+      userId: userId, 
+      operation_name: "get_unique_json_keys_filter_options",
+      operation_arguments: opArgs,
+    });
+  },
+
+  getUniqueJsonKeyValuesFilterOptions: async (userId) => {
+    console.log("ExplorerService.getUniqueJsonValuesFilterOptions called with:", { userId });
+    const opArgs = {};
+    return await ExplorerService.handleOperation({
+      userId: userId, 
+      operation_name: "get_unique_json_key_values_filter_options",
+      operation_arguments: opArgs,
+    });
+  },
+
+  getUniqueJsonValuesFilterOptions: async (userId) => {
+    console.log("ExplorerService.getUniqueJsonValuesFilterOptions called with:", { userId });
+    const opArgs = {};
+    return await ExplorerService.handleOperation({
+      userId: userId, 
+      operation_name: "get_unique_json_values_filter_options",
       operation_arguments: opArgs,
     });
   },

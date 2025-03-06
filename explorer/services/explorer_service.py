@@ -54,20 +54,19 @@ class ExplorerService:
 
         #Caching
         op_cache_policy, op_resp_cache_policy = op_def.get("cache_policy")(operation), op_resp_def.get("cache_policy")(operation)
-        debug_print(op_cache_policy, op_resp_cache_policy, operation_arguments)
         if op_cache_policy and op_resp_cache_policy:
             self.explorer_cache_service.cache_operation_onto_chain(user_id=user_id, operation=operation)
         operation_util.cache_operation_metadata(user_id=user_id, operation=operation)
         
         #Response Creation
         operation_result = OperationResult(data=operation.result_data, meta={"data_type": operation.result_data_type, "operation_bid": operation.id})
+        data_overview = {}
         for data_overview_field_name, data_overview_field_calc in op_resp_def.get("data_overview_fields").items():
-            operation_result.meta[data_overview_field_name] = data_overview_field_calc(user_id=user_id, result_data=operation_result.data)
-        debug_print(operation_result)
+            data_overview[data_overview_field_name] = data_overview_field_calc(user_id=user_id, result_data=operation_result.data)
+        if data_overview:
+            operation_result.meta["data_overview"] = data_overview 
         if op_resp_def.get("operations_history"):
             operation_result.meta["operations_history"] = op_resp_def.get("operations_history")(user_id)
-        debug_print("here?")
-        print(operation_result.to_dict())
         return operation_result.to_dict()
 
         

@@ -70,29 +70,29 @@ const DataOperation = ({ userId, onApplyOperation }) => {
   useEffect(() => {
     if (selectedCategory === "raw") {
       if (selectedOperation === "filter") {
-        if (formData.column) {
-          if (formData.column === "fields") {
-            ExplorerService.getUniqueJsonKeys(userId)
-              .then((keys) =>
-                setCurrentData((prev) => ({ ...prev, uniqueJsonKeys: keys }))
+        if (formData.column_name) {
+          if (formData.column_name === "fields") {
+            ExplorerService.getUniqueJsonKeysFilterOptions(userId)
+              .then((response) =>
+                setCurrentData((prev) => ({ ...prev, uniqueJsonKeys: response.data }))
               )
               .catch((err) => console.error("Error fetching JSON keys:", err));
           } else {
             const categoricalColumns = [
               "functionalities",
-              "subject matters",
-              "general categories",
+              "subject_matters",
+              "general_categories",
               "tags",
               "parents_ids",
               "children_ids",
               "siblings_ids",
             ];
-            if (categoricalColumns.includes(formData.column)) {
-              ExplorerService.getUniqueColumnValues(userId, formData.column)
-                .then((values) =>
+            if (categoricalColumns.includes(formData.column_name)) {
+              ExplorerService.getUniqueColumnValuesFilterOptions(userId, formData.column_name)
+                .then((response) =>
                   setCurrentData((prev) => ({
                     ...prev,
-                    uniqueColumnValues: values,
+                    uniqueColumnValues: response.data,
                   }))
                 )
                 .catch((err) =>
@@ -102,33 +102,33 @@ const DataOperation = ({ userId, onApplyOperation }) => {
           }
         }
       } else if (selectedOperation === "traverse") {
-        ExplorerService.getUniqueColumnValues(userId, "entry_id")
-          .then((ids) =>
-            setCurrentData((prev) => ({ ...prev, uniqueEntryIds: ids }))
+        ExplorerService.getUniqueColumnValuesFilterOptions(userId, "entry_id")
+          .then((response) =>
+            setCurrentData((prev) => ({ ...prev, uniqueEntryIds: response.data }))
           )
           .catch((err) =>
             console.error("Error fetching unique entry IDs:", err)
           );
       }
     } else if (selectedCategory === "metric") {
-      if (formData.column === "fields") {
-        ExplorerService.getUniqueJsonKeys(userId)
-          .then((keys) =>
-            setCurrentData((prev) => ({ ...prev, uniqueJsonKeys: keys }))
+      if (formData.column_name === "fields") {
+        ExplorerService.getUniqueJsonKeysFilterOptions(userId)
+          .then((response) =>
+            setCurrentData((prev) => ({ ...prev, uniqueJsonKeys: response.data }))
           )
           .catch((err) => console.error("Error fetching JSON keys:", err));
       }
     } else if (selectedCategory === "list") {
-      if (formData.column === "fields") {
-        ExplorerService.getUniqueJsonKeys(userId)
-          .then((keys) =>
-            setCurrentData((prev) => ({ ...prev, uniqueJsonKeys: keys }))
+      if (formData.column_name === "fields") {
+        ExplorerService.getUniqueJsonKeysFilterOptions(userId)
+          .then((response) =>
+            setCurrentData((prev) => ({ ...prev, uniqueJsonKeys: response.data }))
           )
           .catch((err) => console.error("Error fetching JSON keys:", err));
-      } else if (formData.column && formData.column !== "fields") {
-        ExplorerService.getUniqueColumnValues(userId, formData.column)
-          .then((values) =>
-            setCurrentData((prev) => ({ ...prev, uniqueColumnValues: values }))
+      } else if (formData.column_name && formData.column_name !== "fields") {
+        ExplorerService.getUniqueColumnValuesFilterOptions(userId, formData.column_name)
+          .then((response) =>
+            setCurrentData((prev) => ({ ...prev, uniqueColumnValues: response.data }))
           )
           .catch((err) =>
             console.error("Error fetching unique column values:", err)
@@ -141,9 +141,9 @@ const DataOperation = ({ userId, onApplyOperation }) => {
           (formData.group_column && formData.group_column === "fields") ||
           (formData.target_column && formData.target_column === "fields")
         ) {
-          ExplorerService.getUniqueJsonKeys(userId)
-            .then((keys) =>
-              setCurrentData((prev) => ({ ...prev, uniqueJsonKeys: keys }))
+          ExplorerService.getUniqueJsonKeysFilterOptions(userId)
+            .then((response) =>
+              setCurrentData((prev) => ({ ...prev, uniqueJsonKeys: response.data }))
             )
             .catch((err) => console.error("Error fetching JSON keys:", err));
         }
@@ -158,14 +158,14 @@ const DataOperation = ({ userId, onApplyOperation }) => {
   // Render a form field based on the current configuration.
   const renderField = (field) => {
     if (field.displayCondition && !field.displayCondition(formData)) return null;
-    const fieldType =
-      typeof field.type === "function" ? field.type(formData) : field.type;
+    const fieldType = typeof field.type === "function" ? field.type(formData) : field.type;
     let options = [];
     if (fieldType === "select" || fieldType === "multiselect") {
-      options =
-        typeof field.options === "function"
-          ? field.options(formData, currentData)
-          : field.options;
+      options = typeof field.options === "function" ? field.options(formData, currentData) : field.options;
+      // Convert options to an array if they aren’t already
+      if (!Array.isArray(options)) {
+        options = Array.from(options);
+      }
     }
     return (
       <Grid item xs={12} sm={6} key={field.key}>
@@ -174,8 +174,7 @@ const DataOperation = ({ userId, onApplyOperation }) => {
             <InputLabel>{field.label}</InputLabel>
             <Select
               value={
-                formData[field.key] ||
-                (fieldType === "multiselect" ? [] : "")
+                formData[field.key] || (fieldType === "multiselect" ? [] : "")
               }
               label={field.label}
               onChange={(e) => handleFieldChange(field.key, e.target.value)}

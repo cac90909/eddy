@@ -25,9 +25,9 @@ function ExplorerPage() {
         // Expect response to be in the structure: 
         // { data, data_type, data_overview, operations_history }
         setData(response.data);
-        setDataType(response.data_type);
-        setDataOverview(response.data_overview);
-        setOperationsHistory(response.operations_history || []);
+        setDataType(response.meta.data_type);
+        setDataOverview(response.meta.data_overview);
+        setOperationsHistory(response.meta.operations_history || []);
         setColumns(Object.keys(response.data[0] || {}));
       } catch (error) {
         console.error("Error fetching initial data:", error);
@@ -39,9 +39,9 @@ function ExplorerPage() {
   const handleOperationApply = (result) => {
     // Expect result to have { data, data_type, data_overview, operations_history }
     setData(result.data);
-    setDataType(result.data_type);
-    setDataOverview(result.data_overview);
-    setOperationsHistory(result.operations_history || []);
+    setDataType(result.meta.data_type);
+    setDataOverview(result.meta.data_overview);
+    setOperationsHistory(result.meta.operations_history || []);
     setColumns(Object.keys(result.data[0] || {}));
     setResetKey((prev) => prev + 1);
   };
@@ -49,18 +49,19 @@ function ExplorerPage() {
   const handleSnapshotReset = (newData) => {
     // Expect newData to have { data, data_type, data_overview, operations_history }
     setData(newData.data);
-    setDataType(newData.data_type);
-    setDataOverview(newData.data_overview);
-    setOperationsHistory(newData.operations_history || []);
+    setDataType(newData.meta.data_type);
+    setDataOverview(newData.meta.data_overview);
+    setOperationsHistory(newData.meta.operations_history || []);
     setColumns(Object.keys(newData.data[0] || {}));
     setResetKey((prev) => prev + 1);
   };
 
   return (
-    <Box sx={{ height: "100vh", padding: "1rem", boxSizing: "border-box" }}>
+    <Box sx={{ height: "100vh", padding: "1rem", flexDirection: "column", boxSizing: "border-box", overflow: "hidden" }}>
       {/* Top panel: Title & Snapshot Manager */}
       <Paper
         sx={{
+          flex: "0 0 10vh", // Fixed height (10vh)
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -86,7 +87,7 @@ function ExplorerPage() {
       <Box
         sx={{
           display: "flex",
-          height: "88%", // Remaining vertical space after top panel
+          height: "85%", // Remaining vertical space after top panel
           gap: "1rem",
         }}
       >
@@ -100,11 +101,12 @@ function ExplorerPage() {
             height: "100%",
             backgroundColor: "#fafafa",
             borderRadius: "8px",
+            overflow: "hidden"
           }}
           elevation={3}
         >
           {/* Data Operation Component */}
-          <Box sx={{ flex: 2 }}>
+          <Box sx={{ flex: 2, overflow: "auto" }}>
             <DataOperation key={resetKey} userId={userId} onApplyOperation={handleOperationApply} />
           </Box>
           {/* Operation History Component */}
@@ -123,6 +125,7 @@ function ExplorerPage() {
             height: "100%",
             backgroundColor: "#fafafa",
             borderRadius: "8px",
+            overflow: "hidden"
           }}
           elevation={3}
         >
@@ -137,6 +140,7 @@ function ExplorerPage() {
               backgroundColor: "#e0e0e0",
               borderRadius: "4px",
               padding: "0.5rem",
+              overflow: "auto"
             }}
           >
             <DataOverview dataType={dataType} dataOverview={dataOverview} />

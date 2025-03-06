@@ -85,37 +85,73 @@ OPERATION_DEFINITIONS = {
     },
     "get_unique_column_values": {
         "operation_type": "universal",
-        "operation_expected_arguments": ["user_id", "column_name", "options_call"],
+        "operation_expected_arguments": ["user_id", "column_name"],
         "operation_expected_result_data_type": "list",
         "handler": lambda user_id, **kwargs: UniversalListService().get_unique_column_values(user_id=user_id, **kwargs),
-        "cache_policy": lambda op: not op.operation_arguments.get("options_call", False),
+        "cache_policy": lambda op: True,
         "data_source": lambda user_id, op: ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id),
         "setup": None
     },
     "get_unique_json_keys": {
         "operation_type": "universal",
-        "operation_expected_arguments": ["user_id", "options_call"],
+        "operation_expected_arguments": ["user_id"],
         "operation_expected_result_data_type": "list",
         "handler": lambda user_id, **kwargs: UniversalListService().get_unique_json_keys(user_id=user_id, **kwargs),
-        "cache_policy": lambda op: not op.operation_arguments.get("options_call", False),
+        "cache_policy": lambda op: True,
         "data_source": lambda user_id, op: ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id),
         "setup": None
     },
     "get_unique_json_values": {
         "operation_type": "universal",
-        "operation_expected_arguments": ["user_id", "options_call"],
+        "operation_expected_arguments": ["user_id"],
         "operation_expected_result_data_type": "list",
         "handler": lambda user_id, **kwargs: UniversalListService().get_unique_json_values(user_id=user_id, **kwargs),
-        "cache_policy": lambda op: not op.operation_arguments.get("options_call", False),
+        "cache_policy": lambda op: True,
         "data_source": lambda user_id, op: ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id),
         "setup": None
     },
     "get_unique_json_key_values": {
         "operation_type": "universal",
-        "operation_expected_arguments": ["user_id", "json_key", "options_call"],
+        "operation_expected_arguments": ["user_id", "json_key"],
         "operation_expected_result_data_type": "list",
         "handler": lambda user_id, **kwargs: UniversalListService().get_unique_json_key_values(user_id=user_id, **kwargs),
-        "cache_policy": lambda op: not op.operation_arguments.get("options_call", False),
+        "cache_policy": lambda op: True,
+        "data_source": lambda user_id, op: ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id),
+        "setup": None
+    },
+    "get_unique_column_values_filter_options": {
+        "operation_type": "universal",
+        "operation_expected_arguments": ["user_id", "column_name"],
+        "operation_expected_result_data_type": "list",
+        "handler": lambda user_id, **kwargs: UniversalListService().get_unique_column_values(user_id=user_id, **kwargs),
+        "cache_policy": lambda op: False,
+        "data_source": lambda user_id, op: ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id),
+        "setup": None
+    },
+    "get_unique_json_keys_filter_options": {
+        "operation_type": "universal",
+        "operation_expected_arguments": ["user_id"],
+        "operation_expected_result_data_type": "list",
+        "handler": lambda user_id, **kwargs: UniversalListService().get_unique_json_keys(user_id=user_id, **kwargs),
+        "cache_policy": lambda op: False,
+        "data_source": lambda user_id, op: ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id),
+        "setup": None
+    },
+    "get_unique_json_values_filter_options": {
+        "operation_type": "universal",
+        "operation_expected_arguments": ["user_id"],
+        "operation_expected_result_data_type": "list",
+        "handler": lambda user_id, **kwargs: UniversalListService().get_unique_json_values(user_id=user_id, **kwargs),
+        "cache_policy": lambda op: False,
+        "data_source": lambda user_id, op: ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id),
+        "setup": None
+    },
+    "get_unique_json_key_values_filter_options": {
+        "operation_type": "universal",
+        "operation_expected_arguments": ["user_id", "json_key"],
+        "operation_expected_result_data_type": "list",
+        "handler": lambda user_id, **kwargs: UniversalListService().get_unique_json_key_values(user_id=user_id, **kwargs),
+        "cache_policy": lambda op: False,
         "data_source": lambda user_id, op: ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id),
         "setup": None
     },

@@ -14,7 +14,7 @@ const EnrichedOperationsConfig = {
           // "key (fields)" but its value remains the key.
           options: (formData, currentData) => {
             // Static columns that are not JSON fields:
-            const staticOptions = ["date", "functionalities", "subject matters", "general categories"];
+            const staticOptions = ["date", "functionalities", "subject_matters", "general_categories"];
             const staticOptionObjects = staticOptions.map(opt => ({ value: opt, label: opt }));
             // Dynamic fields keys from the "fields" column:
             const fieldOptions = (currentData.uniqueJsonKeys || []).map(key => ({

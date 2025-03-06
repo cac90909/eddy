@@ -29,9 +29,9 @@ def cache_operation_metadata(user_id, operation):
     if operation.result_data_type == "raw":
         if len(operation_chain) == 1:
             full_data_shape = {
-                "full_data_rows": len(operation.result_data),
-                "full_data_columns": len(operation.result_data[0]._meta.fields),
-                "full_data_values" : len(operation.result_data) * len(operation.result_data[0]._meta.fields)
+                "num_rows": len(operation.result_data),
+                "num_columns": len(operation.result_data[0]._meta.fields),
+                "num_values" : len(operation.result_data) * len(operation.result_data[0]._meta.fields)
             }
             explorer_cache_service.cache_operation_chain_metadata(user_id=user_id, metadata_key="full_data_shape", metadata_value=full_data_shape)
     #Only update chain number if previous operation was raw (since right now, only raw operations overwrite the underlying data)
