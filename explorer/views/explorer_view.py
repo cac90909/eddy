@@ -13,6 +13,7 @@ class ExplorerView(APIView):
         super().__init__(**kwargs)
         self.explorer_service = ExplorerService()
 
+    #Right now, operations are not confined to a specific HTTP method
     def get(self, request):
         try:
             print()
