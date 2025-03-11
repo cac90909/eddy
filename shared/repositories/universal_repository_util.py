@@ -1,11 +1,12 @@
 from shared.logger import debug_print
 from datetime import datetime
-from django.db.models import F, Func, FloatField, DateField, CharField, TextField, Count, Avg, Sum, Min, Max, Value
+from django.db.models import F, Func, FloatField, DateField, CharField, TextField, BooleanField, IntegerField, JSONField, Count, Avg, Sum, Min, Max, Value
 from django.db.models.functions import Cast, TruncDay, TruncWeek, TruncMonth, TruncYear, Lower
 from django.db.models.fields.json import KeyTextTransform
 from django.contrib.postgres.fields import ArrayField
 from shared.models import Universal
-from django.db import connection
+from django.db import connection, models
+from dateutil.parser import parse as parse_date
 
 # ----------------- Type Mappings -----------------
 
@@ -24,6 +25,26 @@ FREQUENCY_TYPE_MAPPING = {
     "yearly": TruncYear
 }
 
+MODEL_DATA_CLASS_TO_DATA_TYPE_IDENTIFIER_MAPIING = {
+    CharField(): "string",
+    TextField(): "string",
+    BooleanField(): "boolean",
+    IntegerField(): "int",
+    FloatField(): "float",
+    DateField(): "date",
+    ArrayField: "list",
+    JSONField(): "json"
+}
+
+DATA_TYPE_OPERATOR_MAP = {
+    "int": ["=", "!=", "<", ">", "<=", ">="],
+    "float": ["=", "!=", "<", ">", "<=", ">="],
+    "string": ["=", "!=", "string_contains", "string_not_contains"],
+    "date": ["=", "!=", "<", ">", "<=", ">="],
+    "bool": ["=", "!="],
+    "list": ["array_contains", "array_not_contains"]
+    }
+
 # ----------------- Type Checking -----------------
 
 def is_array_field(column_name):
@@ -39,31 +60,84 @@ def is_json_field(column_name):
     except Exception:
         return True
 
-def get_column_data_type(queryset, column_name):
+def get_data_type_from_column_identifier(queryset, column_identifier):
     """
     Determines the data type of a column.
     Returns "json" if it's an undefined field assumed to be nested JSON.
     """
+    columns_list = [field.name for field in Universal._meta.fields]
+    if column_identifier in columns_list:
+        column_data_class = get_column_data_class(queryset=queryset, column_name=column_identifier)
+    else:
+        column_data_class = get_nested_json_column_data_class(queryset=queryset, column_name=column_identifier)
+    data_type_identifier = MODEL_DATA_CLASS_TO_DATA_TYPE_IDENTIFIER_MAPIING.get(column_data_class)
+    return data_type_identifier
+    
+def get_column_data_class(queryset, column_name):
+    """
+    Determines the data type of a column.
+    Returns the Django field class (e.g. models.CharField, models.IntegerField)
+    if the field exists on the model; otherwise, it assumes the field is nested JSON
+    and returns models.JSONField.
+    """
     try:
         field = queryset.model._meta.get_field(column_name)
-        return field.get_internal_type().lower()
+        # get_internal_type() returns a string such as "CharField" or "IntegerField"
+        # We then look up the actual class in django.db.models.
+        field_class = getattr(models, field.get_internal_type(), None)
+        if field_class is not None:
+            return field_class
+        else:
+            return models.JSONField
     except Exception:
-        return "json"
+        return models.JSONField    
+
     
-def get_nested_json_column_type(queryset, column_name):
+def get_nested_json_column_data_class(queryset, column_name):
     """
-    Determines whether a JSON field should be cast as DateField or FloatField.
+    Determines the Django field type for a JSON field based on its first non-null sample value.
+    Assumes all values are stored as strings (even if they represent booleans, numbers, or dates)
+    and tests for boolean, integer, float, and date. Returns the corresponding Django Field instance.
     """
     lookup = build_lookup_expression(queryset, column_name)
     sample = queryset.values_list(lookup, flat=True).first()
+    
     if sample is None:
-        return FloatField()
+        return CharField()
+
+    sample = str(sample).strip()
+    
+    if sample.lower() in ("true", "false"):
+        return BooleanField()
+    
     try:
-        datetime.strptime(sample, "%m/%d/%Y")
+        int_val = int(sample)
+        if str(int_val) == sample or sample.isdigit():
+            return IntegerField()
+    except ValueError:
+        pass
+    
+    try:
+        float_val = float(sample)
+        if '.' in sample:
+            return FloatField()
+    except ValueError:
+        pass
+    
+    try:
+        _ = parse_date(sample)
         return DateField()
     except Exception:
-        return FloatField()
+        pass
     
+    # Fallback: assume it's a string.
+    return CharField()
+
+def get_operators_from_data_type_identifier(data_type_identifier):
+    operators = DATA_TYPE_OPERATOR_MAP.get(data_type_identifier)
+    if operators is None:
+        raise ValueError(f"Unsupported data type: {data_type_identifier}")
+    return operators
 # ----------------- Connection Cursor Helpers -----------------
 
 # ----------------- Lookup & Expression Building -----------------
@@ -210,7 +284,7 @@ def transform_target_column_for_aggregation(queryset, target_column):
     Prepares a target column for aggregation by handling JSON and array unnesting.
     """
     if is_json_field(target_column):
-        output_field = get_nested_json_column_type(queryset, target_column)
+        output_field = get_nested_json_column_data_class(queryset, target_column)
         qs = create_casted_nested_json_column(queryset, target_column, "target_temp", output_field)
         return qs, "target_temp"
     elif is_array_field(target_column):

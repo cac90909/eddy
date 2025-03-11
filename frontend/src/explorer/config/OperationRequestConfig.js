@@ -1,122 +1,219 @@
 const OPERATION_REQUEST_DEFINITIONS = {
   "init_user": {
     "operation_expected_arguments": [],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "raw",
+    "operation_type": "universal",
+    "display": false, 
   },
   "reset": {
     "operation_expected_arguments": [],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "raw",
+    "operation_type": "universal",
+    "display": false, 
   },
   "filter": {
     "operation_expected_arguments": ["column_name", "filter_value", "filter_type"],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "raw",
+    "operation_type": "universal",
+    "display": true, 
+    "form_navigation": {
+      "column_name": {
+        "display_type": "dropdown",
+        
+      }
+    }
   },
   "traverse": {
     "operation_expected_arguments": ["start_id", "traversal_directions"],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "raw",
+    "operation_type": "universal",
+    "display": true, 
   },
   "undo": {
     "operation_expected_arguments": [],
-    "http_method": "POST"
+    "http_method": "POST",
+    "operation_expected_result_data_type": "raw",
+    "operation_type": "universal",
+    "display": false, 
   },
   "load_snapshot": {
     "operation_expected_arguments": ["snapshot_id"],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "raw",
+    "operation_type": "universal",
+    "display": false, 
   },
   "group_aggregate": {
     "operation_expected_arguments": ["group_columns", "aggregate_operation", "target_column"],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "enriched",
+    "operation_type": "universal",
+    "display": true, 
   },
   "get_unique_column_values": {
     "operation_expected_arguments": ["column_name"],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "list",
+    "operation_type": "universal",
+    "display": true, 
   },
   "get_unique_json_keys": {
     "operation_expected_arguments": [],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "list",
+    "operation_type": "universal",
+    "display": true, 
   },
   "get_unique_json_values": {
     "operation_expected_arguments": [],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "list",
+    "operation_type": "universal",
+    "display": true, 
   },
   "get_unique_json_key_values": {
     "operation_expected_arguments": ["json_key"],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "list",
+    "operation_type": "universal",
+    "display": true, 
   },
   "get_unique_column_values_filter_options": {
     "operation_expected_arguments": ["column_name"],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "list",
+    "operation_type": "universal",
+    "display": false, 
   },
   "get_unique_json_keys_filter_options": {
     "operation_expected_arguments": [],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "list",
+    "operation_type": "universal",
+    "display": false,
   },
   "get_unique_json_values_filter_options": {
     "operation_expected_arguments": [],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "list",
+    "operation_type": "universal",
+    "display": false,
   },
   "get_unique_json_key_values_filter_options": {
     "operation_expected_arguments": ["json_key"],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "list",
+    "operation_type": "universal",
+    "display": false,
   },
   "get_count": {
     "operation_expected_arguments": ["column_name"],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "metric",
+    "operation_type": "universal",
+    "display": true,
   },
   "get_average": {
     "operation_expected_arguments": ["column_name"],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "metric",
+    "operation_type": "universal",
+    "display": true,
   },
   "get_sum": {
     "operation_expected_arguments": ["column_name"],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "metric",
+    "operation_type": "universal",
+    "display": true,
   },
   "get_min": {
     "operation_expected_arguments": ["column_name"],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "metric",
+    "operation_type": "universal",
+    "display": true,
   },
   "get_max": {
     "operation_expected_arguments": ["column_name"],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "metric",
+    "operation_type": "universal",
+    "display": true,
   },
   "start_explorer_session": {
     "operation_expected_arguments": [],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "status",
+    "operation_type": "state",
+    "display": false,
   },
   "end_explorer_session": {
     "operation_expected_arguments": [],
-    "http_method": "POST"
+    "http_method": "POST",
+    "operation_expected_result_data_type": "status",
+    "operation_type": "state",
+    "display": false,
   },
   "get_operation_chain": {
     "operation_expected_arguments": [],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "operation_chain",
+    "operation_type": "state",
+    "display": false,
   },
   "get_operation_chain_operations": {
     "operation_expected_arguments": [],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "operations_list",
+    "operation_type": "state",
+    "display": false,
   },
+  
   "get_operation_chain_results": {
     "operation_expected_arguments": [],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "operation_results_list",
+    "operation_type": "state",
+    "display": false,
   },
   "create_snapshot": {
     "operation_expected_arguments": ["title"],
-    "http_method": "POST"
+    "http_method": "POST",
+    "operation_expected_result_data_type": "snapshot",
+    "operation_type": "snapshot",
+    "display": false,
   },
   "delete_snapshot": {
     "operation_expected_arguments": ["snapshot_id"],
-    "http_method": "DELETE"
+    "http_method": "DELETE",
+    "operation_expected_result_data_type": "status",
+    "operation_type": "snapshot",
+    "display": false,
   },
   "update_snapshot": {
     "operation_expected_arguments": ["snapshot_id"],
-    "http_method": "PUT"
+    "http_method": "PUT",
+    "operation_expected_result_data_type": "snapshot",
+    "operation_type": "snapshot",
+    "display": false,
   },
   "get_snapshot": {
     "operation_expected_arguments": ["snapshot_id"],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "snapshot",
+    "operation_type": "snapshot",
+    "display": false,
   },
   "get_all_snapshots": {
     "operation_expected_arguments": [],
-    "http_method": "GET"
+    "http_method": "GET",
+    "operation_expected_result_data_type": "snapshot_list",
+    "operation_type": "snapshot",
+    "display": false,
   }
 };

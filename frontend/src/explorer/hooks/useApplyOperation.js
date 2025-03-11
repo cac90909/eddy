@@ -6,14 +6,13 @@ export function useApplyOperation(userId) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const applyOperation = async (operationName, operationParams) => {
+  const applyOperation = async (operationName, operationArguments) => {
     setLoading(true);
     setError(null);
     try {
       const result = await ExplorerService.handleOperation({
-        userId,
         operation_name: operationName,
-        operation_arguments: operationParams,
+        operation_arguments: operationArguments,
       });
       return result;
     } catch (err) {

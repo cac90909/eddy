@@ -9,8 +9,8 @@ class UniversalRawService:
     def __init__(self):
         self.universal_repository = UniversalRepository()
 
-    def get_user_universal(self, user_id):
-        queryset_resp = self.universal_repository.get_user_data(user_id=user_id)
+    def get_full_data(self, user_id):
+        queryset_resp = self.universal_repository.get_full_data(user_id=user_id)
         return queryset_resp
 
     # Currently supported filter types: =, !=, <, >, string_contains, array_contains, array_not_contains

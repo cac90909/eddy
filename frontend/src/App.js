@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { UserProvider } from "./UserContext";
+import { UserSessionProvider } from ".contexts/UserSessionContext";
+import { ExplorerConfigProvider } from ".contexts/ExplorerConfigContext";
 import SignInPage from "./pages/SignInPage";
 import NavigationPage from "./pages/NavigationPage";
 import ExplorerPage from "./explorer/pages/ExplorerPage";
@@ -27,15 +28,21 @@ function App() {
 
   console.log("App.js");
   return (
-    <UserProvider>
+    <UserSessionProvider>
       <Router>
         <Routes>
           <Route path="/" element={<SignInPage />} />
-          <Route path="/navigation" element={<NavigationPage />} />
-          <Route path="/explorer" element={<ExplorerPage />} />
+          <Route path="/navigation" element={<NavigationPage />} />  
+            <Route path="/explorer" 
+              element={
+                <ExplorerConfigProvider>
+                  <ExplorerPage />
+                </ExplorerConfigProvider>
+              }
+            />
         </Routes>
       </Router>
-    </UserProvider>
+    </UserSessionProvider>
   );
 }
 

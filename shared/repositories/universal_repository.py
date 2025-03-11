@@ -2,7 +2,7 @@ from shared.logger import debug_print
 from shared.repositories.universal_repository_util import (
     is_json_field,
     is_array_field,
-    get_nested_json_column_type,
+    get_nested_json_column_data_class,
     create_casted_nested_json_column,
     create_unnested_list_column,
     perform_aggregation_on_column,
@@ -24,7 +24,7 @@ class UniversalRepository:
 
     # -------------------- Data Retrieval --------------------
 
-    def get_user_data(self, user_id):
+    def get_full_data(self, user_id):
         """Retrieve all data for a specific user."""
         user_instance = User.objects.get(pk=user_id)
         data = Universal.objects.filter(user=user_instance)
@@ -118,7 +118,7 @@ class UniversalRepository:
         #NOTE: this method annotates on the appropriate datatype, which isnt needed for count, but count is still contained here because it should output the same result
         """
         if is_json_field(column_name):
-            output_field_type = get_nested_json_column_type(user_data_queryset, column_name)
+            output_field_type = get_nested_json_column_data_class(user_data_queryset, column_name)
             queryset = create_casted_nested_json_column(queryset=user_data_queryset, original_column_name=column_name, new_column_name="temp", output_field=output_field_type)
             aggregation_result = perform_aggregation_on_column(queryset=queryset, column_name="temp", aggregation_type=aggregation_type)
         elif is_array_field(column_name):

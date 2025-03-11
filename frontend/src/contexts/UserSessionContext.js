@@ -7,7 +7,7 @@ const UserContext = createContext();
 export const useUser = () => useContext(UserContext);
 
 // Create a provider component
-export const UserProvider = ({ children }) => {
+export const UserSessionProvider = ({ children }) => {
 console.log("UserProvider")
   const [userId, setUserId] = useState("");
 
