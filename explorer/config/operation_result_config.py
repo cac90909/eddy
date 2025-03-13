@@ -143,7 +143,7 @@ OPERATION_RESULT_DEFINITIONS = {
         "serialization" : lambda result_data : result_data
     },
     "config": {
-        "data_type_verification": lambda result_data : isinstance(result_data, dict),
+        "data_type_verification": lambda result_data : result_data is not None,
         "cache_policy": lambda op: False,
         "data_overview_fields" : {},
         "attach_operations_history": False,

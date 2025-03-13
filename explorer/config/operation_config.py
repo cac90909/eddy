@@ -136,34 +136,7 @@ OPERATION_DEFINITIONS = [
         "display": "operation_navigation",
         "http_method": "GET"
     },
-    {
-        "operation_name": "get_column_operator_options",
-        "operation_type": "universal",
-        "operation_arguments": [
-            {"argument_name": "user_id", "argument_type": "int", "required": True}
-        ],
-        "operation_result_data_type": "list",
-        "handler": lambda user_id, **kwargs: operation_util.get_column_operator_options(user_id=user_id, **kwargs),
-        "cache_policy": lambda op: False,
-        "data_source": lambda user_id, op: ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id),
-        "setup": None,
-        "display": None,
-        "http_method": "GET"
-    },
-    {
-        "operation_name": "get_filterable_column_names",
-        "operation_type": "universal",
-        "operation_arguments": [
-            {"argument_name": "user_id", "argument_type": "int", "required": True}
-        ],
-        "operation_result_data_type": "list",
-        "handler": lambda user_id, **kwargs: operation_util.get_filterable_column_names(user_id=user_id, **kwargs),
-        "cache_policy": lambda op: False,
-        "data_source": lambda user_id, op: ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id),
-        "setup": None,
-        "display": None,
-        "http_method": "GET"
-    },
+  
     {
         "operation_name": "get_unique_column_values",
         "operation_type": "universal",
@@ -397,6 +370,137 @@ OPERATION_DEFINITIONS = [
         "display": "operation_navigation",
         "http_method": "GET"
     },
+        {
+        "operation_name": "get_operation_chain",
+        "operation_type": "universal_util",
+        "operation_arguments": [
+            {"argument_name": "user_id", "argument_type": "int", "required": True}
+        ],
+        "operation_result_data_type": "operation_chain",
+        "handler": lambda user_id, **kwargs: ExplorerCacheService().get_operation_chain(user_id=user_id, **kwargs),
+        "cache_policy": lambda op: False,
+        "data_source": lambda user_id, op: None,
+        "setup": None,
+        "display": None,
+        "http_method": "GET"
+    },
+    {
+        "operation_name": "get_operation_chain_operations",
+        "operation_type": "universal_util",
+        "operation_arguments": [
+            {"argument_name": "user_id", "argument_type": "int", "required": True}
+        ],
+        "operation_result_data_type": "operations_list",
+        "handler": lambda user_id, **kwargs: ExplorerCacheService().extract_operation_chain_operations(user_id=user_id, **kwargs),
+        "cache_policy": lambda op: False,
+        "data_source": lambda user_id, op: None,
+        "setup": None,
+        "display": None,
+        "http_method": "GET"
+    },
+    {
+        "operation_name": "get_operation_chain_results",
+        "operation_type": "universal_util",
+        "operation_arguments": [
+            {"argument_name": "user_id", "argument_type": "int", "required": True}
+        ],
+        "operation_result_data_type": "results_list",
+        "handler": lambda user_id, **kwargs: ExplorerCacheService().extract_operation_chain_result_data(user_id=user_id, **kwargs),
+        "cache_policy": lambda op: False,
+        "data_source": lambda user_id, op: None,
+        "setup": None,
+        "display": None,
+        "http_method": "GET"
+    },
+      {
+        "operation_name": "get_column_operator_options",
+        "operation_type": "universal_util",
+        "operation_arguments": [
+            {"argument_name": "user_id", "argument_type": "int", "required": True}
+        ],
+        "operation_result_data_type": "list",
+        "handler": lambda user_id, **kwargs: operation_util.get_column_operator_options(user_id=user_id, **kwargs),
+        "cache_policy": lambda op: False,
+        "data_source": lambda user_id, op: ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id),
+        "setup": None,
+        "display": None,
+        "http_method": "GET"
+    },
+    {
+        "operation_name": "get_filterable_column_names",
+        "operation_type": "universal_util",
+        "operation_arguments": [
+            {"argument_name": "user_id", "argument_type": "int", "required": True}
+        ],
+        "operation_result_data_type": "list",
+        "handler": lambda user_id, **kwargs: operation_util.get_filterable_column_names(user_id=user_id, **kwargs),
+        "cache_policy": lambda op: False,
+        "data_source": lambda user_id, op: ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id),
+        "setup": None,
+        "display": None,
+        "http_method": "GET"
+    },
+    {
+        "operation_name": "get_operation_types",
+        "operation_type": "universal_util",
+        "operation_arguments": [
+            {"argument_name": "user_id", "argument_type": "int", "required": True}
+        ],
+        "operation_result_data_type": "list",
+        "handler": lambda user_id, **kwargs: operation_util.get_operation_result_data_types(user_id=user_id, **kwargs),
+        "cache_policy": lambda op: False,
+        "data_source": lambda user_id, op: None,
+        "setup": None,
+        "display": None,
+        "http_method": "GET"
+    },
+        {
+        "operation_name": "get_operation_names_for_result_data_type",
+        "operation_type": "universal_util",
+        "operation_arguments": [
+            {"argument_name": "user_id", "argument_type": "int", "required": True},
+            {"argument_name": "operation_result_data_type", "argument_type": "string", "required": True}
+        ],
+        "operation_result_data_type": "list",
+        "handler": lambda user_id, **kwargs: operation_util.get_operation_names_for_result_data_type(user_id=user_id, **kwargs),
+        "cache_policy": lambda op: False,
+        "data_source": lambda user_id, op: None,
+        "setup": None,
+        "display": None,
+        "http_method": "GET"
+    },
+    {
+    "operation_name": "get_operation_argument_names",
+    "operation_type": "universal_util",
+    "operation_arguments": [
+        {"argument_name": "user_id", "argument_type": "int", "required": True},
+        {"argument_name": "operation_name", "argument_type": "string", "required": True}
+    ],
+    "operation_result_data_type": "list",
+    "handler": lambda user_id, **kwargs: operation_util.get_operation_argument_names(user_id=user_id, **kwargs),
+    "cache_policy": lambda op: False,
+    "data_source": lambda user_id, op: None,
+    "setup": None,
+    "display": None,
+    "http_method": "GET"
+    },
+        {
+    "operation_name": "get_operation_argument_options",
+    "operation_type": "universal_util",
+    "operation_arguments": [
+        {"argument_name": "user_id", "argument_type": "int", "required": True},
+        {"argument_name": "operation_name", "argument_type": "string", "required": True},
+        {"argument_name": "operation_argument_name", "argument_type": "string", "required": True},
+        {"argument_name": "prev_argument_values", "argument_type": "string", "required": True}
+    ],
+    "operation_result_data_type": "list",
+    "handler": lambda user_id, **kwargs: operation_util.get_operation_argument_options(user_id=user_id, **kwargs),
+    "cache_policy": lambda op: False,
+    "data_source": lambda user_id, op: None,
+    "setup": None,
+    "display": None,
+    "http_method": "GET"
+    },
     {
         "operation_name": "start_explorer_session",
         "operation_type": "state",
@@ -474,48 +578,6 @@ OPERATION_DEFINITIONS = [
         "setup": None,
         "display": None,
         "http_method": "POST"
-    },
-    {
-        "operation_name": "get_operation_chain",
-        "operation_type": "state",
-        "operation_arguments": [
-            {"argument_name": "user_id", "argument_type": "int", "required": True}
-        ],
-        "operation_result_data_type": "operation_chain",
-        "handler": lambda user_id, **kwargs: ExplorerCacheService().get_operation_chain(user_id=user_id, **kwargs),
-        "cache_policy": lambda op: False,
-        "data_source": lambda user_id, op: None,
-        "setup": None,
-        "display": None,
-        "http_method": "GET"
-    },
-    {
-        "operation_name": "get_operation_chain_operations",
-        "operation_type": "state",
-        "operation_arguments": [
-            {"argument_name": "user_id", "argument_type": "int", "required": True}
-        ],
-        "operation_result_data_type": "operations_list",
-        "handler": lambda user_id, **kwargs: ExplorerCacheService().extract_operation_chain_operations(user_id=user_id, **kwargs),
-        "cache_policy": lambda op: False,
-        "data_source": lambda user_id, op: None,
-        "setup": None,
-        "display": None,
-        "http_method": "GET"
-    },
-    {
-        "operation_name": "get_operation_chain_results",
-        "operation_type": "state",
-        "operation_arguments": [
-            {"argument_name": "user_id", "argument_type": "int", "required": True}
-        ],
-        "operation_result_data_type": "results_list",
-        "handler": lambda user_id, **kwargs: ExplorerCacheService().extract_operation_chain_result_data(user_id=user_id, **kwargs),
-        "cache_policy": lambda op: False,
-        "data_source": lambda user_id, op: None,
-        "setup": None,
-        "display": None,
-        "http_method": "GET"
     },
     {
         "operation_name": "save_snapshot",

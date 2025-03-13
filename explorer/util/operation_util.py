@@ -45,6 +45,7 @@ def cache_operation_metadata(user_id, operation):
     debug_print(f"Operation metadata cached")
 
 @staticmethod
+#TODO - change this to only send operation names as they pertain to binding them to UI components
 def assemble_operations_config(user_id):
     from explorer.config.operation_config import OPERATION_DEFINITIONS
     operations_config = [{"operation_name":op_def.get("operation_name"), "operation_arguments": op_def.get("operation_expected_arguments"),
@@ -76,6 +77,46 @@ def get_filterable_column_names(user_id, data_source):
     else:
         debug_print(f"Data source is not a queryset of model instances")
         return None
+
+#Eventually, these will be DB queries (operation names, argument definitions I think will eventually be stored in DB)
+#TODO - change the naming scope (and list sontruction scope) for only operations that pertain to the operation request constructor
+def get_operation_result_data_types(user_id):
+    from explorer.config.operation_config import OPERATION_DEFINITIONS
+    operation_result_data_types = [op_def.get("operation_result_data_type") for op_def in OPERATION_DEFINITIONS.values()]
+    return set(operation_result_data_types)
+
+def get_operation_names_for_result_data_type(user_id, operation_result_data_type):
+    from explorer.config.operation_config import OPERATION_DEFINITIONS
+    operation_names = [op_def.get("operation_name") for op_def in OPERATION_DEFINITIONS.values() if op_def.get("operation_expected_result_data_type") == operation_result_data_type]
+    return operation_names
+
+
+def get_operation_argument_names(user_id, operation_name):
+    from explorer.config.operation_config import OPERATION_DEFINITIONS
+    op_def = next((op for op in OPERATION_DEFINITIONS if op["operation_name"] == operation_name), None)
+    if op_def:
+        return [arg.get("argument_name") for arg in op_def.get("operation_expected_arguments") if arg.get("argument_name") != "user_id"]
+    else:
+        return None
+    
+def get_operation_argument_options(user_id, operation_name, operation_argument_name, prev_argument_values):
+    from explorer.config.operation_config import OPERATION_DEFINITIONS
+    op_def = next((op for op in OPERATION_DEFINITIONS if op["operation_name"] == operation_name), None)
+    arg_def = next((arg for arg in op_def.get("operation_expected_arguments") if arg.get("argument_name") == operation_argument_name), None)
+    if arg_def.get("value_options"):
+        return arg_def.get("value_options")(user_id, prev_argument_values)
+    elif arg_def.get("value_options_fetch"): 
+        from explorer.services.explorer_service import ExplorerService
+        if arg_def.get("value_options_dependency") is None:
+            return ExplorerService().handle_operation(user_id=user_id, operation_name=arg_def.get("value_options_fetch"), operation_arguments={})
+        elif "$" in arg_def.get("value_options_dependency"):
+            dep_arg = prev_argument_values[arg_def.get("value_options_dependency")[1:]]
+            return ExplorerService(user_id=user_id, operation_name=arg_def.get("value_options_dependency"), operation_arguments={arg_def.get("value_options_dependency")[1:]:prev_argument_values[dep_arg]})
+        elif "$" not in arg_def.get("value_options_dependency"):
+            return ExplorerService(user_id=user_id, operation_name=arg_def.get("value_options_dependency"), operation_arguments={arg_def.get("value_options_dependency"):prev_argument_values[arg_def.get("value_options_dependency")]}) 
+    else:
+        return None
+        
 
     
 
