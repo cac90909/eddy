@@ -498,7 +498,7 @@ OPERATION_DEFINITIONS = [
     "cache_policy": lambda op: False,
     "data_source": lambda user_id, op: None,
     "setup": None,
-    "display": None,
+    "display": "operation_argument_options",
     "http_method": "GET"
     },
     {
@@ -652,7 +652,7 @@ OPERATION_DEFINITIONS = [
         "cache_policy": lambda op: False,
         "data_source": lambda user_id, op: None,
         "setup": None,
-        "display": None,
+        "display": "load_options",
         "http_method": "GET"
     }
 ]

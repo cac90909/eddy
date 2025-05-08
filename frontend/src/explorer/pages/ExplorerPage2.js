@@ -14,21 +14,26 @@ import OperationNavigation from "../components/OperationNavigation";
 import SnapshotManager from "../components/SnapshotManager";
 import OperationHistory from "../components/OperationHistory";
 import DataOverview from "../components/DataOverview";
-import ExplorerService from "../services/ExplorerService";
+import ExplorerService from "../services/ExplorerService2";
 import { useUser } from "../../contexts/UserSessionContext";
-import { useSetOperationResult } from "../hooks/useSetOperationResult";
-import { useApplyOperation } from "../hooks/useApplyOperation";
-import { useExplorerConfig } from "../../contexts/ExplorerConfigContext";
+import { useSetOperationResult } from "../hooks/useSessionData";
+import { OPERATION_CONFIG } from "../config/OperationConfig";
 
 function ExplorerPage() {
   const { userId } = useUser();
-  const { applyOperation, loading, error } = useApplyOperation(userId);
   const { operationResult, setOperationResult } = useSetOperationResult();
-  const { explorerConfig, setExplorerConfig } = useExplorerConfig();
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState(null);
 
   const handleApplyOperation = async (operationName, operationArguments, updateGlobal = true) => {
+    const operationConfig = OPERATION_CONFIG[operationKey];
+    if (!operationConfig) {
+      throw new Error(`Unknown operation: ${operationKey}`);
+    }
+    httpMethod = operationConfig["httpMethod"]
     try {
-      const result = await applyOperation(operationName, operationArguments);
+      const result = await ExplorerService.callOperation({operationName: operationName, operationArguments:operationArguments, userId:userId, httpMethod:httpMethod});
+      //Left off here
       if (updateGlobal) {
         setOperationResult(result);
       }
@@ -54,34 +59,6 @@ function ExplorerPage() {
     initializeSession();
   }, [userId, applyOperation, setExplorerConfig]);
 
-  // Use useMemo to derive subsets of the config for child components.
-  const navigationOperations = useMemo(() => {
-    return explorerConfig?.operations_config.filter(op => op.display === "operation_navigation") || [];
-  }, [explorerConfig]);
-
-  const resetOperation = useMemo(() => {
-    return explorerConfig?.operations_config.find(op => op.display === "reset_button");
-  }, [explorerConfig]);
-
-  const saveOperation = useMemo(() => {
-    return explorerConfig?.operations_config.find(op => op.display === "save_button");
-  }, [explorerConfig]);
-
-  const deleteOperation = useMemo(() => {
-    return explorerConfig?.operations_config.find(op => op.display === "delete_button");
-  }, [explorerConfig]);
-
-  const loadOperation = useMemo(() => {
-    return explorerConfig?.operations_config.find(op => op.display === "load_button");
-  }, [explorerConfig]);
-
-  const loadOptionsOperation = useMemo(() => {
-    return explorerConfig?.operations_config.find(op => op.display === "load_options");
-  }, [explorerConfig]);
-
-  const argumentOptionsOperation = useMemo(() => {
-    return explorerConfig?.operations_config.find(op => op.display === "operation_argument_options");
-  }, [explorerConfig]);
 
   return (
     <ExplorerContainer>
