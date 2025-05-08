@@ -32,79 +32,100 @@ const SnapshotManager = ({ userId, onSnapshotLoad, onReset }) => {
   const [openLoad, setOpenLoad] = useState(false);
   const [snapshots, setSnapshots] = useState([]);
 
+  const handleApplyOperation = useOperationHandler(userId);
+
   useEffect(() => {
     if (openLoad) {
-      ExplorerService.getAllSnapshots(userId)
-        .then((data) => setSnapshots(data))
+      handleApplyOperation("get_all_snapshots")
+        .then(({ data }) => setSnapshots(data))
         .catch((err) => console.error("Error fetching snapshots:", err));
     }
   }, [openLoad, userId]);
 
   const handleSave = async () => {
     try {
-      const result = await ExplorerService.saveSnapshot(userId, snapshotTitle, snapshotDescription);
+      const { data } = await handleApplyOperation("save_snapshot", {
+        title: snapshotTitle,
+        description: snapshotDescription,
+      });
       setOpenSave(false);
       setSnapshotTitle("");
       setSnapshotDescription("");
-      console.log("Snapshot saved:", result);
+      console.log("Snapshot saved:", data);
       alert("Snapshot saved successfully!");
     } catch (error) {
       console.error("Error saving snapshot:", error);
       alert("Error saving snapshot.");
     }
   };
-
+  
   const handleLoad = async (snapshotId) => {
     try {
-      const loadedData = await ExplorerService.loadSnapshot(userId, snapshotId);
-      onSnapshotLoad(loadedData);
+      const { data } = await handleApplyOperation("load_snapshot", {
+        snapshot_id: snapshotId,
+      });
+      onSnapshotLoad(data);
       setOpenLoad(false);
     } catch (error) {
       console.error("Error loading snapshot:", error);
       alert("Error loading snapshot.");
     }
   };
-
+  
   const handleDelete = async (snapshotId) => {
     try {
-      const result = await ExplorerService.deleteSnapshot(userId, snapshotId);
-      console.log("Snapshot deleted:", result);
-      // Optionally refresh snapshots list.
+      const { data } = await handleApplyOperation("delete_snapshot", {
+        snapshot_id: snapshotId,
+      });
+      console.log("Snapshot deleted:", data);
+      // Optionally refresh snapshot list
     } catch (error) {
       console.error("Error deleting snapshot:", error);
       alert("Error deleting snapshot.");
     }
   };
-
+  
   const handleUpdate = async (snapshotId, title, description) => {
     try {
-      const result = await ExplorerService.updateSnapshot(userId, snapshotId, title, description);
-      console.log("Snapshot updated:", result);
+      const { data } = await handleApplyOperation("update_snapshot", {
+        snapshot_id: snapshotId,
+        title,
+        description,
+      });
+      console.log("Snapshot updated:", data);
     } catch (error) {
       console.error("Error updating snapshot:", error);
       alert("Error updating snapshot.");
     }
   };
-
+  
   const handleUndo = async () => {
     try {
-      const previousData = await ExplorerService.undoOperation(userId);
-      onSnapshotLoad(previousData);
+      const { data } = await handleApplyOperation("undo_last_operation");
+      onSnapshotLoad(data);
     } catch (error) {
       console.error("Error undoing operation:", error);
       alert("Error undoing operation.");
     }
   };
-
+  
   const handleReset = async () => {
     try {
-      const initData = await ExplorerService.reset(userId);
-      onReset(initData);
+      const { data } = await handleApplyOperation("reset_data");
+      onReset(data);
     } catch (error) {
       console.error("Error resetting snapshot data:", error);
       alert("Error resetting snapshot data.");
     }
   };
+  
+  useEffect(() => {
+    if (openLoad) {
+      handleApplyOperation("get_all_snapshots")
+        .then(({ data }) => setSnapshots(data))
+        .catch((err) => console.error("Error fetching snapshots:", err));
+    }
+  }, [openLoad, userId]);
 
   return (
     <Stack direction="row" spacing={1} alignItems="center">

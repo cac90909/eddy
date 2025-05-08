@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Paper, Typography, Box } from "@mui/material";
 import {
   ExplorerContainer,
@@ -14,51 +14,43 @@ import OperationNavigation from "../components/OperationNavigation";
 import SnapshotManager from "../components/SnapshotManager";
 import OperationHistory from "../components/OperationHistory";
 import DataOverview from "../components/DataOverview";
-import ExplorerService from "../services/ExplorerService2";
 import { useUser } from "../../contexts/UserSessionContext";
-import { useSetOperationResult } from "../hooks/useSessionData";
-import { OPERATION_CONFIG } from "../config/OperationConfig";
+import { useOperationHandler } from "../hooks/useOperationHandler"; // Import reusable hook
 
 function ExplorerPage() {
   const { userId } = useUser();
-  const { operationResult, setOperationResult } = useSetOperationResult();
+  const [operationResult, setOperationResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState(null);
+  const [error, setError] = useState(null);
 
-  const handleApplyOperation = async (operationName, operationArguments, updateGlobal = true) => {
-    const operationConfig = OPERATION_CONFIG[operationKey];
-    if (!operationConfig) {
-      throw new Error(`Unknown operation: ${operationKey}`);
-    }
-    httpMethod = operationConfig["httpMethod"]
-    try {
-      const result = await ExplorerService.callOperation({operationName: operationName, operationArguments:operationArguments, userId:userId, httpMethod:httpMethod});
-      //Left off here
-      if (updateGlobal) {
-        setOperationResult(result);
-      }
-      return result;
-    } catch (err) {
-      console.error("Operation failed:", err);
-      throw err;
-    }
-  };
+  const handleApplyOperation = useOperationHandler(userId); // Hook gives you a reusable operation handler
 
-  // Initialize session on mount
   useEffect(() => {
     const initializeSession = async () => {
-      if (userId) {
-        // Call start_explorer_session and save the returned configuration in context
-        const config = await applyOperation("start_explorer_session", {});
-        setExplorerConfig(config);
+      if (!userId) return;
 
-        const fullData = await applyOperation("get_full_data", {});
-        setOperationResult(fullData);
+      try {
+        // previously this returned a config object, and we set config from this call
+        // now config (operation definitions) are stored in the FE util folder
+        // right now, i don't know what this is returning or if it returns anything
+        // it may just start the Django caches
+        const resp = await handleApplyOperation("start_explorer_session", {}, false);
+
+        const { data, meta } = await handleApplyOperation("get_full_data");
+        setOperationResult({
+          data,
+          dataOverview: meta?.data_overview,
+          operationsHistory: meta?.operations_history || [],
+          columns: Object.keys(data?.[0] || {})
+        });
+      } catch (err) {
+        console.error("Initialization failed", err);
+        setError(err);
       }
     };
-    initializeSession();
-  }, [userId, applyOperation, setExplorerConfig]);
 
+    initializeSession();
+  }, [userId]);
 
   return (
     <ExplorerContainer>
