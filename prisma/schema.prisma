@@ -1,0 +1,55 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// -- A minimal User model to satisfy the FK in Django’s get_user_model()
+model User {
+  id          Int          @id @default(autoincrement())
+  email       String       @unique
+  // add any other user fields you need (name, password, etc.)
+  universal   Universal[]  @relation("UserUniversal")
+  snapshots   Snapshots[]  @relation("UserSnapshots")
+  @@map("auth_user")        // optional: map to your existing Django table
+}
+
+// -- Mirrors your Django “Universal” model
+model Universal {
+  id                  Int     @id @default(autoincrement())
+  date                DateTime
+  functionalities     Json?
+  subject_matters     Json?
+  general_categories  Json?
+  title               String? 
+  text                String?
+  tags                Json?
+  parents_ids         Json?
+  children_ids        Json?
+  siblings_ids        Json?
+  fields              Json?
+  entry_id            String  @unique
+  user                User    @relation("UserUniversal", fields: [userId], references: [id])
+  userId              Int
+
+  @@map("universal")
+}
+
+// -- Mirrors your Django “Snapshots” model
+model Snapshots {
+  snapshot_id     Int      @id @default(autoincrement())
+  user            User     @relation("UserSnapshots", fields: [userId], references: [id])
+  userId          Int
+  title           String
+  description     String
+  operation_chain Json      @default("[]")
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  @@map("snapshots")
+}
