@@ -30,25 +30,22 @@ OPERATION_DEFINITIONS = [
                 "argument_name": "column_name",
                 "argument_type": "string",
                 "required": True,
-                "value_options_fetch": "get_filterable_column_names",
+                "value_options_fetch": lambda user_id, **kwargs: operation_util.get_filterable_column_names(user_id=user_id, **kwargs),
                 "value_options_fetch_dependency": None,
-                "accept_free_input": False
             },
             {
                 "argument_name": "filter_value",
                 "argument_type": "string",
                 "required": True,
-                "value_options_fetch": "get_unique_column_values_filter_options",
+                "value_options_fetch": lambda user_id, **kwargs: UniversalListService().get_unique_column_values(user_id=user_id, **kwargs),
                 "value_options_fetch_dependency": "$column_name",
-                "accept_free_input": False
             },
             {
                 "argument_name": "filter_type",
                 "argument_type": "string",
                 "required": True,
-                "value_options_fetch": "get_operator_options",
+                "value_options_fetch": lambda user_id, **kwargs: operation_util.get_column_operator_options(user_id=user_id, **kwargs),
                 "value_options_fetch_dependency": "$column_name",
-                "accept_free_input": False
             }
         ],
         "operation_result_data_type": "raw",
@@ -70,9 +67,8 @@ OPERATION_DEFINITIONS = [
                 "argument_name": "start_id",
                 "argument_type": "int",
                 "required": True,
-                "value_options_fetch": "get_unique_column_values",
+                "value_options_fetch": lambda user_id, **kwargs: UniversalListService().get_unique_column_values(user_id=user_id, **kwargs),
                 "value_options_fetch_dependency": "entry_id",
-                "accept_free_input": False
             },
             {
                 "argument_name": "traversal_directions",
@@ -103,24 +99,22 @@ OPERATION_DEFINITIONS = [
                 "argument_type": "string",
                 "required": True,
                 "multiple_selection": True,
-                "value_options_fetch": "get_groupable_columns",
+                "value_options_fetch": lambda user_id, **kwargs: operation_util.get_groupable_columns(user_id=user_id, **kwargs),
                 "value_options_fetch_dependency": None,
-                "accept_free_input": False
             },
             {
                 "argument_name": "aggregate_operation",
                 "argument_type": "string",
                 "required": True,
-                "value_options": ["sum", "avg", "min", "max", "count"],
-                "accept_free_input": False
+                "value_options_fetch": lambda user_id, **kwargs: operation_util.get_aggregate_operation_options(user_id=user_id, **kwargs),
+                "value_options_fetch_dependency": "$group_columns",
             },
             {
                 "argument_name": "target_column",
                 "argument_type": "string",
                 "required": True,
-                "value_options_fetch": "get_numeric_columns",
-                "value_options_fetch_dependency": None,
-                "accept_free_input": False
+                "value_options_fetch": lambda user_id, **kwargs: operation_util.get_aggregate_target_column_options(user_id=user_id, **kwargs),
+                "value_options_fetch_dependency": ["$group_columns", "$aggregation_operation"],
             },
             {   "argument_name": "frequency", 
                 "argument_type": "string", 
@@ -146,9 +140,8 @@ OPERATION_DEFINITIONS = [
                 "argument_name": "column_name",
                 "argument_type": "string",
                 "required": True,
-                "value_options_fetch": "get_filterable_column_names",
+                "value_options_fetch": lambda user_id, **kwargs: operation_util.get_filterable_column_names(user_id=user_id, **kwargs),
                 "value_options_fetch_dependency": None,
-                "accept_free_input": False
             }
         ],
         "operation_result_data_type": "list",
@@ -269,9 +262,8 @@ OPERATION_DEFINITIONS = [
                 "argument_name": "column_name",
                 "argument_type": "string",
                 "required": True,
-                "value_options_fetch": "get_filterable_column_names",
+                "value_options_fetch": lambda user_id, **kwargs: operation_util.get_filterable_column_names(user_id=user_id, **kwargs),
                 "value_options_fetch_dependency": None,
-                "accept_free_input": False
             }
         ],
         "operation_result_data_type": "metric",
@@ -291,9 +283,8 @@ OPERATION_DEFINITIONS = [
                 "argument_name": "column_name",
                 "argument_type": "string",
                 "required": True,
-                "value_options_fetch": "get_filterable_column_names",
-                "value_options_fetch_dependency": None,
-                "accept_free_input": False
+                "value_options_fetch": lambda user_id, **kwargs: operation_util.get_filterable_column_names(user_id=user_id, **kwargs),
+                "value_options_fetch_dependency": None
             }
         ],
         "operation_result_data_type": "metric",
@@ -313,9 +304,8 @@ OPERATION_DEFINITIONS = [
                 "argument_name": "column_name",
                 "argument_type": "string",
                 "required": True,
-                "value_options_fetch": "get_filterable_column_names",
+                "value_options_fetch": lambda user_id, **kwargs: operation_util.get_filterable_column_names(user_id=user_id, **kwargs),
                 "value_options_fetch_dependency": None,
-                "accept_free_input": False
             }
         ],
         "operation_result_data_type": "metric",
@@ -335,9 +325,8 @@ OPERATION_DEFINITIONS = [
                 "argument_name": "column_name",
                 "argument_type": "string",
                 "required": True,
-                "value_options_fetch": "get_filterable_column_names",
+                "value_options_fetch": lambda user_id, **kwargs: operation_util.get_filterable_column_names(user_id=user_id, **kwargs),
                 "value_options_fetch_dependency": None,
-                "accept_free_input": False
             }
         ],
         "operation_result_data_type": "metric",
@@ -357,9 +346,8 @@ OPERATION_DEFINITIONS = [
                 "argument_name": "column_name",
                 "argument_type": "string",
                 "required": True,
-                "value_options_fetch": "get_filterable_column_names",
+                "value_options_fetch": lambda user_id, **kwargs: operation_util.get_filterable_column_names(user_id=user_id, **kwargs),
                 "value_options_fetch_dependency": None,
-                "accept_free_input": False
             }
         ],
         "operation_result_data_type": "metric",
@@ -484,7 +472,7 @@ OPERATION_DEFINITIONS = [
     "display": None,
     "http_method": "GET"
     },
-        {
+    {
     "operation_name": "get_operation_argument_options",
     "operation_type": "universal_util",
     "operation_arguments": [

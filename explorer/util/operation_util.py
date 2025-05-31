@@ -1,6 +1,7 @@
 from shared.logger import debug_print
 from shared.models import Universal
 from explorer.services.explorer_cache_service import ExplorerCacheService
+from typing import Any, List, Dict, Callable
 
 
 def get_operation_definition(operation_name):
@@ -99,23 +100,83 @@ def get_operation_argument_names(user_id, operation_name):
     else:
         return None
     
-def get_operation_argument_options(user_id, operation_name, operation_argument_name, prev_argument_values):
+def get_groupable_columns(user_id):
+    print("Implement")
+    return
+
+def get_aggregate_operation_options(user_id, group_columns):
+    print("Implement")
+    #Ex: cant perform a min when the working with string data
+    options = ["sum", "avg", "min", "max", "count"]
+    return options
+
+def get_aggregate_target_column_options(user_id, group_columns, aggregation_operation):
+    print("Implement")
+    return
+    
+def get_operation_argument_options(
+    user_id: int,
+    operation_name: str,
+    operation_argument_name: str,
+    prev_argument_values: Dict[str, Any]
+) -> List[Any] | None:
+    """
+    Return the list of possible values for a given argument.
+    
+    - If the argument definition has a static list under "value_options" (a plain list),
+      return that list directly.
+    - Otherwise, assume "value_options_fetch" is a callable with signature:
+          fetcher(user_id: int, **prev_kwargs) -> List[Any]
+      and call it with the entire prev_argument_values dict.
+    - If neither "value_options" nor "value_options_fetch" is provided, return None.
+    """
+
     from explorer.config.operation_config import OPERATION_DEFINITIONS
-    op_def = next((op for op in OPERATION_DEFINITIONS if op["operation_name"] == operation_name), None)
-    arg_def = next((arg for arg in op_def.get("operation_expected_arguments") if arg.get("argument_name") == operation_argument_name), None)
-    if arg_def.get("value_options"):
-        return arg_def.get("value_options")(user_id, prev_argument_values)
-    elif arg_def.get("value_options_fetch"): 
-        from explorer.services.explorer_service import ExplorerService
-        if arg_def.get("value_options_dependency") is None:
-            return ExplorerService().handle_operation(user_id=user_id, operation_name=arg_def.get("value_options_fetch"), operation_arguments={})
-        elif "$" in arg_def.get("value_options_dependency"):
-            dep_arg = prev_argument_values[arg_def.get("value_options_dependency")[1:]]
-            return ExplorerService(user_id=user_id, operation_name=arg_def.get("value_options_dependency"), operation_arguments={arg_def.get("value_options_dependency")[1:]:prev_argument_values[dep_arg]})
-        elif "$" not in arg_def.get("value_options_dependency"):
-            return ExplorerService(user_id=user_id, operation_name=arg_def.get("value_options_dependency"), operation_arguments={arg_def.get("value_options_dependency"):prev_argument_values[arg_def.get("value_options_dependency")]}) 
-    else:
+
+    # 1) Find the operation definition
+    op_def = next(
+        (op for op in OPERATION_DEFINITIONS if op["operation_name"] == operation_name),
+        None
+    )
+    if op_def is None:
+        raise ValueError(f"Unknown operation '{operation_name}'")
+
+    # 2) Find the argument definition ("operation_arguments" key)
+    arg_defs = op_def.get("operation_arguments", [])
+    arg_def = next(
+        (a for a in arg_defs if a.get("argument_name") == operation_argument_name),
+        None
+    )
+    if arg_def is None:
+        raise ValueError(f"Operation '{operation_name}' has no argument '{operation_argument_name}'")
+
+    # 3) If there's a static list under "value_options", return it directly
+    static_opts = arg_def.get("value_options")
+    if static_opts is not None:
+        # We assume static_opts is a list (not a callable)
+        return static_opts
+
+    # 4) Otherwise, get the fetcher callable under "value_options_fetch"
+    fetcher = arg_def.get("value_options_fetch")
+    if not fetcher:
+        # No static list and no fetcher → free-text or no suggestions
         return None
+
+    # 5) Call the fetcher with (user_id, **prev_argument_values)
+    if not isinstance(fetcher, Callable):
+        raise ValueError(
+            f"'value_options_fetch' for argument '{operation_argument_name}' "
+            f"in operation '{operation_name}' is not callable"
+        )
+
+    try:
+        return fetcher(user_id=user_id, **prev_argument_values)
+    except KeyError as e:
+        missing_key = e.args[0]
+        raise ValueError(
+            f"Missing required previous argument '{missing_key}' for '{operation_argument_name}' "
+            f"in operation '{operation_name}'"
+        )
         
 
     
