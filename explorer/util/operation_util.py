@@ -179,7 +179,33 @@ def get_operation_argument_options(
         )
         
 
-    
+# explorer/util/operation_validation.py
+
+from typing import Type, List, Dict, Any
+from explorer.domain.operations.base_operation import BaseOperation
+from explorer.domain.operations.argument import Argument
+
+def validate_args_against_metadata(
+    operation_cls: Type[BaseOperation],
+    provided_args: Dict[str, Any],
+) -> List[str]:
+    """
+    Compare the list of Argument(...) definitions from operation_cls.arguments()
+    against the keys in provided_args. Return a list of missing required argument names.
+    """
+    missing: List[str] = []
+
+    # 1. Fetch the declared Argument objects
+    declared_args: List[Argument] = operation_cls.arguments()
+
+    # 2. For each Argument that is required, check if it's in provided_args
+    for arg_obj in declared_args:
+        arg_name = arg_obj.name
+        if arg_obj.required and (arg_name not in provided_args):
+            missing.append(arg_name)
+
+    return missing
+
 
 
 
