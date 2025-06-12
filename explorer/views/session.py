@@ -17,8 +17,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 
-from explorer.serializers.session_requests import *
-from explorer.serializers.responses import StandardOperationResponseSerializer
+from explorer.serializers.requests.session import *
+from explorer.serializers.responses.base import StandardOperationResponseSerializer
 from explorer.services.explorer_cache_service import ExplorerCacheService
 from shared.services.snapshots_service import SnapshotsService
 from shared.services.universal_raw_service import UniversalRawService

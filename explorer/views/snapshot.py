@@ -21,8 +21,8 @@ from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 
-from explorer.serializers.snapshot_requests import *
-from explorer.serializers.responses import StandardOperationResponseSerializer
+from explorer.serializers.requests.snapshot import *
+from explorer.serializers.responses.base import StandardOperationResponseSerializer
 from shared.services.snapshots_service import SnapshotsService
 
 class SnapshotViewSet(ViewSet):
