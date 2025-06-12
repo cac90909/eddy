@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from explorer.services.explorer_dispatcher import ExplorerDispatcher
 
-class ExplorerView(APIView):
+class ExploreView(APIView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.dispatcher = ExplorerDispatcher()

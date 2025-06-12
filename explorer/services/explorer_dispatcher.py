@@ -2,13 +2,12 @@
 
 import json
 from typing import Any, Dict
-from explorer.domain.operation_registry import get_operation_class
-from explorer.domain.operation_result_registry import get_result_type_class
-from explorer.domain.operation import Operation
+from explorer.domain.operations.operation_registry import get_operation_class
+from explorer.domain.result_types.operation_result_registry import get_result_type_class
 from explorer.domain.operation_result import OperationResult
-from explorer.services.explorer_cache_service import ExplorerCacheService
-from explorer.util.operation_validation import validate_args_against_metadata
+from explorer.util.operation_util import validate_args_against_metadata
 from explorer.util.operation_result_util import get_operation_history, get_all_snapshots
+from explorer.services.explorer_cache_service import ExplorerCacheService
 
 class ExplorerDispatcher:
     def __init__(self):
@@ -18,92 +17,54 @@ class ExplorerDispatcher:
         self,
         user_id: int,
         operation_name: str,
-        operation_arguments: Dict[str, Any],
+        operation_arguments: Dict[str, Any]
     ) -> Dict[str, Any]:
-        # 1. Lookup the operation class
+        # 1. Lookup
         OperationClass = get_operation_class(operation_name)
         if OperationClass is None:
             return OperationResult.error(f"Operation not found: {operation_name}")
 
-        # 2. Validate required args
+        # 2. Validate args
         missing = validate_args_against_metadata(OperationClass, operation_arguments)
         if missing:
             return OperationResult.error(f"Missing required arguments: {missing}")
 
-        # 3. (Optional) Precondition logic:
-        # if hasattr(OperationClass, "precondition"):
-        #     cond, msg = OperationClass.precondition(user_id, operation_arguments)
-        #     if not cond:
-        #         return OperationResult.error(f"Precondition failed: {msg}")
-
-        # 4. Create an Operation domain object for metadata tracking
-        op_instance = Operation(
-            operation_name=operation_name,
-            operation_arguments=operation_arguments,
-            # You can also store category/result_type here if you want
-        )
-
-        # 5. Run any setup()
-        if hasattr(OperationClass, "setup") and callable(OperationClass.setup):
-            OperationClass.setup(user_id, op_instance)
-
-        # 6. Fetch prior data (if needed)
-        data_source = None
-        if hasattr(OperationClass, "data_source") and callable(OperationClass.data_source):
-            data_source = OperationClass.data_source(user_id, op_instance)
-
-        # 7. Execute the handler
+        # 3. Instantiate & execute
+        op_instance = OperationClass(user_id, **operation_arguments)
         try:
-            # Note: we pass user_id and data_source plus all declared args
-            result_data = OperationClass.handler(
-                user_id=user_id,
-                data_source=data_source,
-                **operation_arguments
-            )
+            op_instance.execute()
         except Exception as e:
             return OperationResult.error(f"Execution error: {str(e)}")
 
-        # 8. Determine which ResultType class to use
-        result_type_name = OperationClass.result_type.value  # e.g. "raw", "enriched", etc.
+        # 4. Pick correct result‐type helper
+        result_type_name = op_instance.result_data_type.value
         ResultTypeClass = get_result_type_class(result_type_name)
-        if ResultTypeClass is None:
+        if not ResultTypeClass:
             return OperationResult.error(f"No result‐type for: {result_type_name}")
 
-        # 9. Verify the returned data matches the expected Python type/shape
-        if not ResultTypeClass.verify(result_data):
-            return OperationResult.error(
-                f"Result data failed type check for result_type={result_type_name}"
-            )
+        # 5. Verify & maybe cache
+        if not ResultTypeClass.verify(op_instance.result_data):
+            return OperationResult.error(f"Result data failed type check for {result_type_name}")
 
-        # 10. Fill op_instance metadata so cache knows about it
-        op_instance.result_data = result_data
-        op_instance.result_data_type = OperationClass.result_type
-
-        # 11. Caching
         if ResultTypeClass.cache_policy(op_instance):
             self.cache_service.cache_operation_onto_chain(user_id, op_instance)
 
-        # 12. Build “data_overview_fields” (if any)
-        overview_fields = ResultTypeClass.data_overview_fields(user_id, result_data)
+        # 6. Build response payload
+        overview = ResultTypeClass.data_overview_fields(user_id, op_instance.result_data)
+        attach_history = ResultTypeClass.attach_history()
+        attach_snapshots = ResultTypeClass.attach_snapshots_list()
+        serialized = ResultTypeClass.serialize(op_instance.result_data)
 
-        # 13. Should we attach operation history? snapshots?
-        attach_history_flag = ResultTypeClass.attach_history()
-        attach_snapshots_flag = ResultTypeClass.attach_snapshots_list()
-
-        # 14. Serialize the result for HTTP
-        serialized_data = ResultTypeClass.serialize(result_data)
-
-        # 15. Assemble final payload
         meta: Dict[str, Any] = {
             "data_type": result_type_name,
             "operation_name": operation_name,
             "operation_bid": op_instance.id,
         }
-        if overview_fields:
-            meta["data_overview"] = overview_fields
-        if attach_history_flag:
+        if overview:
+            meta["data_overview"] = overview
+        if attach_history:
             meta["operations_history"] = get_operation_history(user_id)
-        if attach_snapshots_flag:
+        if attach_snapshots:
             meta["snapshots_list"] = get_all_snapshots(user_id)
 
-        return OperationResult(data=serialized_data, meta=meta).to_dict()
+        return OperationResult(data=serialized, meta=meta).to_dict()

@@ -3,8 +3,10 @@ from explorer.domain.enums.operation_result_type import OperationResultType
 from explorer.domain.enums.display_mode import DisplayMode
 from explorer.domain.operations.argument import Argument
 
-from typing import List, Optional
-
+import uuid
+from datetime import datetime
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional, List
 
 class BaseOperation:
     name: str
@@ -12,6 +14,21 @@ class BaseOperation:
     result_type: OperationResultType
     http_method: str
     display: Optional[DisplayMode] = None
+
+    def __init__(self, user_id: int, **operation_arguments):
+        self.id = uuid.uuid4()
+        self.user_id = user_id
+        self.operation_arguments: Dict[str, Any] = operation_arguments
+        self.app = "explorer"
+        self.created_at = datetime.now()
+
+        # will be filled in by execute()
+        self.result_data: Any = None
+        self.result_data_type: Any = None
+
+        # optional hook
+        if hasattr(self, "setup") and callable(self.setup):
+            self.setup(user_id, self)
 
     @classmethod
     def arguments(cls) -> List[Argument]:
