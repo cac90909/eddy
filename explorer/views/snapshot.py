@@ -18,81 +18,92 @@ Documentation support is added via drf-spectacular:
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework import status
 
-from explorer.serializers.requests.snapshot import *
-from explorer.serializers.responses.base import StandardOperationResponseSerializer
+from explorer.serializers.snapshot import *
+from explorer.serializers.base import StandardOperationResponseSerializer
+from explorer.services.snapshot_service import ExplorerSnapshotService
 from shared.services.snapshots_service import SnapshotsService
 
 class SnapshotViewSet(ViewSet):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.snapshot_service = ExplorerSnapshotService()
+
     @extend_schema(
         request=SaveSnapshotRequestSerializer,
-        responses=StandardOperationResponseSerializer
+        responses=SnapshotResponseSerializer
     )
     @action(detail=False, methods=["post"], url_path="", url_name="save_snapshot")
     def save_snapshot(self, request):
-        serializer = SaveSnapshotRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = SnapshotsService().create_snapshot(
+        in_ser = SaveSnapshotRequestSerializer(data=request.data)
+        in_ser.is_valid(raise_exception=True)
+        validated = in_ser.validated_data
+        snapshot =  self.snapshot_service.create_snapshot(
             user_id=validated["user_id"],
             operation_chain=None,  # Injected in real context
             title=validated["title"],
             description=validated.get("description")
         )
-        return Response({"data": result_payload, "meta": {}})
+        out_ser = SnapshotResponseSerializer(snapshot)
+        return Response({"data": out_ser.data, "meta": {}})
 
     @extend_schema(
         request=GetSnapshotRequestSerializer,
-        responses=StandardOperationResponseSerializer
+        responses=SnapshotResponseSerializer
     )
     @action(detail=True, methods=["get"], url_path="", url_name="get_snapshot")
     def get_snapshot(self, request, pk=None):
-        serializer = GetSnapshotRequestSerializer(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = SnapshotsService().get_snapshot(user_id=validated["user_id"], snapshot_id=pk)
-        return Response({"data": result_payload, "meta": {}})
+        in_ser = GetSnapshotRequestSerializer(data=request.query_params)
+        in_ser.is_valid(raise_exception=True)
+        validated = in_ser.validated_data
+        snapshot = self.snapshot_service.get_snapshot(user_id=validated["user_id"], snapshot_id=pk)
+        out_ser = SnapshotResponseSerializer(snapshot)
+        return Response({"data": out_ser.data, "meta": {}})
 
     @extend_schema(
         request=GetAllSnapshotsRequestSerializer,
-        responses=StandardOperationResponseSerializer
+        responses=SnapshotResponseSerializer(many=True)
     )
     @action(detail=False, methods=["get"], url_path="", url_name="get_all_snapshots")
     def get_all_snapshots(self, request):
-        serializer = GetAllSnapshotsRequestSerializer(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = SnapshotsService().get_all_snapshots(user_id=validated["user_id"])
-        return Response({"data": result_payload, "meta": {}})
+        in_ser = GetAllSnapshotsRequestSerializer(data=request.query_params)
+        in_ser.is_valid(raise_exception=True)
+        validated = in_ser.validated_data
+        snapshot = self.snapshot_service.get_all_snapshots(user_id=validated["user_id"])
+        out_ser = SnapshotResponseSerializer(snapshot, many=True)
+        return Response({"data": out_ser.data, "meta": {}})
 
     @extend_schema(
         request=UpdateSnapshotRequestSerializer,
-        responses=StandardOperationResponseSerializer
+        responses=SnapshotResponseSerializer
     )
     @action(detail=True, methods=["put"], url_path="", url_name="update_snapshot")
     def update_snapshot(self, request, pk=None):
-        serializer = UpdateSnapshotRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = SnapshotsService().update_snapshot(
+        in_ser = UpdateSnapshotRequestSerializer(data=request.data)
+        in_ser.is_valid(raise_exception=True)
+        validated = in_ser.validated_data
+        snapshot = self.snapshot_service.update_snapshot(
             user_id=validated["user_id"],
             snapshot_id=pk,
             title=validated.get("title"),
             description=validated.get("description")
         )
-        return Response({"data": result_payload, "meta": {}})
+        out_ser = SnapshotResponseSerializer(snapshot)
+        return Response({"data": out_ser.data, "meta": {}})
 
+
+    #NOTE: can drop the serializer usage here so only user id is used (but still keep extend schema for drf-spec. doc purposes)
     @extend_schema(
         request=DeleteSnapshotRequestSerializer,
-        responses=StandardOperationResponseSerializer
+        responses={204: OpenApiResponse(description="Snapshot deleted successfully")}
     )
     @action(detail=True, methods=["delete"], url_path="", url_name="delete_snapshot")
     def delete_snapshot(self, request, pk=None):
-        serializer = DeleteSnapshotRequestSerializer(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = SnapshotsService().delete_snapshot(user_id=validated["user_id"], snapshot_id=pk)
-        return Response({"data": result_payload, "meta": {}})
+        in_ser = DeleteSnapshotRequestSerializer(data=request.query_params)
+        in_ser.is_valid(raise_exception=True)
+        validated = in_ser.validated_data
+        self.snapshot_service.delete_snapshot(user_id=validated["user_id"], snapshot_id=pk)
+        return Response(status=status.HTTP_204_NO_CONTENT)

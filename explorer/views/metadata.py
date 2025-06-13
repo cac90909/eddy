@@ -7,7 +7,7 @@ from explorer.serializers.requests.metadata import (
     OperationChainOperationsRequestSerializer,
     OperationChainResultsRequestSerializer
 )
-from explorer.serializers.responses.base import StandardOperationResponseSerializer
+from explorer.serializers.base import StandardOperationResponseSerializer
 from explorer.services.explorer_cache_service import ExplorerCacheService
 
 

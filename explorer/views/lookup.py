@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 from explorer.serializers.requests.lookups import (ArgumentOptionsRequestSerializer, 
                                                    OperationInfoRequestSerializer)
-from explorer.serializers.responses.base import StandardOperationResponseSerializer
+from explorer.serializers.base import StandardOperationResponseSerializer
 from explorer.services.lookup_service import LookupService
 
 class LookupViewSet(ViewSet):

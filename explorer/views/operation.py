@@ -37,8 +37,8 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 
-from explorer.serializers.operation_requests import *
-from explorer.serializers.responses import StandardOperationResponseSerializer
+from explorer.serializers.requests.operations import *
+from explorer.serializers.base import StandardOperationResponseSerializer
 from shared.services.universal_raw_service import UniversalRawService
 from shared.services.universal_list_service import UniversalListService
 from shared.services.universal_metric_service import UniversalMetricService
