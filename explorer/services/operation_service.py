@@ -28,6 +28,7 @@ class ExplorerOperationService:
         self.metric_svc   = UniversalMetricService()
         self.enriched_svc = UniversalEnrichedService()
 
+        #TODO - possible to not hard code? Or maybe save as enum?
         self._registry: Dict[str, Callable[..., Any]] = {
             "get_full_data":               self.get_full_data,
             "filter":                      self.filter,
