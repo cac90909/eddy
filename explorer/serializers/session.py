@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from shared.serializers import UniversalSerializer
 
 class StartSessionRequestSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
@@ -15,3 +16,16 @@ class LoadSnapshotIntoSessionRequestSerializer(serializers.Serializer):
 
 class EndSessionRequestSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
+
+class ResetSessionResponseSerializer(serializers.Serializer):
+    data = UniversalSerializer(many=True)
+    meta = serializers.DictField()
+
+class UndoOperationResponseSerializer(serializers.Serializer):
+    data = UniversalSerializer(many=True)
+    meta = serializers.DictField()
+
+class LoadSnapshotResponseSerializer(serializers.Serializer):
+    data = UniversalSerializer(many=True)
+    meta = serializers.DictField()
+

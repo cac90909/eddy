@@ -15,91 +15,87 @@ is powered by drf-spectacular.
 from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+from rest_framework import status
 
-from explorer.serializers.requests.session import *
+
+from explorer.serializers.session import *
 from explorer.serializers.base import StandardOperationResponseSerializer
 from explorer.services.explorer_cache_service import ExplorerCacheService
 from shared.services.snapshots_service import SnapshotsService
 from shared.services.universal_raw_service import UniversalRawService
 from explorer.util import operation_util
+from explorer.services.session_service import ExplorerSessionService
 
 class ExplorerSessionViewSet(ViewSet):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.session_serivce = ExplorerSessionService()
+
     @extend_schema(
         request=StartSessionRequestSerializer,
-        responses=StandardOperationResponseSerializer
+        responses={201: OpenApiResponse(description="Session started successfully")}
     )
     @action(detail=False, methods=["post"], url_path="start", url_name="start_session")
     def start_session(self, request):
-        serializer = StartSessionRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user_id = serializer.validated_data["user_id"]
-
-        ExplorerCacheService().create_empty_operation_chain_cache(user_id=user_id)
-        config = operation_util.assemble_operations_config(user_id=user_id)
-        return Response({"data": config, "meta": {}})
+        in_ser = StartSessionRequestSerializer(data=request.data)
+        validated = in_ser.is_valid(raise_exception=True)
+        self.session_serivce.start_session(user_id=validated['user_id'])
+        return Response(status=status.HTTP_201_CREATED)
 
     @extend_schema(
         request=ResetSessionRequestSerializer,
-        responses=StandardOperationResponseSerializer
+        responses={200: ResetSessionResponseSerializer}
     )
     @action(detail=False, methods=["post"], url_path="reset", url_name="reset_session")
     def reset_session(self, request):
-        serializer = ResetSessionRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user_id = serializer.validated_data["user_id"]
-
-        ExplorerCacheService().create_empty_operation_chain_cache(user_id=user_id)
-        raw_data = UniversalRawService().get_full_data(user_id=user_id)
-        return Response({"data": raw_data, "meta": {}})
-
-    @extend_schema(
-        request=UndoOperationRequestSerializer,
-        responses=StandardOperationResponseSerializer
-    )
-    @action(detail=False, methods=["post"], url_path="undo", url_name="undo_operation")
-    def undo_operation(self, request):
-        serializer = UndoOperationRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user_id = serializer.validated_data["user_id"]
-
-        chain = ExplorerCacheService().get_operation_chain(user_id=user_id)
-        if len(chain) <= 1:
-            return Response({"data": None, "meta": {"error": "Cannot undo operation: no operations to undo"}}, status=400)
-
-        ExplorerCacheService().delete_most_recent_operation_from_chain(user_id=user_id)
-        result = ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id=user_id)
-        return Response({"data": result, "meta": {}})
-
-    @extend_schema(
-        request=LoadSnapshotIntoSessionRequestSerializer,
-        responses=StandardOperationResponseSerializer
-    )
-    @action(detail=False, methods=["post"], url_path="load", url_name="load_snapshot")
-    def load_snapshot(self, request):
-        serializer = LoadSnapshotIntoSessionRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-
-        ExplorerCacheService().empty_operation_chain(user_id=validated["user_id"])
-        operation_chain = SnapshotsService().get_snapshot_operation_chain(
-            user_id=validated["user_id"], snapshot_id=validated["snapshot_id"]
+        in_ser = ResetSessionRequestSerializer(data=request.data)
+        validated = in_ser.is_valid(raise_exception=True)
+        full_data = self.session_serivce.reset_session(user_id=validated['user_id'])
+        out_ser = ResetSessionResponseSerializer(full_data, many=True)
+        return Response(
+            {"data": out_ser.data, "meta": {}},
+            status=status.HTTP_200_OK
         )
-        data = operation_util.assemble_dataset_list_from_operation_chain(
-            user_id=validated["user_id"], operation_chain=operation_chain
-        )
-        return Response({"data": data, "meta": {}})
-
+    
     @extend_schema(
         request=EndSessionRequestSerializer,
-        responses=StandardOperationResponseSerializer
+        responses={204: OpenApiResponse(description="Session ended successfully")}
     )
     @action(detail=False, methods=["post"], url_path="end", url_name="end_session")
     def end_session(self, request):
-        serializer = EndSessionRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user_id = serializer.validated_data["user_id"]
+        in_ser = EndSessionRequestSerializer(data=request.data)
+        validated = in_ser.is_valid(raise_exception=True)
+        self.session_serivce.end_session(user_id=validated['user_id'])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-        ExplorerCacheService().delete_operation_chain_cache(user_id=user_id)
-        return Response({"data": "Session ended", "meta": {}})
+    @extend_schema(
+        request=UndoOperationRequestSerializer,
+        responses=UndoOperationResponseSerializer
+    )
+    @action(detail=False, methods=["post"], url_path="undo", url_name="undo_operation")
+    def undo_operation(self, request):
+        in_ser = UndoOperationRequestSerializer(data=request.data)
+        validated = in_ser.is_valid(raise_exception=True)
+        previous_data = self.session_serivce.undo_operation(user_id=validated['user_id'])
+        out_ser = UndoOperationResponseSerializer(previous_data, many=True)
+        return Response(
+            {"data": out_ser.data, "meta": {}},
+            status=status.HTTP_200_OK
+        )
+
+    @extend_schema(
+        request=LoadSnapshotIntoSessionRequestSerializer,
+        responses=LoadSnapshotResponseSerializer
+    )
+    @action(detail=False, methods=["post"], url_path="load", url_name="load_snapshot")
+    def load_snapshot(self, request):
+        in_ser = LoadSnapshotIntoSessionRequestSerializer(data=request.data)
+        validated = in_ser.is_valid(raise_exception=True)
+        loaded_data = self.session_serivce.load_snapshot(user_id=validated['user_id'])
+        out_ser = UndoOperationResponseSerializer(loaded_data, many=True)
+        return Response(
+            {"data": out_ser.data, "meta": {}},
+            status=status.HTTP_200_OK
+        )

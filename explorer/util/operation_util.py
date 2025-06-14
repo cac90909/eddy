@@ -10,7 +10,7 @@ def get_operation_definition(operation_name):
 
 @staticmethod
 def assemble_dataset_list_from_operation_chain(user_id, operation_chain):
-    from explorer.services.explorer_service import ExplorerService  # local import to avoid circular dependency
+    from explorer.services._______explorer_service import ExplorerService  # local import to avoid circular dependency
     explorer_service = ExplorerService()
     final_result = None
     for op in operation_chain:

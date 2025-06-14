@@ -26,6 +26,9 @@ from explorer.serializers.base import StandardOperationResponseSerializer
 from explorer.services.snapshot_service import ExplorerSnapshotService
 from shared.services.snapshots_service import SnapshotsService
 
+#TODO -> this class makes use of SnapshotResponseSerializer (snapshots are being returned)
+#        , really the snapshot serializer should reside in shared (core) and then we create 
+#        serializers in explorer that reference the shared snapshot serializer.
 class SnapshotViewSet(ViewSet):
 
     def __init__(self, *args, **kwargs):
