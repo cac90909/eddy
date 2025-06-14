@@ -1,50 +1,20 @@
 # explorer/views/operation_viewset.py
 
-"""
-ViewSet for executing all registered Explorer operations via POST requests.
-
-Each method on the viewset corresponds to a specific operation and will:
-- Validate request payloads via serializers (to be plugged in later)
-- Invoke the corresponding UniversalService (e.g., UniversalRawService, etc.)
-- Return a standardized response format
-
-Note: Common decorator `@explorer_operation` (not shown here) can be used to:
-- Inject metadata (timing, logging, result types)
-- Automatically register operation names and serializers
-- Ensure uniform validation/caching
-
-# Example Decorator Stub:
-#
-# def explorer_operation(serializer_class, result_type, cacheable=True):
-#     def decorator(func):
-#         def wrapper(self, request, *args, **kwargs):
-#             ...  # shared logic
-#         return wrapper
-#     return decorator
-"""
-
-"""
-This viewset defines all supported data operations within the Explorer context.
-
-Documentation support is added via drf-spectacular:
-- Each endpoint is decorated with @extend_schema, explicitly listing the request and response serializers.
-- This ensures self-documenting APIs, discoverable through Swagger or Redoc.
-- Request validation and field extraction are handled through dedicated request serializers.
-- All responses follow a standardized shape via StandardOperationResponseSerializer.
-"""
-
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 
-from explorer.serializers.requests.operations import *
+from explorer.serializers.operations import *
 from explorer.serializers.base import StandardOperationResponseSerializer
-from shared.services.universal_raw_service import UniversalRawService
-from shared.services.universal_list_service import UniversalListService
-from shared.services.universal_metric_service import UniversalMetricService
-from shared.services.universal_enriched_service import UniversalEnrichedService
+from explorer.services.operation_service import ExplorerOperationService
+
 
 class ExplorerOperationViewSet(ViewSet):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # one service instance per request
+        self.op_svc = ExplorerOperationService()
 
     @extend_schema(
         request=GetFullDataRequestSerializer,
@@ -53,8 +23,7 @@ class ExplorerOperationViewSet(ViewSet):
     def get_full_data(self, request):
         serializer = GetFullDataRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = UniversalRawService().get_full_data(**validated)
+        result_payload = self.op_svc.get_full_data(**serializer.validated_data)
         return Response({"data": result_payload, "meta": {}})
 
     @extend_schema(
@@ -64,8 +33,7 @@ class ExplorerOperationViewSet(ViewSet):
     def filter(self, request):
         serializer = FilterRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = UniversalRawService().filter(**validated)
+        result_payload = self.op_svc.filter(**serializer.validated_data)
         return Response({"data": result_payload, "meta": {}})
 
     @extend_schema(
@@ -75,8 +43,7 @@ class ExplorerOperationViewSet(ViewSet):
     def traverse(self, request):
         serializer = TraverseRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = UniversalRawService().traverse(**validated)
+        result_payload = self.op_svc.traverse(**serializer.validated_data)
         return Response({"data": result_payload, "meta": {}})
 
     @extend_schema(
@@ -86,8 +53,7 @@ class ExplorerOperationViewSet(ViewSet):
     def get_unique_column_values(self, request):
         serializer = GetUniqueColumnValuesRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = UniversalListService().get_unique_column_values(**validated)
+        result_payload = self.op_svc.get_unique_column_values(**serializer.validated_data)
         return Response({"data": result_payload, "meta": {}})
 
     @extend_schema(
@@ -97,8 +63,7 @@ class ExplorerOperationViewSet(ViewSet):
     def get_unique_json_keys(self, request):
         serializer = GetUniqueJsonKeysRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = UniversalListService().get_unique_json_keys(**validated)
+        result_payload = self.op_svc.get_unique_json_keys(**serializer.validated_data)
         return Response({"data": result_payload, "meta": {}})
 
     @extend_schema(
@@ -108,8 +73,7 @@ class ExplorerOperationViewSet(ViewSet):
     def get_unique_json_values(self, request):
         serializer = GetUniqueJsonValuesRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = UniversalListService().get_unique_json_values(**validated)
+        result_payload = self.op_svc.get_unique_json_values(**serializer.validated_data)
         return Response({"data": result_payload, "meta": {}})
 
     @extend_schema(
@@ -119,8 +83,7 @@ class ExplorerOperationViewSet(ViewSet):
     def get_unique_json_key_values(self, request):
         serializer = GetUniqueJsonKeyValuesRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = UniversalListService().get_unique_json_key_values(**validated)
+        result_payload = self.op_svc.get_unique_json_key_values(**serializer.validated_data)
         return Response({"data": result_payload, "meta": {}})
 
     @extend_schema(
@@ -130,8 +93,7 @@ class ExplorerOperationViewSet(ViewSet):
     def get_count(self, request):
         serializer = GetCountRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = UniversalMetricService().get_count(**validated)
+        result_payload = self.op_svc.get_count(**serializer.validated_data)
         return Response({"data": result_payload, "meta": {}})
 
     @extend_schema(
@@ -141,8 +103,7 @@ class ExplorerOperationViewSet(ViewSet):
     def get_average(self, request):
         serializer = GetAverageRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = UniversalMetricService().get_average(**validated)
+        result_payload = self.op_svc.get_average(**serializer.validated_data)
         return Response({"data": result_payload, "meta": {}})
 
     @extend_schema(
@@ -152,8 +113,7 @@ class ExplorerOperationViewSet(ViewSet):
     def get_sum(self, request):
         serializer = GetSumRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = UniversalMetricService().get_sum(**validated)
+        result_payload = self.op_svc.get_sum(**serializer.validated_data)
         return Response({"data": result_payload, "meta": {}})
 
     @extend_schema(
@@ -163,8 +123,7 @@ class ExplorerOperationViewSet(ViewSet):
     def get_min(self, request):
         serializer = GetMinRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = UniversalMetricService().get_min(**validated)
+        result_payload = self.op_svc.get_min(**serializer.validated_data)
         return Response({"data": result_payload, "meta": {}})
 
     @extend_schema(
@@ -174,8 +133,7 @@ class ExplorerOperationViewSet(ViewSet):
     def get_max(self, request):
         serializer = GetMaxRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = UniversalMetricService().get_max(**validated)
+        result_payload = self.op_svc.get_max(**serializer.validated_data)
         return Response({"data": result_payload, "meta": {}})
 
     @extend_schema(
@@ -185,6 +143,6 @@ class ExplorerOperationViewSet(ViewSet):
     def group_aggregate(self, request):
         serializer = GroupAggregateRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        validated = serializer.validated_data
-        result_payload = UniversalEnrichedService().group_aggregate(**validated)
+        result_payload = self.op_svc.group_aggregate(**serializer.validated_data)
         return Response({"data": result_payload, "meta": {}})
+

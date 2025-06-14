@@ -1,7 +1,9 @@
 from explorer.services.explorer_cache_service import ExplorerCacheService #Move ECS to non-serv folder
 from shared.services.universal_raw_service import UniversalRawService
 from shared.services.snapshots_service import SnapshotsService
+from explorer.domain.operation_chain import OperationChain
 from rest_framework.exceptions import APIException
+from typing import Any, Callable, Dict
 
 class ExplorerSessionService:
 
@@ -51,10 +53,29 @@ class ExplorerSessionService:
         except Exception as e:
             raise APIException(e)
         
-    def _assemble_dataset_list_from_operation_chain(self, user_id, operation_chain):
-        for op in operation_chain:
-            pass
-            #TODO - implement
+    def assemble_from_chain(self, user_id: int, chain: OperationChain) -> Any:
+        """
+        Replay each OperationCommand in the given chain in sequence,
+        passing the prior result into the next operation.
+        Returns the final result (e.g. a QuerySet or list).
+        """
+        result = None
+        for cmd in chain.commands:
+            result = self.op_svc.execute(
+                user_id=user_id,
+                operation_name=cmd.name,
+                operation_args=cmd.args,
+                previous=result
+            )
+        return result
+
+
+
+
+
+
+
+
 
 
 
