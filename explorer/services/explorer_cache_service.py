@@ -55,15 +55,25 @@ class ExplorerCacheService(CacheService):
         chain.append(op)
         self.save_chain(user_id, chain)
 
-    # ─── Recent operation helpers ────────────────────────────────────────────────
-    def get_last_operation(self, user_id: int) -> Operation | None:
-        """Return the most recently appended Operation, or None."""
-        return self.get_chain(user_id).last_command
+    def remove_last_operation(self, user_id: int) -> None:
+        """
+        Discard the most recently cached operation.
+        """
+        chain = self.get_chain(user_id)
+        if chain.operations:
+            chain.operations.pop()
+            self.save_chain(user_id, chain)
 
-    def get_last_result(self, user_id: int) -> Any:
+    # ─── Recent operation helpers ────────────────────────────────────────────────
+    @property
+    def last_operation(self, user_id: int) -> Operation | None:
+        """Return the most recently appended Operation, or None."""
+        return self.get_chain(user_id).last_operation
+
+    @property
+    def last_result(self, user_id: int) -> Any:
         """Return the result_data of the last Operation, or None."""
-        cmd = self.get_chain(user_id).last_command
-        return getattr(cmd, 'result_data', None) if cmd else None
+        return  self.get_chain(user_id).last_result
 
     # ─── Metadata CRUD ───────────────────────────────────────────────────────────
     def get_meta(self, user_id: int) -> dict:

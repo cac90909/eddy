@@ -14,14 +14,14 @@ class ExplorerSessionService:
 
     def start_session(self, user_id):
         try:
-            self.cache_service.create_empty_operation_chain_cache(user_id)
+            self.cache_service.init_chain(user_id)
             return
         except Exception as e:
             raise APIException(e)
         
     def reset_session(self, user_id):
         try:
-            self.cache_service.create_empty_operation_chain_cache(user_id)
+            self.cache_service.clear_chain(user_id)
             full_data = self.universal_raw_service.get_full_data(user_id)
             return full_data
         except Exception as e:
@@ -29,31 +29,30 @@ class ExplorerSessionService:
     
     def end_session(self, user_id):
         try:
-            self.cache_service.delete_operation_chain_cache(user_id=user_id)
+            self.cache_service.delete_chain(user_id=user_id)
             return
         except Exception as e:
             raise APIException(e)
     
     def undo_operation(self, user_id):
         try:
-            self.cache_service.delete_most_recent_operation_from_chain(user_id)
-            most_recent_dataset = self.cache_service.get_most_recent_operation_chain_raw_data_result(user_id)
+            self.cache_service.remove_last_operation(user_id)
+            most_recent_dataset = self.cache_service.get_last_result(user_id)
             return most_recent_dataset
         except Exception as e:
             raise APIException(e)
         
-    #TODO - develop assemble  
     def load_snapshot(self, user_id, snapshot_id):
         try:
-            self.cache_service.empty_operation_chain(user_id)
             snapshot = self.snapshot_service.get_snapshot(user_id, snapshot_id)
             operation_chain = snapshot.operation_chain
-            loaded_data = self._assemble_dataset_list_from_operation_chain(user_id, operation_chain)
+            loaded_data = self._assemble_from_chain(user_id, operation_chain)
+            self.cache_service.clear_chain(user_id)
             return loaded_data
         except Exception as e:
             raise APIException(e)
         
-    def assemble_from_chain(self, user_id: int, chain: OperationChain) -> Any:
+    def _assemble_from_chain(self, user_id: int, chain: OperationChain) -> Any:
         """
         Replay each OperationCommand in the given chain in sequence,
         passing the prior result into the next operation.

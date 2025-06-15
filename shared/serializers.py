@@ -7,16 +7,6 @@ class UniversalSerializer(serializers.ModelSerializer):
         #fields = '__all__'  # or list the fields you want to expose
         exclude = ('user',)
 
-# class UniversalDatasetsSerializer(serializers.Serializer):
-#     dataset = UniversalSerializer(many=True)
-
-# class OperationSerializer(serializers.Serializer):
-#     operation_type = serializers.CharField()
-#     operation_params = serializers.DictField(child=serializers.JSONField(), required=False)
-
-# class OperationChainItemSerializer(serializers.Serializer):
-#     operation = OperationSerializer(many=True)
-
 class SnapshotSerializer(serializers.ModelSerializer):
     class Meta:
         model = Snapshots
@@ -28,9 +18,6 @@ class FlexibleDictSerializer(serializers.Serializer):
     def to_representation(self, instance):
         return instance
 
-
-
-
-# class UserCacheSerializer(serializers.Serializer):
-#     datasets = UniversalSerializer(many=True)
-#     operation_chain = OperationChainItemSerializer(many=True)
+class StandardOperationResponseSerializer(serializers.Serializer):
+    data = serializers.JSONField()
+    meta = serializers.DictField(required=False)
