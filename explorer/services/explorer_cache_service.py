@@ -14,6 +14,11 @@ class ExplorerCacheService(CacheService):
 
     PREFIX = "explorer"
 
+    # well-known meta-keys
+    FULL_SHAPE_KEY       = "full_shape"
+    CURRENT_SHAPE_KEY    = "current_shape"
+    OPERATION_COUNT_KEY  = "operation_count"
+
     def __init__(self, default_timeout: int = 3600):
         super().__init__(default_timeout)
 
@@ -75,7 +80,7 @@ class ExplorerCacheService(CacheService):
         """Return the result_data of the last Operation, or None."""
         return  self.get_chain(user_id).last_result
 
-    # ─── Metadata CRUD ───────────────────────────────────────────────────────────
+    # ─── General Metadata CRUD ───────────────────────────────────────────────────
     def get_meta(self, user_id: int) -> dict:
         return self.get(self._meta_key(user_id), {})
 
@@ -96,6 +101,36 @@ class ExplorerCacheService(CacheService):
 
     def get_meta_key(self, user_id: int, key: str, default=None) -> Any:
         return self.get_meta(user_id).get(key, default)
+    
+    # ─── Specific Metadata CRUD ──────────────────────────────────────────────────
+
+    def set_full_shape(self, user_id: int, shape: dict) -> None:
+        self.update_meta_key(user_id, self.FULL_SHAPE_KEY, shape)
+
+    def get_full_shape(self, user_id: int) -> dict | None:
+        return self.get_meta_key(user_id, self.FULL_SHAPE_KEY, default=None)
+    
+    def clear_full_shape(self, user_id: int) -> None:
+        self.update_meta_key(user_id, self.FULL_SHAPE_KEY, {})
+
+    def set_current_shape(self, user_id: int, shape: dict) -> None:
+        self.update_meta_key(user_id, self.CURRENT_SHAPE_KEY, shape)
+
+    def get_current_shape(self, user_id: int) -> dict | None:
+        return self.get_meta_key(user_id, self.CURRENT_SHAPE_KEY, default=None)
+    
+    def clear_current_shape(self, user_id: int) -> None:
+        self.update_meta_key(user_id, self.CURRENT_SHAPE_KEY, {})
+
+    def increment_operation_count(self, user_id: int) -> None:
+        count = self.get_meta_key(user_id, self.OPERATION_COUNT_KEY, default=0)
+        self.update_meta_key(user_id, self.OPERATION_COUNT_KEY, count + 1)
+
+    def get_operation_count(self, user_id: int) -> int:
+        return self.get_meta_key(user_id, self.OPERATION_COUNT_KEY, default=0)
+    
+    def clear_operation_count(self, user_id: int) -> None:
+        self.update_meta_key(user_id, self.OPERATION_COUNT_KEY, 1)
 
 
 # from django.core.cache import cache

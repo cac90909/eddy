@@ -7,6 +7,7 @@ from shared.services.universal_list_service import UniversalListService
 from shared.services.universal_metric_service import UniversalMetricService
 from shared.services.universal_enriched_service import UniversalEnrichedService
 from explorer.services.explorer_cache_service import ExplorerCacheService
+from explorer.services.metadata_service import ExplorerMetadataService
 from explorer.domain.operation import Operation
 
 
@@ -23,6 +24,7 @@ class ExplorerOperationService:
         self.metric_svc   = UniversalMetricService()
         self.enriched_svc = UniversalEnrichedService()
         self.cache_svc    = ExplorerCacheService()
+        self.metadata_svc = ExplorerMetadataService()
 
         #TODO - possible to not hard code? Or maybe save as enum?
         self._registry: Dict[str, Callable[..., Any]] = {
@@ -69,6 +71,9 @@ class ExplorerOperationService:
                 result_data=result
             )
             self.cache_svc.append_operation(user_id, entry)
+            shape = self.metadata_svc.compute_data_shape(result, "raw")
+            self.cache_svc.set_current_shape(user_id, shape)
+            self.cache_svc.increment_operation_count(user_id)
             return result
         except Exception as e:
             raise APIException(str(e))
@@ -88,6 +93,9 @@ class ExplorerOperationService:
                 result_data=result
             )
             self.cache_svc.append_operation(user_id, entry)
+            shape = self.metadata_svc.compute_data_shape(result, "raw")
+            self.cache_svc.set_current_shape(user_id, shape)
+            self.cache_svc.increment_operation_count(user_id)
             return result
         except Exception as e:
             raise APIException(str(e))
@@ -107,6 +115,9 @@ class ExplorerOperationService:
                 result_data=result
             )
             self.cache_svc.append_operation(user_id, entry)
+            shape = self.metadata_svc.compute_data_shape(result, "raw")
+            self.cache_svc.set_current_shape(user_id, shape)
+            self.cache_svc.increment_operation_count(user_id)
             return result
         except Exception as e:
             raise APIException(str(e))
@@ -126,6 +137,9 @@ class ExplorerOperationService:
                 result_data=result
             )
             self.cache_svc.append_operation(user_id, entry)
+            shape = self.metadata_svc.compute_data_shape(result, "list")
+            self.cache_svc.set_current_shape(user_id, shape)
+            self.cache_svc.increment_operation_count(user_id)
             return result
         except Exception as e:
             raise APIException(str(e))
@@ -145,6 +159,9 @@ class ExplorerOperationService:
                 result_data=result
             )
             self.cache_svc.append_operation(user_id, entry)
+            shape = self.metadata_svc.compute_data_shape(result, "list")
+            self.cache_svc.set_current_shape(user_id, shape)
+            self.cache_svc.increment_operation_count(user_id)
             return result
         except Exception as e:
             raise APIException(str(e))
@@ -164,6 +181,9 @@ class ExplorerOperationService:
                 result_data=result
             )
             self.cache_svc.append_operation(user_id, entry)
+            shape = self.metadata_svc.compute_data_shape(result, "list")
+            self.cache_svc.set_current_shape(user_id, shape)
+            self.cache_svc.increment_operation_count(user_id)
             return result
         except Exception as e:
             raise APIException(str(e))
@@ -183,6 +203,9 @@ class ExplorerOperationService:
                 result_data=result
             )
             self.cache_svc.append_operation(user_id, entry)
+            shape = self.metadata_svc.compute_data_shape(result, "list")
+            self.cache_svc.set_current_shape(user_id, shape)
+            self.cache_svc.increment_operation_count(user_id)
             return result
         except Exception as e:
             raise APIException(str(e))
@@ -202,6 +225,9 @@ class ExplorerOperationService:
                 result_data=result
             )
             self.cache_svc.append_operation(user_id, entry)
+            shape = self.metadata_svc.compute_data_shape(result, "metric")
+            self.cache_svc.set_current_shape(user_id, shape)
+            self.cache_svc.increment_operation_count(user_id)
             return result
         except Exception as e:
             raise APIException(str(e))
@@ -221,6 +247,9 @@ class ExplorerOperationService:
                 result_data=result
             )
             self.cache_svc.append_operation(user_id, entry)
+            shape = self.metadata_svc.compute_data_shape(result, "metric")
+            self.cache_svc.set_current_shape(user_id, shape)
+            self.cache_svc.increment_operation_count(user_id)
             return result
         except Exception as e:
             raise APIException(str(e))
@@ -240,6 +269,9 @@ class ExplorerOperationService:
                 result_data=result
             )
             self.cache_svc.append_operation(user_id, entry)
+            shape = self.metadata_svc.compute_data_shape(result, "metric")
+            self.cache_svc.set_current_shape(user_id, shape)
+            self.cache_svc.increment_operation_count(user_id)
             return result
         except Exception as e:
             raise APIException(str(e))
@@ -259,6 +291,9 @@ class ExplorerOperationService:
                 result_data=result
             )
             self.cache_svc.append_operation(user_id, entry)
+            shape = self.metadata_svc.compute_data_shape(result, "metric")
+            self.cache_svc.set_current_shape(user_id, shape)
+            self.cache_svc.increment_operation_count(user_id)
             return result
         except Exception as e:
             raise APIException(str(e))
@@ -278,6 +313,9 @@ class ExplorerOperationService:
                 result_data=result
             )
             self.cache_svc.append_operation(user_id, entry)
+            shape = self.metadata_svc.compute_data_shape(result, "metric")
+            self.cache_svc.set_current_shape(user_id, shape)
+            self.cache_svc.increment_operation_count(user_id)
             return result
         except Exception as e:
             raise APIException(str(e))
@@ -297,6 +335,9 @@ class ExplorerOperationService:
                 result_data=result
             )
             self.cache_svc.append_operation(user_id, entry)
+            shape = self.metadata_svc.compute_data_shape(result, "metric")
+            self.cache_svc.set_current_shape(user_id, shape)
+            self.cache_svc.increment_operation_count(user_id)
             return result
         except Exception as e:
             raise APIException(str(e))

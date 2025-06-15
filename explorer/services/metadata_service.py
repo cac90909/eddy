@@ -63,7 +63,7 @@ class ExplorerMetadataService:
 
     #NOTE: not in use right now - operation service calls one of the above methods
     #      if 'include_meta'key is included/True
-    def compute_current_shape(self,
+    def compute_data_shape(self,
                               result_data: Any,
                               result_type: str) -> dict:
         """
