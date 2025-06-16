@@ -1,7 +1,7 @@
 # explorer/domain/operation_results/enriched_operation_result.py
 
 from explorer.util.operation_result_util import is_queryset_of_dicts
-from explorer.services.explorer_cache_service import ExplorerCacheService
+from explorer.cache.service import ExplorerCacheService
 from shared.serializers import FlexibleDictSerializer
 from .base_result_type import BaseResultType
 

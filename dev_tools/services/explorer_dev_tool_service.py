@@ -1,6 +1,6 @@
 from shared.logger import debug_print, debug_print_vars
 from shared.util import log_vars_vals_cls, catch_exceptions_cls
-from explorer.services.explorer_cache_service import ExplorerCacheService
+from explorer.cache.service import ExplorerCacheService
 from shared.services.snapshots_service import SnapshotsService
 from shared.serializers import SnapshotSerializer
 

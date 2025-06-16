@@ -1,7 +1,7 @@
 # explorer/domain/operation_result_types/operation_chain.py
 
 from explorer.util.operation_result_util import is_list_of_operation_instances, serialize_operation_chain
-from explorer.services.explorer_cache_service import ExplorerCacheService
+from explorer.cache.service import ExplorerCacheService
 from .base_result_type import BaseResultType
 
 

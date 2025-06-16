@@ -10,7 +10,7 @@ from explorer.domain.enums.operation_result_type import OperationResultType
 from explorer.domain.enums.display_mode import DisplayMode
 
 from shared.services.snapshots_service import SnapshotsService
-from explorer.services.explorer_cache_service import ExplorerCacheService
+from explorer.cache.service import ExplorerCacheService
 
 @register_operation
 class SaveSnapshotOperation(BaseOperation):

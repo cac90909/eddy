@@ -1,7 +1,7 @@
 # explorer/domain/operation_result_types/raw.py
 
 from explorer.domain.result_types.base_result_type import BaseResultType
-from explorer.services.explorer_cache_service import ExplorerCacheService
+from explorer.cache.service import ExplorerCacheService
 from shared.serializers import UniversalSerializer
 from shared.models import Universal
 

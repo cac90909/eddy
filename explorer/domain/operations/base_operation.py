@@ -61,7 +61,7 @@ class SQLBaseOperation(BaseOperation):
 
     @staticmethod
     def data_source(user_id: int, op_instance: "SQLBaseOperation"):
-        from explorer.services.explorer_cache_service import ExplorerCacheService
+        from explorer.cache.service import ExplorerCacheService
         return ExplorerCacheService().get_most_recent_operation_chain_raw_data_result(user_id)
 
     @staticmethod

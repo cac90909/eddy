@@ -2,7 +2,7 @@
 
 from shared.models import Universal
 from explorer.util.operation_result_util import is_list_of_querysets_of_model_instances, serialize_results_list
-from explorer.services.explorer_cache_service import ExplorerCacheService
+from explorer.cache.service import ExplorerCacheService
 from .base_result_type import BaseResultType
 
 

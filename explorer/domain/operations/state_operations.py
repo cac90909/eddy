@@ -9,7 +9,7 @@ from explorer.domain.enums.operation_category import OperationCategory
 from explorer.domain.enums.operation_result_type import OperationResultType
 from explorer.domain.enums.display_mode import DisplayMode
 
-from explorer.services.explorer_cache_service import ExplorerCacheService
+from explorer.cache.service import ExplorerCacheService
 from shared.services.snapshots_service import SnapshotsService
 from shared.services.universal_raw_service import UniversalRawService
 from explorer.util import operation_util

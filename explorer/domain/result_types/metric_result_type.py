@@ -1,6 +1,6 @@
 # explorer/domain/operation_result_types/metric.py
 
-from explorer.services.explorer_cache_service import ExplorerCacheService
+from explorer.cache.service import ExplorerCacheService
 from .base_result_type import BaseResultType
 
 
