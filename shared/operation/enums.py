@@ -1,4 +1,5 @@
 from enum import Enum
+from shared.universal.enums import UniversalColumn
 
 class OperationName(str, Enum):
     GET_FULL_DATA               = "get_full_data"
@@ -41,3 +42,11 @@ class TraversalDirection(str, Enum):
     UPWARDS    = "upwards"
     DOWNWARDS  = "downwards"
     HORIZONTAL = "horizontal"
+
+NON_FILTERABLE_COLUMNS = {
+    UniversalColumn.USER.value,
+    UniversalColumn.CHILDREN_IDS.value,
+    UniversalColumn.PARENTS_IDS.value,
+    UniversalColumn.SIBLINGS_IDS.value,
+    UniversalColumn.FIELDS.value
+}

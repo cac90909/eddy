@@ -17,6 +17,10 @@ from shared.universal.repository_util import (
     get_column_data_type
 )
 from django.contrib.auth import get_user_model
+from django.core.exceptions import FieldDoesNotExist
+from shared.universal.enums import (
+    OperatorType
+)
 from shared.models import Universal
 User = get_user_model()
 
@@ -31,21 +35,18 @@ class UniversalRepository:
         debug_print(f"Finished Query: {data.count()} rows, {type(data)} type")
         return data
 
-    def filter_data(self, user_data_queryset, column_name, filter_value, filter_type):
+    def filter_data(self, qs, column_name, filter_value, filter_type):
         try:
+            # Only catch “no such field,” not all Exceptions
             Universal._meta.get_field(column_name)
-            actual_column = column_name
-        except Exception:
-            actual_column = f"fields__{column_name}"
+            actual = column_name
+        except FieldDoesNotExist:
+            actual = f"fields__{column_name}"
 
-        filter_condition = build_filter_statement(actual_column, filter_value, filter_type)
-
-        if filter_type in ['!=', 'array_not_contains']:
-            data = user_data_queryset.exclude(**filter_condition) 
-        else:
-            data = user_data_queryset.filter(**filter_condition)
-        debug_print(f"Finished Query: {data.count()} rows, {type(data)} type")
-        return data
+        lookup = build_filter_statement(actual, filter_value, filter_type)
+        if filter_type == OperatorType.NEQ.value or filter_type == OperatorType.ARRAY_NOT_CONTAINS.value:
+            return qs.exclude(**lookup)
+        return qs.filter(**lookup)
     
     @staticmethod
     def traverse_data(user_data_queryset, start_id, traversal_directions=None):

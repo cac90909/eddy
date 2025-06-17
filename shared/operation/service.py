@@ -2,6 +2,8 @@ from shared.universal.repository import UniversalRepository
 from shared.logger import debug_print, debug_print_vars
 from shared.util import log_vars_vals_cls, catch_exceptions_cls
 from shared.universal.repository import UniversalRepository
+from shared.operation.mappings import CONTAINS_OPERATOR_MAP
+import shared.universal.util as UniversalUtil 
 
 #@log_vars_vals_cls(exclude=None)
 @catch_exceptions_cls(exception_return_value="Error", exclude=None)
@@ -15,6 +17,9 @@ class OperationService:
         return self.uni_rep.get_full_data(user_id)
 
     def filter(self, user_id, data_src, col_name, filter_val, filter_type):
+        if filter_type in CONTAINS_OPERATOR_MAP:
+            col_data_type = UniversalUtil.get_column_data_type(data_src, col_name)
+            filter_type = CONTAINS_OPERATOR_MAP.get(filter_type).get(col_data_type)
         return self.uni_rep.filter_data(data_src, col_name, filter_val, filter_type)
 
     def traverse(self, user_id, data_src, start_id, traversal_dirs):
