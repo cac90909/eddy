@@ -7,6 +7,8 @@ from django.contrib.postgres.fields import ArrayField
 from shared.models import Universal
 from django.db import connection, models
 from dateutil.parser import parse as parse_date
+from .mappings import FILTER_LOOKUP_BUILDERS
+from typing import Any
 
 # ----------------- Type Mappings -----------------
 
@@ -155,26 +157,12 @@ def build_lookup_expression(queryset, column_name):
 
 # ----------------- Filtering -----------------
 
-def build_filter_statement(column_name, filter_value, filter_type):
-    """
-    Constructs a filter condition dictionary for Django ORM filtering.
-    """
-    filter_map = {
-        '=': {f"{column_name}": filter_value},
-        '!=': {f"{column_name}": filter_value},  # Handled separately in exclude()
-        '<': {f"{column_name}__lt": filter_value},
-        '>': {f"{column_name}__gt": filter_value},
-        '<=': {f"{column_name}__lte": filter_value},
-        '>=': {f"{column_name}__gte": filter_value},
-        'string_contains': {f"{column_name}__icontains": filter_value},
-        'array_contains': {f"{column_name}__contains": [filter_value] if not isinstance(filter_value, list) else filter_value},
-        'array_not_contains': {f"{column_name}__contains": [filter_value] if not isinstance(filter_value, list) else filter_value},
-    }
-
-    if filter_type not in filter_map:
+def build_filter_statement(column_name: str, filter_value: Any, filter_type: str) -> dict:
+    try:
+        builder = FILTER_LOOKUP_BUILDERS[filter_type]
+    except KeyError:
         raise ValueError(f"Unsupported filter type: {filter_type}")
-
-    return filter_map[filter_type]
+    return builder(column_name, filter_value)
 
 def generate_ids_in_traversal(user_data_queryset, start_id, traversal_columns):
     """

@@ -6,7 +6,7 @@ import json
 from shared.util import catch_exceptions_cls
 from shared.logger import debug_print_vars, debug_print
 from explorer.services.explorer_service import ExplorerService
-from shared.serializers import UniversalSerializer, SnapshotSerializer, FlexibleDictSerializer
+from shared.universal.serializers import UniversalSerializer, SnapshotSerializer, FlexibleDictSerializer
 from dev_tools.services.explorer_dev_tool_service import ExplorerDevToolService
 
 @catch_exceptions_cls(exception_return_value="Error")

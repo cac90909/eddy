@@ -1,6 +1,6 @@
 from shared.models import Snapshots
 from shared.logger import debug_print_vars, debug_print
-from shared.repositories.snapshots_repository import SnapshotsRepository
+from shared.snapshot.repository import SnapshotsRepository
 
 class SnapshotsService:
     def __init__(self):

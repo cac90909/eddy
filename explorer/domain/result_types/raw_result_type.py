@@ -2,7 +2,7 @@
 
 from explorer.domain.result_types.base_result_type import BaseResultType
 from explorer.cache.service import ExplorerCacheService
-from shared.serializers import UniversalSerializer
+from shared.universal.serializers import UniversalSerializer
 from shared.models import Universal
 
 class RawResultType(BaseResultType):

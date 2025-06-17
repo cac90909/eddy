@@ -1,5 +1,5 @@
 from explorer.cache.service import ExplorerCacheService #Move ECS to non-serv folder
-from shared.services.snapshots_service import SnapshotsService
+from shared.snapshot.service import SnapshotsService
 from explorer.operation.service import ExplorerOperationService
 from explorer.metadata.service import ExplorerMetadataService
 from explorer.domain.operation_chain import OperationChain

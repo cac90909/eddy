@@ -1,7 +1,7 @@
 import json
 from typing import Any
 
-from shared.services.cache_service import CacheService
+from shared.cache.service import CacheService
 from explorer.domain.operation_chain import OperationChain, Operation
 
 

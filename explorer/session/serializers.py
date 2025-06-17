@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from shared.serializers import UniversalSerializer
+from shared.universal.serializers import UniversalSerializer
 
 class StartSessionRequestSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()

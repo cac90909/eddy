@@ -1,5 +1,5 @@
 from explorer.cache.service import ExplorerCacheService
-from shared.services.snapshots_service import SnapshotsService
+from shared.snapshot.service import SnapshotsService
 from rest_framework.exceptions import APIException
 
 class ExplorerSnapshotService():

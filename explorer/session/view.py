@@ -22,7 +22,7 @@ from rest_framework import status
 from explorer.session.serializers import *
 from explorer.serializers.base import StandardOperationResponseSerializer
 from explorer.cache.service import ExplorerCacheService
-from shared.services.snapshots_service import SnapshotsService
+from shared.snapshot.service import SnapshotsService
 from shared.services.universal_raw_service import UniversalRawService
 from explorer.util import operation_util
 from explorer.session.service import ExplorerSessionService

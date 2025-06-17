@@ -2,7 +2,7 @@
 
 from explorer.util.operation_result_util import is_queryset_of_dicts
 from explorer.cache.service import ExplorerCacheService
-from shared.serializers import FlexibleDictSerializer
+from shared.universal.serializers import FlexibleDictSerializer
 from .base_result_type import BaseResultType
 
 

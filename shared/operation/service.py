@@ -5,7 +5,7 @@ from shared.universal.repository import UniversalRepository
 
 #@log_vars_vals_cls(exclude=None)
 @catch_exceptions_cls(exception_return_value="Error", exclude=None)
-class UniversalRawService:
+class OperationService:
     def __init__(self):
         self.uni_rep = UniversalRepository()
 
@@ -25,8 +25,8 @@ class UniversalRawService:
     def get_count(self, user_id, data_src, col_name):   
         return self.uni_rep.get_count(data_src, col_name)
 
-    def get_sum(self, user_id, data_src, col_name):   
-        return self.uni_rep.get_sum(data_src, col_name)
+    def get_min(self, user_id, data_src, col_name):   
+        return self.uni_rep.get_min(data_src, col_name)
     
     def get_max(self, user_id, data_src, col_name):   
         return self.uni_rep.get_max(data_src, col_name)

@@ -24,7 +24,7 @@ from rest_framework import status
 from explorer.snapshot.serializers import *
 from explorer.serializers.base import StandardOperationResponseSerializer
 from explorer.snapshot.service import ExplorerSnapshotService
-from shared.services.snapshots_service import SnapshotsService
+from shared.snapshot.service import SnapshotsService
 
 #TODO -> this class makes use of SnapshotResponseSerializer (snapshots are being returned)
 #        , really the snapshot serializer should reside in shared (core) and then we create 

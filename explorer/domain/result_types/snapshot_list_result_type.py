@@ -2,7 +2,7 @@
 
 from shared.models import Snapshots
 from explorer.util.operation_result_util import is_queryset_of_model_instances
-from shared.serializers import SnapshotSerializer
+from shared.universal.serializers import SnapshotSerializer
 from .base_result_type import BaseResultType
 
 
