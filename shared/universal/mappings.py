@@ -49,19 +49,6 @@ OPERATORS_BY_TYPE = {
     DataType.LIST:    [OperatorType.ARRAY_CONTAINS.value, OperatorType.ARRAY_NOT_CONTAINS.value],
 }
 
-CONTAINS_OPERATOR_MAP: Dict[str, Dict[DataType, OperatorType]] = {
-    "contains": {
-        DataType.STRING: OperatorType.STRING_CONTAINS,
-        DataType.LIST:   OperatorType.ARRAY_CONTAINS,
-        DataType.JSON:   OperatorType.ARRAY_CONTAINS,
-    },
-    "not contains": {
-        DataType.STRING: OperatorType.STRING_NOT_CONTAINS,
-        DataType.LIST:   OperatorType.ARRAY_NOT_CONTAINS,
-        DataType.JSON:   OperatorType.ARRAY_NOT_CONTAINS,
-    },
-}
-
 FILTER_LOOKUP_BUILDERS: Dict[str, Callable[[str, Any], Dict[str, Any]]] = {
     OperatorType.EQ.value:                 lambda col, val: {col: val},
     OperatorType.NEQ.value:                lambda col, val: {col: val},

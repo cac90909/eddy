@@ -67,18 +67,6 @@ def get_column_operator_options(user_id, data_source, column_name):
 
 
 
-def get_filterable_column_names(user_id, data_source):
-    from explorer.util import operation_result_util
-    from shared.services.universal_list_service import UniversalListService
-    model_columns_list = ["functionalities", "subject_matters", "general_categories", "tags", "entry_id"]
-    if operation_result_util.is_queryset_of_model_instances(data_source, Universal):
-        keys_list = UniversalListService().get_unique_json_keys(user_id=user_id, data_source=data_source)
-        merged_list = model_columns_list + keys_list 
-        return merged_list
-    else:
-        debug_print(f"Data source is not a queryset of model instances")
-        return None
-
 #Eventually, these will be DB queries (operation names, argument definitions I think will eventually be stored in DB)
 #TODO - change the naming scope (and list sontruction scope) for only operations that pertain to the operation request constructor
 def get_operation_result_data_types(user_id):
