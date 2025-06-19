@@ -5,11 +5,12 @@ from shared.operation.registry import get_spec_for_op
 
 @dataclass(frozen=True)
 class ArgumentSpec:
-    name:          OperationArgumentName
-    required:      bool
-    validate_fn:   Callable[[Any, Dict[str, Any]], bool]
-    error_msg:     str
-    choices_fn:    Optional[Callable[[Dict[str, Any]], Tuple[Any, ...]]] = None
+    name: OperationArgumentName
+    required: bool
+    multiple: Optional[bool] = False
+    validate_fn: Optional[Callable[[Any, Dict[str, Any]], bool]] = lambda value, ctx: True
+    error_msg: Optional[str] = ""
+    choices_fn: Optional[Callable[..., Tuple[Any, ...]]] = None
 
 @dataclass(frozen=True)
 class OperationSpec:

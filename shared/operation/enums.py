@@ -50,3 +50,9 @@ NON_FILTERABLE_COLUMNS = {
     UniversalColumn.SIBLINGS_IDS.value,
     UniversalColumn.FIELDS.value
 }
+
+class FrequencyType(str, Enum):
+    DAILY   = "daily"
+    WEEKLY  = "weekly"
+    MONTHLY = "monthly"
+    YEARLY  = "yearly"

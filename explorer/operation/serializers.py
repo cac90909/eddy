@@ -24,7 +24,11 @@ class FilterResponseSerializer(serializers.Serializer):
 class TraverseRequestSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
     start_id = serializers.IntegerField()
-    traversal_directions = serializers.ListField(child=serializers.ChoiceField(choices=["horizontal", "upwards", "downwards"]))
+    traversal_directions = serializers.ListField(
+        child=serializers.ChoiceField(choices=["horizontal", "upwards", "downwards"]),
+        allow_empty=False
+    )
+    
 
 class TraverseResponseSerializer(serializers.Serializer):
     data = UniversalSerializer(many=True)

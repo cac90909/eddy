@@ -1,8 +1,8 @@
-from typing import set
+from typing import set, Any
 
 from shared.universal.enums import (
     UniversalColumn,
-    DataType
+    DataType,
 )
 from shared.universal.mappings import (
     UNIVERSAL_COLUMN_TO_DATATYPE,
@@ -13,7 +13,10 @@ from shared.operation.mappings import (
 )
 from shared.operation.service import OperationService
 from shared.operation.enums import (
-    NON_FILTERABLE_COLUMNS
+    NON_FILTERABLE_COLUMNS,
+    TraversalDirection,
+    OperationName,
+    FrequencyType
 )
 import shared.universal.util as UniversalUtil
 # ----- Raw Universal -----
@@ -41,60 +44,46 @@ def get_column_value_options(user_id, data_src, col_name):
 def get_filter_type_options(user_id, data_src, col_name):
     col_data_type = UniversalUtil.get_column_data_type(data_src, col_name)
     return DATATYPE_TO_OPERATORS[col_data_type]
+
+def get_start_id_options(user_id, data_src):
+    """
+    Reuses column value options logic but specifically for entry_id.
+    """
+    entry_id_dtype = UNIVERSAL_COLUMN_TO_DATATYPE[UniversalColumn.ENTRY_ID]
+    options_provider = DATATYPE_TO_VALUE_PROVIDER[entry_id_dtype]
+    return list(options_provider(user_id, data_src, UniversalColumn.ENTRY_ID))
+
+def get_traversal_direction_options(user_id):
+    """
+    Always return the fixed set of directions.
+    """
+    return [d.value for d in TraversalDirection]
+
+def get_unique_json_keys(user_id, data_src):
+    return OperationService.get_unique_json_keys(user_id, data_src)
+
     
+def get_target_column_options(
+    user_id: int,
+    data_src: Any,
+    group_columns: list[str],
+    op_name: str
+) -> list[str]:
+    # base list of all real columns + JSON keys:
+    cols = get_column_name_options(user_id, data_src)
+    # remove the grouping columns
+    cols = [c for c in cols if c not in group_columns]
 
-def filter(self, user_id, data_src, col_name, filter_val, filter_type):
-    return self.uni_rep.filter_data(data_src, col_name, filter_val, filter_type)
+    # only for non-count ops, further restrict to numeric/date
+    if op_name != OperationName.GET_COUNT_GROUP_AGGREGATE.value:
+        valid_types = {DataType.INT, DataType.FLOAT, DataType.DATE}
+        return [
+          c for c in cols
+          if UniversalUtil.get_column_data_type(data_src, c) in valid_types
+        ]
 
+    # for count, return all
+    return cols
 
-
-def traverse(self, user_id, data_src, start_id, traversal_dirs):
-    return self.uni_rep.traverse_data(data_src, start_id, traversal_dirs)
-
-# ----- Metric (Simple Aggregations) -----
-
-def get_count(self, user_id, data_src, col_name):   
-    return self.uni_rep.get_count(data_src, col_name)
-
-def get_min(self, user_id, data_src, col_name):   
-    return self.uni_rep.get_min(data_src, col_name)
-
-def get_max(self, user_id, data_src, col_name):   
-    return self.uni_rep.get_max(data_src, col_name)
-
-def get_sum(self, user_id, data_src, col_name):   
-    return self.uni_rep.get_sum(data_src, col_name)
-
-def get_average(self, user_id, data_src, col_name):   
-    return self.uni_rep.get_average(data_src, col_name)
-
-# ----- List -----
-
-def get_unique_column_values(self, user_id, data_src, col_name):
-    return self.uni_rep.get_unique_column_values(data_src, col_name)
-
-def get_unique_json_keys(self, user_id, data_src):
-    return self.uni_rep.get_unique_json_keys(data_src)
-
-def get_unique_json_key_values(self, user_id, data_src, json_key):
-    return self.uni_rep.get_unique_json_key_values(data_src, json_key)
-
-def get_unique_json_values(self, user_id, data_src):
-    return self.uni_rep.get_unique_json_values(data_src)
-
-# ----- Group Aggregations -----
-
-def get_count_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-    return self.uni_rep.get_count_group_aggregate(data_src, grp_cols, tgt_col, freq)
-
-def get_min_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-    return self.uni_rep.get_min_group_aggregate(data_src, grp_cols, tgt_col, freq)
-
-def get_max_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-    return self.uni_rep.get_max_group_aggregate(data_src, grp_cols, tgt_col, freq)
-
-def get_sum_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-    return self.uni_rep.get_sum_group_aggregate(data_src, grp_cols, tgt_col, freq)
-
-def get_average_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-    return self.uni_rep.get_average_group_aggregate(data_src, grp_cols, tgt_col, freq)
+def get_group_aggregate_frequency_options(user_id):
+    return [freq.value for freq in FrequencyType]
