@@ -18,18 +18,22 @@ from shared.operation.enums import (
 import shared.universal.util as UniversalUtil
 # ----- Raw Universal -----
 
-def get_filter_column_name_options(user_id, data_src) -> set:
+def get_column_name_options(user_id, data_src) -> set:
     """
     Retrieves list of valid column names that can have a filter operation applied:
     combining a list of Universal Columns + Universal Fields Column Keys 
     (which are drawn from the passed current data source)
     """
+    #NOTE: expand scope to just column names instead of filter use case
+    #      just naming and invoking all cols instead of non filt cols
+    #      esp since non filt cols isnt a thing i think 
+    #      (all ops dont use user maybe fields, thats it)
     all_cols = {col.value for col in UniversalColumn}
     filterable_cols = all_cols - NON_FILTERABLE_COLUMNS 
     filterable_keys = OperationService.get_unique_json_keys(user_id, data_src)
     return sorted(filterable_cols + filterable_keys)
 
-def get_filter_value_options(user_id, data_src, col_name):
+def get_column_value_options(user_id, data_src, col_name):
     col_data_type = UniversalUtil.get_column_data_type(data_src, col_name)
     options_provider = DATATYPE_TO_VALUE_PROVIDER[col_data_type]
     return list(options_provider(user_id, data_src, col_name))

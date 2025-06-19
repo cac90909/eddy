@@ -2,16 +2,19 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
-from explorer.serializers.requests.lookups import (ArgumentOptionsRequestSerializer, 
-                                                   OperationInfoRequestSerializer)
-from explorer.serializers.base import StandardOperationResponseSerializer
+from explorer.lookup.serializers import (ArgumentOptionsRequestSerializer, 
+                                        ArgumentOptionsResponseSerializer,
+                                        OperationInfoRequestSerializer)
 from explorer.lookup.service import LookupService
 
 class LookupViewSet(ViewSet):
+
+    def __init__(self):
+        self.lookup_svc = LookupService()
     
     @extend_schema(
         request=ArgumentOptionsRequestSerializer,
-        responses=StandardOperationResponseSerializer
+        responses=ArgumentOptionsResponseSerializer
     )
     @action(
         detail=False,
@@ -20,22 +23,23 @@ class LookupViewSet(ViewSet):
         url_name='lookup_options'
     )
     def operation_arg_options(self, request):
-        # Validate input
-        serializer = ArgumentOptionsRequestSerializer(data=request.data)
+        serializer = ArgumentOptionsRequestSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
-        op = serializer.validated_data['operation_name']
-        arg = serializer.validated_data['argument']
-        prev_args = serializer.validated_data.get('previous_arguments', {})
+        op         = serializer.validated_data['operation_name']
+        arg        = serializer.validated_data['argument']
+        prev_args  = serializer.validated_data.get('previous_arguments', {})
 
-        # Business logic: fetch options for the given operation and argument
-       
-        choices = LookupService.get_arg_options_for_operation(op, arg, prev_args)
+        # 2) fetch choices
+        choices = self.lookup_svc.get_operation_argument_options(
+            user_id   = request.user.id,
+            op_name   = op,
+            arg_name  = arg,
+            prev_args = prev_args,
+        )
 
-        # Wrap in the standard response format
-        return Response({
-            "data": choices,
-            "meta": {}
-        })
+        # 3) wrap in standard envelope
+        out_ser = ArgumentOptionsResponseSerializer({"data": choices, "meta": {}})
+        return Response(out_ser.data)
     
     @extend_schema(
         request=OperationInfoRequestSerializer,
@@ -62,13 +66,3 @@ class LookupViewSet(ViewSet):
             "data": op_info,
             "meta": {}
         })
-    
-
-
-# In your urls.py, wire it up:
-# from rest_framework.routers import DefaultRouter
-# from explorer.views.lookup_viewset import LookupViewSet
-#
-# router = DefaultRouter()
-# router.register(r'explorer/lookups', LookupViewSet, basename='lookup')
-# urlpatterns = router.urls

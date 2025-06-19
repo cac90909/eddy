@@ -51,15 +51,15 @@ def get_column_data_type(queryset, col_name: str) -> DataType:
         col_data_type = _get_json_key_type(queryset, col_name)
     return col_data_type
 
-def _get_list_values(user_id, qs, col_name):
+def get_list_values(user_id, qs, col_name):
     # e.g. unnest + distinct
     return qs.values_list(col_name, flat=True).distinct()
 
-def _get_scalar_values(user_id, qs, col_name):
+def get_scalar_values(user_id, qs, col_name):
     # e.g. dates, strings, ints, floats
     return qs.values_list(col_name, flat=True).distinct()
 
-def _get_json_values(user_id, qs, json_key):
+def get_json_values(user_id, qs, json_key):
     # e.g. extract nested JSON values
     return qs.filter(fields__has_key=json_key).values_list(f"fields__{json_key}", flat=True).distinct()
 

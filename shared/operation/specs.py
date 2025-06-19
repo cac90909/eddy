@@ -11,11 +11,12 @@ from shared.operation.domain import (
     OperationSpec as OpSpec,
 )
 from shared.operation.service import OperationService
+import shared.operation.arguments.choices as ChoiceUtil
 
-# Placeholder validator and options_fn
-DEFAULT_VALIDATOR = lambda v, ctx: True
-DEFAULT_ERROR_MSG = ""
-DEFAULT_OPTIONS_FN = None
+# Placeholder VALID and options_fn
+DEFAULT_VALIDATOR = VALID = lambda v, ctx: True
+DEFAULT_ERROR_MESSAGE = ERR_MSG = ""
+DEFAULT_OPTIONS_FN = OPTS = None
 
 # Unbound references to UniversalService methods
 OpSvc = OperationService
@@ -33,9 +34,9 @@ OP_SPECS: Dict[OpName, OpSpec] = {
         name           = OpName.FILTER,
         result_type    = OpType.RAW,
         args           = (
-            ArgSpec(OpArgName.COLUMN_NAME,          True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
-            ArgSpec(OpArgName.FILTER_VALUE,         True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
-            ArgSpec(OpArgName.FILTER_TYPE,          True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.COLUMN_NAME,  True, VALID, ERR_MSG, ChoiceUtil.get_column_name_options),
+            ArgSpec(OpArgName.FILTER_VALUE, True, VALID, ERR_MSG, ChoiceUtil.get_column_value_options),
+            ArgSpec(OpArgName.FILTER_TYPE,  True, VALID, ERR_MSG, ChoiceUtil.get_filter_type_options),
         ),
         service_method = OpSvc.filter,
     ),
@@ -43,8 +44,8 @@ OP_SPECS: Dict[OpName, OpSpec] = {
         name           = OpName.TRAVERSE,
         result_type    = OpType.RAW,
         args           = (
-            ArgSpec(OpArgName.START_ID,             True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
-            ArgSpec(OpArgName.TRAVERSAL_DIRECTIONS, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.START_ID,             True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.TRAVERSAL_DIRECTIONS, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
         ),
         service_method = OpSvc.traverse,
     ),
@@ -54,7 +55,7 @@ OP_SPECS: Dict[OpName, OpSpec] = {
         name           = OpName.GET_COUNT,
         result_type    = OpType.METRIC,
         args           = (
-            ArgSpec(OpArgName.COLUMN_NAME, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.COLUMN_NAME, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
         ),
         service_method = OpSvc.get_count,
     ),
@@ -62,7 +63,7 @@ OP_SPECS: Dict[OpName, OpSpec] = {
         name           = OpName.GET_SUM,
         result_type    = OpType.METRIC,
         args           = (
-            ArgSpec(OpArgName.COLUMN_NAME, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.COLUMN_NAME, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
         ),
         service_method = OpSvc.get_sum,
     ),
@@ -70,7 +71,7 @@ OP_SPECS: Dict[OpName, OpSpec] = {
         name           = OpName.GET_MIN,
         result_type    = OpType.METRIC,
         args           = (
-            ArgSpec(OpArgName.COLUMN_NAME, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.COLUMN_NAME, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
         ),
         service_method = OpSvc.get_min,
     ),
@@ -78,7 +79,7 @@ OP_SPECS: Dict[OpName, OpSpec] = {
         name           = OpName.GET_MAX,
         result_type    = OpType.METRIC,
         args           = (
-            ArgSpec(OpArgName.COLUMN_NAME, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.COLUMN_NAME, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
         ),
         service_method = OpSvc.get_max,
     ),
@@ -86,7 +87,7 @@ OP_SPECS: Dict[OpName, OpSpec] = {
         name           = OpName.GET_AVERAGE,
         result_type    = OpType.METRIC,
         args           = (
-            ArgSpec(OpArgName.COLUMN_NAME, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.COLUMN_NAME, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
         ),
         service_method = OpSvc.get_average,
     ),
@@ -96,7 +97,7 @@ OP_SPECS: Dict[OpName, OpSpec] = {
         name           = OpName.GET_UNIQUE_COLUMN_VALUES,
         result_type    = OpType.LIST,
         args           = (
-            ArgSpec(OpArgName.COLUMN_NAME, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.COLUMN_NAME, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
         ),
         service_method = OpSvc.get_unique_column_values,
     ),
@@ -110,7 +111,7 @@ OP_SPECS: Dict[OpName, OpSpec] = {
         name           = OpName.GET_UNIQUE_JSON_KEY_VALUES,
         result_type    = OpType.LIST,
         args           = (
-            ArgSpec(OpArgName.JSON_KEY, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.JSON_KEY, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
         ),
         service_method = OpSvc.get_unique_json_key_values,
     ),
@@ -126,9 +127,9 @@ OP_SPECS: Dict[OpName, OpSpec] = {
         name           = OpName.GET_COUNT_GROUP_AGGREGATE,
         result_type    = OpType.ENRICHED,
         args           = (
-            ArgSpec(OpArgName.GROUP_COLUMNS, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
-            ArgSpec(OpArgName.TARGET_COLUMN, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
-            ArgSpec(OpArgName.FREQUENCY,   False, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.GROUP_COLUMNS, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.TARGET_COLUMN, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.FREQUENCY,   False, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
         ),
         service_method = OpSvc.get_count_group_aggregate,
     ),
@@ -136,9 +137,9 @@ OP_SPECS: Dict[OpName, OpSpec] = {
         name           = OpName.GET_MIN_GROUP_AGGREGATE,
         result_type    = OpType.ENRICHED,
         args           = (
-            ArgSpec(OpArgName.GROUP_COLUMNS, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
-            ArgSpec(OpArgName.TARGET_COLUMN, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
-            ArgSpec(OpArgName.FREQUENCY,   False, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.GROUP_COLUMNS, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.TARGET_COLUMN, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.FREQUENCY,   False, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
         ),
         service_method = OpSvc.get_min_group_aggregate,
     ),
@@ -146,9 +147,9 @@ OP_SPECS: Dict[OpName, OpSpec] = {
         name           = OpName.GET_MAX_GROUP_AGGREGATE,
         result_type    = OpType.ENRICHED,
         args           = (
-            ArgSpec(OpArgName.GROUP_COLUMNS, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
-            ArgSpec(OpArgName.TARGET_COLUMN, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
-            ArgSpec(OpArgName.FREQUENCY,   False, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.GROUP_COLUMNS, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.TARGET_COLUMN, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.FREQUENCY,   False, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
         ),
         service_method = OpSvc.get_max_group_aggregate,
     ),
@@ -156,9 +157,9 @@ OP_SPECS: Dict[OpName, OpSpec] = {
         name           = OpName.GET_SUM_GROUP_AGGREGATE,
         result_type    = OpType.ENRICHED,
         args           = (
-            ArgSpec(OpArgName.GROUP_COLUMNS, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
-            ArgSpec(OpArgName.TARGET_COLUMN, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
-            ArgSpec(OpArgName.FREQUENCY,   False, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.GROUP_COLUMNS, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.TARGET_COLUMN, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.FREQUENCY,   False, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
         ),
         service_method = OpSvc.get_sum_group_aggregate,
     ),
@@ -166,9 +167,9 @@ OP_SPECS: Dict[OpName, OpSpec] = {
         name           = OpName.GET_AVERAGE_GROUP_AGGREGATE,
         result_type    = OpType.ENRICHED,
         args           = (
-            ArgSpec(OpArgName.GROUP_COLUMNS, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
-            ArgSpec(OpArgName.TARGET_COLUMN, True, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
-            ArgSpec(OpArgName.FREQUENCY,   False, DEFAULT_VALIDATOR, DEFAULT_ERROR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.GROUP_COLUMNS, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.TARGET_COLUMN, True, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
+            ArgSpec(OpArgName.FREQUENCY,   False, VALID, ERR_MSG, DEFAULT_OPTIONS_FN),
         ),
         service_method = OpSvc.get_average_group_aggregate,
     ),

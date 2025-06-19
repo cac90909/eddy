@@ -14,6 +14,18 @@ class ArgumentOptionsRequestSerializer(serializers.Serializer):
         default={},
         help_text="Previous argument values for dependent lookups"
     )
+class ArgumentOptionsResponseSerializer(serializers.Serializer):
+    """
+    Response for get operation argument options request:
+      - data: options list
+    """
+    data = serializers.ListField(
+        help_text="options list"
+    )
+    meta = serializers.DictField(
+        help_text="Additional metadata",
+        default={}
+    )
 
 class OperationInfoRequestSerializer(serializers.Serializer):
     operation_name = serializers.CharField(

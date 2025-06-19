@@ -2,10 +2,7 @@
 from typing import Any, Dict, Callable
 
 from rest_framework.exceptions import APIException, NotFound
-from shared.services.universal_raw_service import UniversalRawService
-from shared.services.universal_list_service import UniversalListService
-from shared.services.universal_metric_service import UniversalMetricService
-from shared.services.universal_enriched_service import UniversalEnrichedService
+from shared.operation.service import OperationService
 from explorer.cache.service import ExplorerCacheService
 from explorer.metadata.service import ExplorerMetadataService
 from explorer.domain.operation import Operation
@@ -19,10 +16,7 @@ class ExplorerOperationService:
     """
 
     def __init__(self):
-        self.raw_svc      = UniversalRawService()
-        self.list_svc     = UniversalListService()
-        self.metric_svc   = UniversalMetricService()
-        self.enriched_svc = UniversalEnrichedService()
+        self.core_op_svc = OperationService()
         self.cache_svc    = ExplorerCacheService()
         self.metadata_svc = ExplorerMetadataService()
 
@@ -63,7 +57,7 @@ class ExplorerOperationService:
     def get_full_data(self, user_id: int, **kwargs) -> Any:
         try:
             previous = self.cache_svc.last_result(user_id)
-            result = self.raw_svc.get_full_data(user_id=user_id)
+            result = self.core_op_svc.get_full_data(user_id=user_id)
             entry = Operation(
                 name="get_full_data",
                 args={},
@@ -81,7 +75,7 @@ class ExplorerOperationService:
     def filter(self, user_id: int, previous: Any = None, **kwargs) -> Any:
         try:
             previous = self.cache_svc.last_result(user_id)
-            result = self.raw_svc.filter(
+            result = self.core_op_svc.filter(
                 user_id=user_id,
                 data_source=previous,
                 **kwargs
@@ -103,7 +97,7 @@ class ExplorerOperationService:
     def traverse(self, user_id: int, previous: Any = None, **kwargs) -> Any:
         try:
             previous = self.cache_svc.last_result(user_id)
-            result = self.raw_svc.traverse(
+            result = self.core_op_svc.traverse(
                 user_id=user_id,
                 data_source=previous,
                 **kwargs
