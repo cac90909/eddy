@@ -1,5 +1,12 @@
 from typing import Dict, List
-from shared.universal.enums import DataType, OperatorType
+from shared.universal.enums import (
+    DataType, 
+    OperatorType,
+    UniversalColumn
+)
+from shared.operation.enums import (
+    TraversalDirection
+)
 
 DATATYPE_TO_OPERATORS: Dict[DataType, List[str]] = {
     DataType.INT:     ["=", "!=", "<", ">", "<=", ">="],
@@ -22,4 +29,10 @@ CONTAINS_OPERATOR_MAP: Dict[str, Dict[DataType, OperatorType]] = {
         DataType.LIST:   OperatorType.ARRAY_NOT_CONTAINS,
         DataType.JSON:   OperatorType.ARRAY_NOT_CONTAINS,
     },
+}
+
+TRAVERSAL_DIRECTION_TO_UNIVERSAL_COLUMN: Dict[TraversalDirection, UniversalColumn] = {
+    TraversalDirection.UPWARDS.value: UniversalColumn.PARENTS_IDS,
+    TraversalDirection.DOWNWARDS.value: UniversalColumn.CHILDREN_IDS,
+    TraversalDirection.HORIZONTAL.value: UniversalColumn.SIBLINGS_IDS
 }

@@ -1,3 +1,5 @@
+from typing import List, Any, Dict, str, Sequence
+from collections import deque
 from shared.logger import debug_print
 from shared.universal.repository_util import (
     is_json_field,
@@ -18,8 +20,15 @@ from shared.universal.repository_util import (
 )
 from django.contrib.auth import get_user_model
 from django.core.exceptions import FieldDoesNotExist
+from django.db.models import QuerySet
 from shared.universal.enums import (
-    OperatorType
+    OperatorType,
+    UniversalColumn,
+    ARRAY_OPERATORS,
+    NEGATION_OPERATORS
+)
+from shared.universal.mappings import (
+    OPERATOR_TO_LOOKUP_SUFFIX
 )
 from shared.models import Universal
 User = get_user_model()
@@ -35,36 +44,64 @@ class UniversalRepository:
         debug_print(f"Finished Query: {data.count()} rows, {type(data)} type")
         return data
 
-    def filter_data(self, qs, column_name, filter_value, filter_type):
-        try:
-            # Only catch “no such field,” not all Exceptions
-            Universal._meta.get_field(column_name)
-            actual = column_name
-        except FieldDoesNotExist:
-            actual = f"fields__{column_name}"
+    def filter_data(self, qs: QuerySet, col_name: str, filt_val: Any, filt_op: str) -> QuerySet:
+        # coerce single value → list for array lookups
+        if filt_op in ARRAY_OPERATORS and not isinstance(filt_val, list):
+            filt_val = [filt_val]
 
-        lookup = build_filter_statement(actual, filter_value, filter_type)
-        if filter_type == OperatorType.NEQ.value or filter_type == OperatorType.ARRAY_NOT_CONTAINS.value:
+        # build the lookup key
+        suffix = OPERATOR_TO_LOOKUP_SUFFIX.get(filt_op)
+        if suffix is None:
+            raise ValueError(f"Unsupported filter operator {filt_op!r}")
+        lookup = { f"{col_name}{suffix}": filt_val }
+
+        # decide include vs exclude
+        if filt_op in NEGATION_OPERATORS:
             return qs.exclude(**lookup)
+
         return qs.filter(**lookup)
     
     @staticmethod
-    def traverse_data(user_data_queryset, start_id, traversal_directions=None):
+    def traverse_data(qs: QuerySet, start_id : UniversalColumn.ENTRY_ID, cols : List[UniversalColumn]):
         """
         Traverses hierarchical relationships in the dataset and retrieves all relevant rows.
         """
-        if traversal_directions is None:
-            traversal_directions = ["upwards"]
-        traversal_mapping = {
-            "upwards": "parents_ids",
-            "downwards": "children_ids",
-            "horizontal": "siblings_ids"
-        }
-        traversal_columns = {direction: traversal_mapping[direction] for direction in traversal_directions if direction in traversal_mapping}
-        visited_ids = generate_ids_in_traversal(user_data_queryset, start_id, traversal_columns)
-        full_rows = user_data_queryset.filter(entry_id__in=visited_ids)
-        debug_print(f"Finished Query: {full_rows.count()} rows, {type(full_rows)} type")
+        visited, to_visit = set(), [start_id]
+
+        while to_visit:
+            current_id = to_visit.pop()
+            if current_id not in visited:
+                visited.add(current_id)
+                for col_name in cols.values():
+                    related_ids = qs.filter(entry_id=current_id).values_list(col_name, flat=True).first()
+                    if related_ids:
+                        to_visit.extend(related_ids)
+
+        full_rows = qs.filter(entry_id__in=visited)
         return full_rows
+    
+    def get_neighbors(
+        self,
+        qs: QuerySet[Universal],
+        graph_cols: Sequence[str],
+    ) -> dict[Any, list[Any]]:
+        """
+        Returns a mapping from each entry_id to its list of related IDs
+        (across the given graph-cols) in one bulk query.
+        """
+        mapping: dict[Any, list[Any]] = {}
+        for entry_id, *related_lists in qs.values_list("entry_id", *graph_cols):
+            for idx, lst in enumerate(related_lists):
+                if lst:
+                    mapping.setdefault(entry_id, []).extend(lst)
+        return mapping
+
+    def get_rows_by_ids(
+        self,
+        qs: QuerySet[Universal],
+        entry_ids: Sequence[Any],
+    ) -> QuerySet[Universal]:
+        return qs.filter(entry_id__in=entry_ids)
     
     # -------------------- Unique Value Extraction --------------------
     

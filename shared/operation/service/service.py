@@ -2,28 +2,50 @@ from shared.universal.repository import UniversalRepository
 from shared.logger import debug_print, debug_print_vars
 from shared.util import log_vars_vals_cls, catch_exceptions_cls
 from shared.universal.repository import UniversalRepository
-from shared.operation.mappings import CONTAINS_OPERATOR_MAP
+from shared.operation.mappings import (
+    CONTAINS_OPERATOR_MAP,
+    TRAVERSAL_DIRECTION_TO_UNIVERSAL_COLUMN
+)
+from django.db.models import QuerySet
+from shared.models import Universal
 import shared.universal.util as UniversalUtil 
+from typing import Sequence, Any, Dict
+import shared.operation.service.util as OpSvcUtil
 
 #@log_vars_vals_cls(exclude=None)
 @catch_exceptions_cls(exception_return_value="Error", exclude=None)
 class OperationService:
     def __init__(self):
-        self.uni_rep = UniversalRepository()
+        self.univ_repo = UniversalRepository()
 
     # ----- Raw Universal -----
 
     def get_full_data(self, user_id):
-        return self.uni_rep.get_full_data(user_id)
+        return self.univ_repo.get_full_data(user_id)
 
     def filter(self, user_id, data_src, col_name, filter_val, filter_type):
         if filter_type in CONTAINS_OPERATOR_MAP:
             col_data_type = UniversalUtil.get_column_data_type(data_src, col_name)
             filter_type = CONTAINS_OPERATOR_MAP.get(filter_type).get(col_data_type)
-        return self.uni_rep.filter_data(data_src, col_name, filter_val, filter_type)
+        return self.univ_repo.filter_data(data_src, col_name, filter_val, filter_type)
 
-    def traverse(self, user_id, data_src, start_id, traversal_dirs):
-        return self.uni_rep.traverse_data(data_src, start_id, traversal_dirs)
+    def traverse(
+            self, 
+            user_id: int, 
+            data_src: QuerySet[Universal], 
+            start_id: Any, 
+            traversal_dirs: Sequence[str],
+    ) -> QuerySet[Universal]:
+        """
+        1) Translates traversal directions to model columns names 
+        2) fetches all the node neighbors
+        3) performs BFS on neighbors
+        4) and then returns all neighbors that are reachable from the entry ID. 
+        """
+        graph_cols = [TRAVERSAL_DIRECTION_TO_UNIVERSAL_COLUMN[d]for d in traversal_dirs]
+        neighbor_map = self.univ_repo.get_neighbors(data_src, graph_cols)
+        visited_ids = OpSvcUtil.bfs(neighbor_map, start_id)
+        return self.univ_repo.get_rows_by_ids(data_src, visited_ids)
     
     # ----- Metric (Simple Aggregations) -----
     

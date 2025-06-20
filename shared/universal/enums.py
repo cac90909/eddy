@@ -51,4 +51,24 @@ class OperatorType(str, Enum):
     ARRAY_NOT_CONTAINS = "array_not_contains"
 
 
+TRAVERSABLE_COLUMNS = {
+    UniversalColumn.PARENTS_IDS,
+    UniversalColumn.CHILDREN_IDS,
+    UniversalColumn.SIBLINGS_IDS
+}
+
+# any operator here needs its value wrapped in a list
+ARRAY_OPERATORS = {
+    OperatorType.ARRAY_CONTAINS,
+    OperatorType.ARRAY_NOT_CONTAINS,
+}
+
+# those operators mean “exclude” instead of “filter”
+NEGATION_OPERATORS = {
+    OperatorType.NEQ,
+    OperatorType.ARRAY_NOT_CONTAINS,
+}
+
+
+
 

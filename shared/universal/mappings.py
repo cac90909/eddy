@@ -13,6 +13,7 @@ from .enums import (
 from shared.universal.enums import DataType
 from shared.operation.enums import UniversalColumn
 import shared.universal.util as UniversalUtil 
+from shared.operation.enums import TraversalDirection
 
 AGGREGATION_FUNCTIONS = {
     AggregationType.COUNT: Count,
@@ -49,16 +50,16 @@ OPERATORS_BY_TYPE = {
     DataType.LIST:    [OperatorType.ARRAY_CONTAINS.value, OperatorType.ARRAY_NOT_CONTAINS.value],
 }
 
-FILTER_LOOKUP_BUILDERS: Dict[str, Callable[[str, Any], Dict[str, Any]]] = {
-    OperatorType.EQ.value:                 lambda col, val: {col: val},
-    OperatorType.NEQ.value:                lambda col, val: {col: val},
-    OperatorType.LT.value:                 lambda col, val: {f"{col}__lt": val},
-    OperatorType.GT.value:                 lambda col, val: {f"{col}__gt": val},
-    OperatorType.LTE.value:                lambda col, val: {f"{col}__lte": val},
-    OperatorType.GTE.value:                lambda col, val: {f"{col}__gte": val},
-    OperatorType.STRING_CONTAINS.value:    lambda col, val: {f"{col}__icontains": val},
-    OperatorType.ARRAY_CONTAINS.value:     lambda col, val: {f"{col}__contains": val if isinstance(val, list) else [val]},
-    OperatorType.ARRAY_NOT_CONTAINS.value: lambda col, val: {f"{col}__contains": val if isinstance(val, list) else [val]},
+OPERATOR_TO_LOOKUP_SUFFIX: dict[OperatorType, str] = {
+    OperatorType.EQ.value:                "",          # exact match
+    OperatorType.NEQ.value:               "",          # negated later
+    OperatorType.LT.value:                "__lt",
+    OperatorType.GT.value:                "__gt",
+    OperatorType.LTE.value:               "__lte",
+    OperatorType.GTE.value:               "__gte",
+    OperatorType.STRING_CONTAINS.value:   "__icontains",
+    OperatorType.ARRAY_CONTAINS.value:    "__contains",
+    OperatorType.ARRAY_NOT_CONTAINS.value:"__contains",
 }
 
 UNIVERSAL_COLUMN_TO_DATATYPE: dict[UniversalColumn, DataType] = {
@@ -86,3 +87,5 @@ DATATYPE_TO_VALUE_PROVIDER: dict[DataType, ValueProvider] = {
     DataType.DATE:   UniversalUtil.get_scalar_values,
     DataType.JSON:   UniversalUtil.get_json_values,  
 }
+
+

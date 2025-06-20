@@ -164,22 +164,6 @@ def build_filter_statement(column_name: str, filter_value: Any, filter_type: str
         raise ValueError(f"Unsupported filter type: {filter_type}")
     return builder(column_name, filter_value)
 
-def generate_ids_in_traversal(user_data_queryset, start_id, traversal_columns):
-    """
-    Recursively traverses relationships in a dataset and collects all relevant entry IDs.
-    """
-    visited, to_visit = set(), [start_id]
-
-    while to_visit:
-        current_id = to_visit.pop()
-        if current_id not in visited:
-            visited.add(current_id)
-            for col_name in traversal_columns.values():
-                related_ids = user_data_queryset.filter(entry_id=current_id).values_list(col_name, flat=True).first()
-                if related_ids:
-                    to_visit.extend(related_ids)
-
-    return visited
 
 def get_unique_id_list(user_data_queryset):
     return list(user_data_queryset.values_list('id', flat=True))
