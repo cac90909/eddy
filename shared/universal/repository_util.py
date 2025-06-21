@@ -296,12 +296,6 @@ def get_unique_json_keys(user_data_queryset):
     """
     return set(user_data_queryset.annotate(json_key=Func(F("fields"), function="jsonb_object_keys")).values_list("json_key", flat=True).distinct())
 
-def get_unique_json_key_values(user_data_queryset, json_key):
-    """
-    Retrieve unique values for a specific key in the JSON column "fields".
-    """
-    return set(user_data_queryset.filter(**{"fields__has_key": json_key}).annotate(value=F(f"fields__{json_key}")).values_list("value", flat=True).distinct())
-
 def get_unique_json_values(user_data_queryset):
     """
     Retrieve all unique values from the JSON column "fields",

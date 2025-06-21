@@ -1,4 +1,4 @@
-from typing import List, Any, Dict, str, Sequence
+from typing import List, Any, Dict, str, Sequence, Set
 from django.db.models import F, Func, IntegerField, FloatField, DateField
 from django.db.models.functions import Cast
 from collections import deque
@@ -32,7 +32,7 @@ from shared.universal.enums import (
     DataStructureType
 )
 from shared.universal.mappings import (
-    OPERATOR_TO_LOOKUP_SUFFIX,
+    OPERATOR_LOOKUPS,
     AGGREGATION_FUNCTIONS
 )
 import shared.universal.util as UnivRepoUtil
@@ -51,8 +51,11 @@ class UniversalRepository:
         return data
 
     def filter_data(self, qs: QuerySet, col_name: str, filt_val: Any, filt_op: str) -> QuerySet:
-        filter_kwargs = UnivRepoUtil.build_filter_kwargs(col_name, filt_op, filt_val)
-        if filt_op in NEGATION_OPERATORS:
+        if filt_op in [OperatorType.ARRAY_CONTAINS, OperatorType.ARRAY_NOT_CONTAINS]:
+            filt_val = [filt_val] if not isinstance(filt_val, list) else filt_val
+        operator = OPERATOR_LOOKUPS.get(filt_op)
+        filter_kwargs = { f"{col_name}{operator.lookup_suffix}": filt_val }
+        if operator.exclude:
             return qs.exclude(**filter_kwargs)
         return qs.filter(**filter_kwargs)
     
@@ -71,57 +74,42 @@ class UniversalRepository:
     def get_rows_by_ids(self, qs: QuerySet[Universal], entry_ids: Sequence[Any]) -> QuerySet[Universal]:
         return qs.filter(entry_id__in=entry_ids)
     
-    def get_distinct_values(self, qs: QuerySet, column_name: str):
-        expr = UnivRepoUtil.build_column_ref_expression(column_name)
-
-        # If it’s JSON, cast to the inferred native type
-        if not isinstance(expr, F):
-            dtype = UnivRepoUtil.get_column_primitive_type(qs, column_name)
-            if dtype == DataType.INT:
-                expr = Cast(expr, output_field=IntegerField())
-            elif dtype == DataType.FLOAT:
-                expr = Cast(expr, output_field=FloatField())
-            elif dtype == DataType.DATE:
-                expr = Cast(expr, output_field=DateField())
-            # else leave it as text
-
-        # Then annotate & pull out distinct values exactly as before
-        alias = f"_val_{column_name}"
-        qs = UnivRepoUtil.create_temp_column(qs, expr, alias)
-        return list(qs.values_list(alias, flat=True).distinct())
+    def get_distinct_values(self, qs: QuerySet, col_name: str):
+        col_struc = UnivRepoUtil.get_column_structure_type(col_name)
+        if col_struc == DataStructureType.JSON:
+            qs, new_col_name = UnivRepoUtil.create_col_for_json_key(qs, col_name)
+            return list(qs.values_list(new_col_name, flat=True).distinct())
+        elif col_struc == DataStructureType.LIST:
+            qs, new_col_name = UnivRepoUtil.create_col_for_array_field(qs, col_name)
+            return list(qs.values_list(new_col_name, flat=True).distinct())
+        else:
+            return list(qs.values_list(col_name, flat=True).distinct())
     
     # -------------------- Unique Value Extraction --------------------
-    
-    def get_unique_column_values(self, user_data_queryset, column_name):
-        """
-        Retrieve unique values from a column (non-"fields" column).
-        """
-        column_type = get_column_data_type(user_data_queryset, column_name)
-        if column_type == "arrayfield":  # Unnest array field and retrieve unique values
-            queryset = create_unnested_list_column(user_data_queryset, column_name, new_column_name="unnested_value")
-            values = queryset.values_list("unnested_value", flat=True).distinct()
-        else:  # Retrieve distinct values directly
-            values = user_data_queryset.values_list(column_name, flat=True).distinct()
-        unique_values = set(values)
-        debug_print(f"Finished Query: {len(unique_values)} rows, {type(unique_values)} type")
-        return unique_values
 
     #NOTE: rows can currently have the same key names (ex: restaurnts and albums both have a ratings key), handle this later
-    def get_unique_json_keys(self, user_data_queryset):
+    def get_unique_json_keys(self, qs: QuerySet):
         """
         Retrieve all unique keys from the JSON column "fields".
         """
-        unique_keys = get_unique_json_keys(user_data_queryset)
-        debug_print(f"Finished Query: {len(unique_keys)} rows, {type(unique_keys)} type")
-        return unique_keys
+        qs, alias = UnivRepoUtil.create_col_for_all_json_keys(qs)
+        return set(qs.values_list(alias, flat=True).distinct())
+    
+    def get_unique_json_key_values(qs: QuerySet, json_key: str) -> Set:
+        """
+        1) Keep only rows where `fields` actually has that key
+        2) Annotate each row with its value for that key, under the alias "value"
+        3) Pull out and dedupe those values
+        """
+        filter_kwargs = {f"{UniversalColumn.FIELDS}{OperatorType.HAS_KEY}":{json_key}}
+        qs_with_key = qs.filter(filter_kwargs)
 
-    def get_unique_json_key_values(self, user_data_queryset, json_key):
-        """
-        Retrieve unique values for a specific key in the JSON column "fields".
-        """
-        unique_key_values = get_unique_json_key_values(user_data_queryset, json_key)
-        debug_print(f"Finished Query: {len(unique_key_values)} rows, {type(unique_key_values)} type")
-        return unique_key_values
+        # 2) Extract & cast that key’s value into a column called "value"
+        qs_with_value, alias = UnivRepoUtil.create_col_for_json_key(qs_with_key, json_key)
+
+        # 3) Return the distinct set of those values
+        vals = qs_with_value.values_list("value", flat=True).distinct()
+        return set(vals)
     
     def get_unique_json_values(self, user_data_queryset):
         """
@@ -130,6 +118,22 @@ class UniversalRepository:
         unique_values = get_unique_json_values(user_data_queryset)
         debug_print(f"Finished Query: {len(unique_values)} rows, {type(unique_values)} type")
         return unique_values
+    
+    def get_unique_json_values(qs: QuerySet) -> Set:
+        """
+        Retrieve all unique JSON *values* across *all* keys in `fields`,
+        using only Django ORM calls (no raw SQL).
+        """
+        all_vals = set()
+        # 1) Find every key present in `fields`
+        keys = get_unique_json_keys(qs)  # returns Set[str]
+        # 2) For each key, grab its values and add to our set
+        for key in keys:
+            filter_kwargs = {f"{UniversalColumn.FIELDS.value}{OperatorType.HAS_KEY.value}":{key}}
+            fields_expr = f"{UniversalColumn.FIELDS.value}__{key}"
+            vals_for_key = qs.filter(filter_kwargs).values_list(fields_expr, flat=True).distinct()
+            all_vals.update(v for v in vals_for_key if v is not None)
+        return all_vals
 
     # -------------------- Aggregation --------------------
 
@@ -139,15 +143,14 @@ class UniversalRepository:
         For array fields: annotate with a temporary field "temp" using UNNEST.
         For standard fields: directly aggregate.
         """
-        col_struc = UnivRepoUtil.get_column_structure_type(qs, col_name)
-        temp_col = "temp"
+        col_struc = UnivRepoUtil.get_column_structure_type(col_name)
         agg_func = AGGREGATION_FUNCTIONS.get(agg_type)
         if col_struc == DataStructureType.JSON:
-            qs = UnivRepoUtil.create_col_for_json_key(qs, col_name, temp_col)
-            return qs.aggregate(result=agg_func(temp_col))["result"]
+            qs, new_col_name = UnivRepoUtil.create_col_for_json_key(qs, col_name)
+            return qs.aggregate(result=agg_func(new_col_name))["result"]
         elif col_struc == DataStructureType.LIST:
-            qs = UnivRepoUtil.create_col_for_array_field(qs, col_name, temp_col)
-            return qs.aggregate(result=agg_func(temp_col))["result"]
+            qs, new_col_name = UnivRepoUtil.create_col_for_array_field(qs, col_name)
+            return qs.aggregate(result=agg_func(new_col_name))["result"]
         else:
             return qs.aggregate(result=agg_func(col_name))["result"]
     

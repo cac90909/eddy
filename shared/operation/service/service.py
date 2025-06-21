@@ -27,9 +27,6 @@ class OperationService:
         return self.univ_repo.get_full_data(user_id)
 
     def filter(self, user_id, data_src, col_name, filter_val, filter_type):
-        if filter_type in CONTAINS_OPERATOR_MAP:
-            col_data_type = UniversalUtil.get_column_primitive_type(data_src, col_name)
-            filter_type = CONTAINS_OPERATOR_MAP.get(filter_type).get(col_data_type)
         return self.univ_repo.filter_data(data_src, col_name, filter_val, filter_type)
 
     def traverse(

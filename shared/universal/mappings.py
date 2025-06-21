@@ -2,11 +2,11 @@
 from django.db.models import Count, Avg, Sum, Min, Max
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.db.models import (
-    CharField, TextField, BooleanField, IntegerField, FloatField, DateField, JSONField
+    CharField, TextField, BooleanField, IntegerField, FloatField, DateField, JSONField, Field
 )
 from django.contrib.postgres.fields import ArrayField
 
-from typing import Any, Dict, Callable, List
+from typing import Any, Dict, Callable, List, Type, NamedTuple
 from .enums import (
     AggregationType, FrequencyType, DataType, OperatorType
 )
@@ -41,7 +41,7 @@ FIELD_TO_DATA_TYPE = {
     JSONField:    DataType.JSON,
 }
 
-DATA_TYPE_TO_FIELD: dict[DataType, type] = {
+DATA_TYPE_TO_FIELD: dict[DataType, Type[Field]] = {
     DataType.STRING:  CharField,    # choose CharField over TextField
     DataType.BOOLEAN: BooleanField,
     DataType.INT:     IntegerField,
@@ -60,16 +60,23 @@ OPERATORS_BY_TYPE = {
     DataType.LIST:    [OperatorType.ARRAY_CONTAINS.value, OperatorType.ARRAY_NOT_CONTAINS.value],
 }
 
-OPERATOR_TO_LOOKUP_SUFFIX: dict[OperatorType, str] = {
-    OperatorType.EQ.value:                "",          # exact match
-    OperatorType.NEQ.value:               "",          # negated later
-    OperatorType.LT.value:                "__lt",
-    OperatorType.GT.value:                "__gt",
-    OperatorType.LTE.value:               "__lte",
-    OperatorType.GTE.value:               "__gte",
-    OperatorType.STRING_CONTAINS.value:   "__icontains",
-    OperatorType.ARRAY_CONTAINS.value:    "__contains",
-    OperatorType.ARRAY_NOT_CONTAINS.value:"__contains",
+class LookupItem(NamedTuple):
+    lookup_suffix: str   # the "__gt", "__isnull", etc.
+    exclude: bool 
+OPERATOR_LOOKUPS: dict[str, LookupItem] = {
+OperatorType.EQ.value:                LookupItem("", False),
+OperatorType.NEQ.value:               LookupItem("", True),
+OperatorType.LT.value:                LookupItem("__lt", False),
+OperatorType.GT.value:                LookupItem("__gt", False),
+OperatorType.LTE.value:               LookupItem("__lte", False),
+OperatorType.GTE.value:               LookupItem("__gte", False),
+OperatorType.STRING_CONTAINS.value:   LookupItem("__icontains", False),
+OperatorType.ARRAY_CONTAINS.value:    LookupItem("__contains", False),
+OperatorType.ARRAY_NOT_CONTAINS.value:LookupItem("__contains", True),
+OperatorType.IS_NULL.value:           LookupItem("__isnull", False),
+OperatorType.IS_NOT_NULL.value:       LookupItem("__isnull", False),
+OperatorType.HAS_KEY.value:           LookupItem("__has_key", False),
+OperatorType.DOESNT_HAVE_KEY.value:   LookupItem("__has_key", True)
 }
 
 UNIVERSAL_COLUMN_TO_DATATYPE: dict[UniversalColumn, DataType] = {
@@ -87,15 +94,4 @@ UNIVERSAL_COLUMN_TO_DATATYPE: dict[UniversalColumn, DataType] = {
     UniversalColumn.FIELDS:            DataType.JSON,
     UniversalColumn.USER:              DataType.STRING,
 }
-
-# ValueProvider = Callable[[int, Any, str], List[Any]]
-# DATATYPE_TO_VALUE_PROVIDER: dict[DataType, ValueProvider] = {
-#     DataType.LIST:   UniversalUtil.get_list_values,
-#     DataType.STRING: UniversalUtil.get_scalar_values,
-#     DataType.INT:    UniversalUtil.get_scalar_values,
-#     DataType.FLOAT:  UniversalUtil.get_scalar_values,
-#     DataType.DATE:   UniversalUtil.get_scalar_values,
-#     DataType.JSON:   UniversalUtil.get_json_values,  
-# }
-
 

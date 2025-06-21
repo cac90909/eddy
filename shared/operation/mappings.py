@@ -18,19 +18,6 @@ DATATYPE_TO_OPERATORS: Dict[DataType, List[str]] = {
     DataType.JSON:    ["contains", "not contains"],
 }
 
-CONTAINS_OPERATOR_MAP: Dict[str, Dict[DataType, OperatorType]] = {
-    "contains": {
-        DataType.STRING: OperatorType.STRING_CONTAINS,
-        DataType.LIST:   OperatorType.ARRAY_CONTAINS,
-        DataType.JSON:   OperatorType.ARRAY_CONTAINS,
-    },
-    "not contains": {
-        DataType.STRING: OperatorType.STRING_NOT_CONTAINS,
-        DataType.LIST:   OperatorType.ARRAY_NOT_CONTAINS,
-        DataType.JSON:   OperatorType.ARRAY_NOT_CONTAINS,
-    },
-}
-
 TRAVERSAL_DIRECTION_TO_UNIVERSAL_COLUMN: Dict[TraversalDirection, UniversalColumn] = {
     TraversalDirection.UPWARDS.value: UniversalColumn.PARENTS_IDS,
     TraversalDirection.DOWNWARDS.value: UniversalColumn.CHILDREN_IDS,

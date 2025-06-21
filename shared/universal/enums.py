@@ -53,24 +53,16 @@ class OperatorType(str, Enum):
     STRING_NOT_CONTAINS= "string_not_contains"
     ARRAY_CONTAINS     = "array_contains"
     ARRAY_NOT_CONTAINS = "array_not_contains"
+    IS_NULL             = "is_null"
+    IS_NOT_NULL         = "is_not_null"
+    HAS_KEY             = "has_key"
+    DOESNT_HAVE_KEY     = "doesnt_have_key"
 
 
 TRAVERSABLE_COLUMNS = {
     UniversalColumn.PARENTS_IDS,
     UniversalColumn.CHILDREN_IDS,
     UniversalColumn.SIBLINGS_IDS
-}
-
-# any operator here needs its value wrapped in a list
-ARRAY_OPERATORS = {
-    OperatorType.ARRAY_CONTAINS,
-    OperatorType.ARRAY_NOT_CONTAINS,
-}
-
-# those operators mean “exclude” instead of “filter”
-NEGATION_OPERATORS = {
-    OperatorType.NEQ,
-    OperatorType.ARRAY_NOT_CONTAINS,
 }
 
 class DataStructureType(str, Enum):
@@ -87,4 +79,9 @@ DJANGO_FIELD_TYPES: Field = {
     DateField,
     JSONField
 }
+
+class PGFunc(str, Enum):
+    UNNEST           = "UNNEST"
+    JSONB_OBJECT_KEYS = "jsonb_object_keys"
+    JSONB_EACH_TEXT  = "jsonb_each_text"
 
