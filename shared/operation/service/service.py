@@ -50,19 +50,19 @@ class OperationService:
     # ----- Metric (Simple Aggregations) -----
     
     def get_count(self, user_id, data_src, col_name):   
-        return self.uni_rep.get_count(data_src, col_name)
+        return self.univ_repo.get_count(data_src, col_name)
 
     def get_min(self, user_id, data_src, col_name):   
-        return self.uni_rep.get_min(data_src, col_name)
+        return self.univ_repo.get_min(data_src, col_name)
     
     def get_max(self, user_id, data_src, col_name):   
-        return self.uni_rep.get_max(data_src, col_name)
+        return self.univ_repo.get_max(data_src, col_name)
     
     def get_sum(self, user_id, data_src, col_name):   
-        return self.uni_rep.get_sum(data_src, col_name)
+        return self.univ_repo.get_sum(data_src, col_name)
     
     def get_average(self, user_id, data_src, col_name):   
-        return self.uni_rep.get_average(data_src, col_name)
+        return self.univ_repo.get_average(data_src, col_name)
     
     # ----- List -----
     

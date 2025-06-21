@@ -10,7 +10,7 @@ from shared.operation.domain import (
     ArgumentSpec as ArgSpec,
     OperationSpec as OpSpec,
 )
-from shared.operation.service import OperationService
+from shared.operation.service.service import OperationService
 import shared.operation.arguments.choices as ChoiceUtil
 
 # Placeholder VALID and options_fn

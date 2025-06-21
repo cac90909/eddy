@@ -78,14 +78,14 @@ UNIVERSAL_COLUMN_TO_DATATYPE: dict[UniversalColumn, DataType] = {
     UniversalColumn.USER:              DataType.STRING,
 }
 
-ValueProvider = Callable[[int, Any, str], List[Any]]
-DATATYPE_TO_VALUE_PROVIDER: dict[DataType, ValueProvider] = {
-    DataType.LIST:   UniversalUtil.get_list_values,
-    DataType.STRING: UniversalUtil.get_scalar_values,
-    DataType.INT:    UniversalUtil.get_scalar_values,
-    DataType.FLOAT:  UniversalUtil.get_scalar_values,
-    DataType.DATE:   UniversalUtil.get_scalar_values,
-    DataType.JSON:   UniversalUtil.get_json_values,  
-}
+# ValueProvider = Callable[[int, Any, str], List[Any]]
+# DATATYPE_TO_VALUE_PROVIDER: dict[DataType, ValueProvider] = {
+#     DataType.LIST:   UniversalUtil.get_list_values,
+#     DataType.STRING: UniversalUtil.get_scalar_values,
+#     DataType.INT:    UniversalUtil.get_scalar_values,
+#     DataType.FLOAT:  UniversalUtil.get_scalar_values,
+#     DataType.DATE:   UniversalUtil.get_scalar_values,
+#     DataType.JSON:   UniversalUtil.get_json_values,  
+# }
 
 

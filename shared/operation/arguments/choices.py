@@ -11,7 +11,7 @@ from shared.universal.mappings import (
 from shared.operation.mappings import (
     DATATYPE_TO_OPERATORS
 )
-from shared.operation.service import OperationService
+from shared.operation.service.service import OperationService
 from shared.operation.enums import (
     NON_FILTERABLE_COLUMNS,
     TraversalDirection,
@@ -19,6 +19,7 @@ from shared.operation.enums import (
     FrequencyType
 )
 import shared.universal.util as UniversalUtil
+from shared.universal.repository import UniversalRepository
 # ----- Raw Universal -----
 
 def get_column_name_options(user_id, data_src) -> set:
@@ -37,9 +38,7 @@ def get_column_name_options(user_id, data_src) -> set:
     return sorted(filterable_cols + filterable_keys)
 
 def get_column_value_options(user_id, data_src, col_name):
-    col_data_type = UniversalUtil.get_column_data_type(data_src, col_name)
-    options_provider = DATATYPE_TO_VALUE_PROVIDER[col_data_type]
-    return list(options_provider(user_id, data_src, col_name))
+    return UniversalRepository.get_distinct_values(data_src, col_name)
 
 def get_filter_type_options(user_id, data_src, col_name):
     col_data_type = UniversalUtil.get_column_data_type(data_src, col_name)
@@ -49,9 +48,7 @@ def get_start_id_options(user_id, data_src):
     """
     Reuses column value options logic but specifically for entry_id.
     """
-    entry_id_dtype = UNIVERSAL_COLUMN_TO_DATATYPE[UniversalColumn.ENTRY_ID]
-    options_provider = DATATYPE_TO_VALUE_PROVIDER[entry_id_dtype]
-    return list(options_provider(user_id, data_src, UniversalColumn.ENTRY_ID))
+    return UniversalRepository.get_distinct_values(data_src, UniversalColumn.ENTRY_ID)
 
 def get_traversal_direction_options(user_id):
     """

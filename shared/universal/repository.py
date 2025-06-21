@@ -1,4 +1,6 @@
 from typing import List, Any, Dict, str, Sequence
+from django.db.models import F, Func, IntegerField, FloatField, DateField
+from django.db.models.functions import Cast
 from collections import deque
 from shared.logger import debug_print
 from shared.universal.repository_util import (
@@ -25,11 +27,13 @@ from shared.universal.enums import (
     OperatorType,
     UniversalColumn,
     ARRAY_OPERATORS,
-    NEGATION_OPERATORS
+    NEGATION_OPERATORS,
+    DataType
 )
 from shared.universal.mappings import (
     OPERATOR_TO_LOOKUP_SUFFIX
 )
+import shared.universal.util as UnivRepoUtil
 from shared.models import Universal
 User = get_user_model()
 
@@ -45,21 +49,10 @@ class UniversalRepository:
         return data
 
     def filter_data(self, qs: QuerySet, col_name: str, filt_val: Any, filt_op: str) -> QuerySet:
-        # coerce single value → list for array lookups
-        if filt_op in ARRAY_OPERATORS and not isinstance(filt_val, list):
-            filt_val = [filt_val]
-
-        # build the lookup key
-        suffix = OPERATOR_TO_LOOKUP_SUFFIX.get(filt_op)
-        if suffix is None:
-            raise ValueError(f"Unsupported filter operator {filt_op!r}")
-        lookup = { f"{col_name}{suffix}": filt_val }
-
-        # decide include vs exclude
+        filter_kwargs = UnivRepoUtil.build_filter_kwargs(col_name, filt_op, filt_val)
         if filt_op in NEGATION_OPERATORS:
-            return qs.exclude(**lookup)
-
-        return qs.filter(**lookup)
+            return qs.exclude(**filter_kwargs)
+        return qs.filter(**filter_kwargs)
     
     @staticmethod
     def traverse_data(qs: QuerySet, start_id : UniversalColumn.ENTRY_ID, cols : List[UniversalColumn]):
@@ -102,6 +95,25 @@ class UniversalRepository:
         entry_ids: Sequence[Any],
     ) -> QuerySet[Universal]:
         return qs.filter(entry_id__in=entry_ids)
+    
+    def get_distinct_values(self, qs: QuerySet, column_name: str):
+        expr = UnivRepoUtil.build_column_ref_expression(column_name)
+
+        # If it’s JSON, cast to the inferred native type
+        if not isinstance(expr, F):
+            dtype = UnivRepoUtil.get_column_data_type(qs, column_name)
+            if dtype == DataType.INT:
+                expr = Cast(expr, output_field=IntegerField())
+            elif dtype == DataType.FLOAT:
+                expr = Cast(expr, output_field=FloatField())
+            elif dtype == DataType.DATE:
+                expr = Cast(expr, output_field=DateField())
+            # else leave it as text
+
+        # Then annotate & pull out distinct values exactly as before
+        alias = f"_val_{column_name}"
+        qs = UnivRepoUtil.add_temp_column(qs, expr, alias)
+        return list(qs.values_list(alias, flat=True).distinct())
     
     # -------------------- Unique Value Extraction --------------------
     

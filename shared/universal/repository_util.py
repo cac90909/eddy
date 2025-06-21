@@ -9,6 +9,10 @@ from django.db import connection, models
 from dateutil.parser import parse as parse_date
 from .mappings import FILTER_LOOKUP_BUILDERS
 from typing import Any
+from django.db.models import QuerySet
+from shared.universal.mappings import (
+    OPERATOR_TO_LOOKUP_SUFFIX
+)
 
 # ----------------- Type Mappings -----------------
 
@@ -144,18 +148,19 @@ def get_operators_from_data_type_identifier(data_type_identifier):
 
 # ----------------- Lookup & Expression Building -----------------
 
-def build_lookup_expression(queryset, column_name):
+def build_lookup_expression(qs : QuerySet, col_name):
     """
     Builds an ORM lookup expression for a given column.
     Uses `KeyTextTransform` for JSON fields and `F(column_name)` for others.
     """
     try:
-        queryset.model._meta.get_field(column_name)
-        return F(column_name)
+        return F(col_name)
     except Exception:
-        return KeyTextTransform(column_name, "fields")
+        return KeyTextTransform(col_name, "fields")
 
 # ----------------- Filtering -----------------
+
+
 
 def build_filter_statement(column_name: str, filter_value: Any, filter_type: str) -> dict:
     try:
@@ -170,7 +175,7 @@ def get_unique_id_list(user_data_queryset):
 
 # ----------------- Aggregation -----------------
 
-def perform_aggregation_on_column(queryset, column_name, aggregation_type):
+def perform_aggregation_on_column(queryset : QuerySet, column_name, aggregation_type):
     """
     Performs an aggregation on a column using the specified aggregation function.
     """

@@ -1,18 +1,23 @@
 from django.core.exceptions import FieldDoesNotExist
+from django.db.models import F, Func
+from django.db.models.fields.json import KeyTextTransform
 from shared.universal.utils.types import get_column_data_type
 from shared.universal.enums import DataType
 from shared.models import Universal  # or wherever your model lives
 
 from typing import Type, Any
 from django.db import models
+from django.db.models import QuerySet, Expression
 from django.contrib.postgres.fields import ArrayField
 
 from shared.universal.enums import (
     DataType,
-    UniversalColumn
+    UniversalColumn,
+    ARRAY_OPERATORS,
+    OperatorType
 )
 from shared.universal.mappings import (
-    FILTER_LOOKUP_BUILDERS,
+    OPERATOR_TO_LOOKUP_SUFFIX,
     UNIVERSAL_COLUMN_TO_DATATYPE
 )
 
@@ -51,22 +56,31 @@ def get_column_data_type(queryset, col_name: str) -> DataType:
         col_data_type = _get_json_key_type(queryset, col_name)
     return col_data_type
 
-def get_list_values(user_id, qs, col_name):
-    # e.g. unnest + distinct
-    return qs.values_list(col_name, flat=True).distinct()
+def add_temp_column(qs: QuerySet, expression: Expression, alias: str) -> QuerySet:
+    """
+    Adds a computed column to the queryset under `alias`, using the given ORM `expression`.
+    This is just a thin wrapper around qs.annotate(**{alias: expression}).
+    """
+    return qs.annotate(**{alias: expression})
 
-def get_scalar_values(user_id, qs, col_name):
-    # e.g. dates, strings, ints, floats
-    return qs.values_list(col_name, flat=True).distinct()
+def build_filter_kwargs( col_name: str, filt_op: OperatorType, filt_val: Any):
+    # coerce single value → list for array lookups
+    if filt_op in ARRAY_OPERATORS and not isinstance(filt_val, list):
+        filt_val = [filt_val]
 
-def get_json_values(user_id, qs, json_key):
-    # e.g. extract nested JSON values
-    return qs.filter(fields__has_key=json_key).values_list(f"fields__{json_key}", flat=True).distinct()
+    # build the lookup key
+    suffix = OPERATOR_TO_LOOKUP_SUFFIX.get(filt_op)
+    if suffix is None:
+        raise ValueError(f"Unsupported filter operator {filt_op!r}")
+    filter_kwargs = { f"{col_name}{suffix}": filt_val }
+    return filter_kwargs
 
-def build_filter_statement(column_name: str, filter_value: Any, filter_type: str) -> dict:
-    # filter_type here is guaranteed to be one of OperatorType.value
-    try:
-        builder = FILTER_LOOKUP_BUILDERS[filter_type]
-    except KeyError:
-        raise ValueError(f"Unsupported filter type: {filter_type}")
-    return builder(column_name, filter_value)
+def build_column_ref_expression(col_name: str):
+    """
+    Return F(column_name) if it's a real field, 
+    or KeyTextTransform(column_name, "fields") for JSON.
+    """
+    if col_name in {col.value for col in UniversalColumn}:
+        return F(col_name)
+    else:
+        return KeyTextTransform(col_name, UniversalColumn.FIELDS.value)
