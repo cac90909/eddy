@@ -6,6 +6,9 @@ from shared.operation.mappings import (
     CONTAINS_OPERATOR_MAP,
     TRAVERSAL_DIRECTION_TO_UNIVERSAL_COLUMN
 )
+from shared.universal.enums import (
+    AggregationType
+)
 from django.db.models import QuerySet
 from shared.models import Universal
 import shared.universal.util as UniversalUtil 
@@ -25,7 +28,7 @@ class OperationService:
 
     def filter(self, user_id, data_src, col_name, filter_val, filter_type):
         if filter_type in CONTAINS_OPERATOR_MAP:
-            col_data_type = UniversalUtil.get_column_data_type(data_src, col_name)
+            col_data_type = UniversalUtil.get_column_primitive_type(data_src, col_name)
             filter_type = CONTAINS_OPERATOR_MAP.get(filter_type).get(col_data_type)
         return self.univ_repo.filter_data(data_src, col_name, filter_val, filter_type)
 
@@ -44,25 +47,25 @@ class OperationService:
         """
         graph_cols = [TRAVERSAL_DIRECTION_TO_UNIVERSAL_COLUMN[d]for d in traversal_dirs]
         neighbor_map = self.univ_repo.get_neighbors(data_src, graph_cols)
-        visited_ids = OpSvcUtil.bfs(neighbor_map, start_id)
+        visited_ids = OpSvcUtil.bfs_traverse(neighbor_map, start_id)
         return self.univ_repo.get_rows_by_ids(data_src, visited_ids)
     
     # ----- Metric (Simple Aggregations) -----
     
     def get_count(self, user_id, data_src, col_name):   
-        return self.univ_repo.get_count(data_src, col_name)
+        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.COUNT)
 
     def get_min(self, user_id, data_src, col_name):   
-        return self.univ_repo.get_min(data_src, col_name)
+        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.MIN)
     
     def get_max(self, user_id, data_src, col_name):   
-        return self.univ_repo.get_max(data_src, col_name)
+        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.MAX)
     
     def get_sum(self, user_id, data_src, col_name):   
-        return self.univ_repo.get_sum(data_src, col_name)
+        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.SUM)
     
     def get_average(self, user_id, data_src, col_name):   
-        return self.univ_repo.get_average(data_src, col_name)
+        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.AVG)
     
     # ----- List -----
     

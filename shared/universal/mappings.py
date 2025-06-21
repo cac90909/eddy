@@ -41,6 +41,16 @@ FIELD_TO_DATA_TYPE = {
     JSONField:    DataType.JSON,
 }
 
+DATA_TYPE_TO_FIELD: dict[DataType, type] = {
+    DataType.STRING:  CharField,    # choose CharField over TextField
+    DataType.BOOLEAN: BooleanField,
+    DataType.INT:     IntegerField,
+    DataType.FLOAT:   FloatField,
+    DataType.DATE:    DateField,
+    DataType.LIST:    ArrayField,
+    DataType.JSON:    JSONField,
+}
+
 OPERATORS_BY_TYPE = {
     DataType.INT:     [OperatorType.EQ.value, OperatorType.NEQ.value, OperatorType.LT.value, OperatorType.GT.value, OperatorType.LTE.value, OperatorType.GTE.value],
     DataType.FLOAT:   [OperatorType.EQ.value, OperatorType.NEQ.value, OperatorType.LT.value, OperatorType.GT.value, OperatorType.LTE.value, OperatorType.GTE.value],

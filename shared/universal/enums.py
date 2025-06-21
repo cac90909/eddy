@@ -1,5 +1,9 @@
 # core/universal/enums.py
 from enum import Enum
+from django.db.models import (
+    CharField, TextField, BooleanField, IntegerField, FloatField, DateField, JSONField
+)
+from django.db.models import Field
 
 class UniversalColumn(str, Enum):
     DATE                = "date"
@@ -69,6 +73,18 @@ NEGATION_OPERATORS = {
     OperatorType.ARRAY_NOT_CONTAINS,
 }
 
+class DataStructureType(str, Enum):
+    SCALER = "scaler"
+    JSON = "json"
+    LIST = "list"
 
-
+DJANGO_FIELD_TYPES: Field = {
+    CharField,
+    TextField,
+    BooleanField,
+    IntegerField,
+    FloatField,
+    DateField,
+    JSONField
+}
 

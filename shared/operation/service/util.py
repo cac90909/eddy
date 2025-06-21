@@ -1,7 +1,7 @@
 from collections import deque
 from typing import Any
 
-def bfs(neighbor_map: dict[Any, list[Any]], start: Any) -> set[Any]:
+def bfs_traverse(neighbor_map: dict[Any, list[Any]], start: Any) -> set[Any]:
     visited, queue = set(), deque([start])
     while queue:
         node = queue.popleft()

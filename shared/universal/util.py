@@ -2,26 +2,28 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db.models import F, Func
 from django.db.models.fields.json import KeyTextTransform
 from shared.universal.utils.types import get_column_data_type
-from shared.universal.enums import DataType
+from shared.universal.enums import DataType, DataStructureType
 from shared.models import Universal  # or wherever your model lives
 
 from typing import Type, Any
 from django.db import models
-from django.db.models import QuerySet, Expression
+from django.db.models import QuerySet, Expression, Field
+from django.db.models.functions import Cast
 from django.contrib.postgres.fields import ArrayField
 
 from shared.universal.enums import (
     DataType,
     UniversalColumn,
     ARRAY_OPERATORS,
-    OperatorType
+    OperatorType,
+    DJANGO_FIELD_TYPES
 )
 from shared.universal.mappings import (
     OPERATOR_TO_LOOKUP_SUFFIX,
     UNIVERSAL_COLUMN_TO_DATATYPE
 )
 
-def _get_json_key_type(queryset, json_key: str) -> DataType:
+def get_json_key_type(queryset, json_key: str) -> DataType:
     """
     Sample the first non-null value of fields->json_key and parse its type.
     Returns one of STRING, INT, FLOAT, DATE, or falls back to STRING.
@@ -46,22 +48,35 @@ def _get_json_key_type(queryset, json_key: str) -> DataType:
 
     return DataType.STRING
 
-def get_column_data_type(queryset, col_name: str) -> DataType:
+def get_column_primitive_type(queryset: QuerySet, col_name: str) -> DataType:
     """
     Retrieves data type of the column, handling logic for if column is fields key or not.
     """
     if col_name in {col.value for col in UniversalColumn}:
         col_data_type = UNIVERSAL_COLUMN_TO_DATATYPE.get(UniversalColumn(col_name))
     else:
-        col_data_type = _get_json_key_type(queryset, col_name)
+        col_data_type = get_json_key_type(queryset, col_name)
     return col_data_type
 
-def add_temp_column(qs: QuerySet, expression: Expression, alias: str) -> QuerySet:
+def get_column_structure_type(queryset: QuerySet, col_name: str) -> DataStructureType:
+    univ_cols = {col.value for col in UniversalColumn}
+    if col_name not in univ_cols:
+        return DataStructureType.JSON
+    if UNIVERSAL_COLUMN_TO_DATATYPE.get(col_name) == DataType.LIST:
+        return DataStructureType.LIST
+    else:
+        return DataStructureType.SCALER
+
+def create_temp_column(qs: QuerySet, expr: Expression, alias: str) -> QuerySet:
     """
     Adds a computed column to the queryset under `alias`, using the given ORM `expression`.
     This is just a thin wrapper around qs.annotate(**{alias: expression}).
     """
-    return qs.annotate(**{alias: expression})
+    return qs.annotate(**{alias: expr})
+
+def create_casted_temp_column(qs: QuerySet, expr: Expression, alias: str, cast_d_type: Field):
+    cast_expr = Cast(expr, output_field=cast_d_type)
+    return create_temp_column(qs, cast_expr, alias)
 
 def build_filter_kwargs( col_name: str, filt_op: OperatorType, filt_val: Any):
     # coerce single value → list for array lookups
@@ -84,3 +99,21 @@ def build_column_ref_expression(col_name: str):
         return F(col_name)
     else:
         return KeyTextTransform(col_name, UniversalColumn.FIELDS.value)
+    
+def create_col_for_json_key(qs: QuerySet, key_name, alias):
+    """
+    Annotates a queryset with a new field extracted from JSON and casts it.
+    """
+    col_expr = build_column_ref_expression(key_name)
+    col_d_type = get_column_primitive_type(qs, key_name)
+    cast_expr = Cast(col_expr, output_field=col_d_type)
+    return qs.annotate(**{alias: cast_expr})
+
+def create_col_for_array_field(qs: QuerySet, col_name: str, alias: str) -> QuerySet:
+    """
+    Annotate the queryset by unnesting the Postgres ArrayField `col_name` into rows,
+    placing each element under `alias`.
+    """
+    col_expr = build_column_ref_expression(col_name)
+    unnest_expr: Expression = Func(col_expr, function="UNNEST")
+    return qs.annotate(**{alias: unnest_expr})

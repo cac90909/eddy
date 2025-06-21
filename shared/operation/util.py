@@ -5,4 +5,4 @@ import shared.universal.util as UniversalUtil
 
 def translate_filter_label(filter_type, col_name):
     if filter_type in CONTAINS_OPERATOR_MAP:
-        UniversalUtil.get_column_data_type() 
+        UniversalUtil.get_column_primitive_type() 

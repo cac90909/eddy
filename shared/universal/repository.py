@@ -28,10 +28,12 @@ from shared.universal.enums import (
     UniversalColumn,
     ARRAY_OPERATORS,
     NEGATION_OPERATORS,
-    DataType
+    DataType,
+    DataStructureType
 )
 from shared.universal.mappings import (
-    OPERATOR_TO_LOOKUP_SUFFIX
+    OPERATOR_TO_LOOKUP_SUFFIX,
+    AGGREGATION_FUNCTIONS
 )
 import shared.universal.util as UnivRepoUtil
 from shared.models import Universal
@@ -54,30 +56,7 @@ class UniversalRepository:
             return qs.exclude(**filter_kwargs)
         return qs.filter(**filter_kwargs)
     
-    @staticmethod
-    def traverse_data(qs: QuerySet, start_id : UniversalColumn.ENTRY_ID, cols : List[UniversalColumn]):
-        """
-        Traverses hierarchical relationships in the dataset and retrieves all relevant rows.
-        """
-        visited, to_visit = set(), [start_id]
-
-        while to_visit:
-            current_id = to_visit.pop()
-            if current_id not in visited:
-                visited.add(current_id)
-                for col_name in cols.values():
-                    related_ids = qs.filter(entry_id=current_id).values_list(col_name, flat=True).first()
-                    if related_ids:
-                        to_visit.extend(related_ids)
-
-        full_rows = qs.filter(entry_id__in=visited)
-        return full_rows
-    
-    def get_neighbors(
-        self,
-        qs: QuerySet[Universal],
-        graph_cols: Sequence[str],
-    ) -> dict[Any, list[Any]]:
+    def get_neighbors(self, qs: QuerySet[Universal], graph_cols: Sequence[str]) -> dict[Any, list[Any]]:
         """
         Returns a mapping from each entry_id to its list of related IDs
         (across the given graph-cols) in one bulk query.
@@ -89,11 +68,7 @@ class UniversalRepository:
                     mapping.setdefault(entry_id, []).extend(lst)
         return mapping
 
-    def get_rows_by_ids(
-        self,
-        qs: QuerySet[Universal],
-        entry_ids: Sequence[Any],
-    ) -> QuerySet[Universal]:
+    def get_rows_by_ids(self, qs: QuerySet[Universal], entry_ids: Sequence[Any]) -> QuerySet[Universal]:
         return qs.filter(entry_id__in=entry_ids)
     
     def get_distinct_values(self, qs: QuerySet, column_name: str):
@@ -101,7 +76,7 @@ class UniversalRepository:
 
         # If it’s JSON, cast to the inferred native type
         if not isinstance(expr, F):
-            dtype = UnivRepoUtil.get_column_data_type(qs, column_name)
+            dtype = UnivRepoUtil.get_column_primitive_type(qs, column_name)
             if dtype == DataType.INT:
                 expr = Cast(expr, output_field=IntegerField())
             elif dtype == DataType.FLOAT:
@@ -112,7 +87,7 @@ class UniversalRepository:
 
         # Then annotate & pull out distinct values exactly as before
         alias = f"_val_{column_name}"
-        qs = UnivRepoUtil.add_temp_column(qs, expr, alias)
+        qs = UnivRepoUtil.create_temp_column(qs, expr, alias)
         return list(qs.values_list(alias, flat=True).distinct())
     
     # -------------------- Unique Value Extraction --------------------
@@ -158,41 +133,23 @@ class UniversalRepository:
 
     # -------------------- Aggregation --------------------
 
-    def get_count(self, data_qs, col_name):
-        return self.get_aggregate(data_qs, col_name, "count")
-    
-    def get_min(self, data_qs, col_name):
-        return self.get_aggregate(data_qs, col_name, "min")
-    
-    def get_max(self, data_qs, col_name):
-        return self.get_aggregate(data_qs, col_name, "max")
-    
-    def get_average(self, data_qs, col_name):
-        return self.get_aggregate(data_qs, col_name, "average")
-    
-    def get_sum(self, data_qs, col_name):
-        return self.get_aggregate(data_qs, col_name, "sum")
-
-    def get_aggregate(self, user_data_queryset, column_name, agg_type):
+    def aggregate_field(self, qs: QuerySet, col_name: str, agg_type: str):
         """
         For JSON fields: determine output type and annotate with a temporary field "temp"
         For array fields: annotate with a temporary field "temp" using UNNEST.
         For standard fields: directly aggregate.
-        #NOTE: this currently assumes datatypes are correct at this point (this method is not restricted and can do things like find sum of dates)
-        #NOTE: want to expand on this method, right now can only aggregate on floats and ints (but what about list floats? etc)
-        #NOTE: this method annotates on the appropriate datatype, which isnt needed for count, but count is still contained here because it should output the same result
         """
-        if is_json_field(column_name):
-            output_field_type = get_nested_json_column_data_class(user_data_queryset, column_name)
-            queryset = create_casted_nested_json_column(queryset=user_data_queryset, original_column_name=column_name, new_column_name="temp", output_field=output_field_type)
-            aggregation_result = perform_aggregation_on_column(queryset=queryset, column_name="temp", aggregation_type=agg_type)
-        elif is_array_field(column_name):
-            queryset = create_unnested_list_column(queryset=user_data_queryset, original_column_name=column_name, new_column_name="temp")
-            aggregation_result = perform_aggregation_on_column(queryset=queryset, column_name="temp", aggregation_type=agg_type)
+        col_struc = UnivRepoUtil.get_column_structure_type(qs, col_name)
+        temp_col = "temp"
+        agg_func = AGGREGATION_FUNCTIONS.get(agg_type)
+        if col_struc == DataStructureType.JSON:
+            qs = UnivRepoUtil.create_col_for_json_key(qs, col_name, temp_col)
+            return qs.aggregate(result=agg_func(temp_col))["result"]
+        elif col_struc == DataStructureType.LIST:
+            qs = UnivRepoUtil.create_col_for_array_field(qs, col_name, temp_col)
+            return qs.aggregate(result=agg_func(temp_col))["result"]
         else:
-            aggregation_result = perform_aggregation_on_column(queryset=user_data_queryset, column_name=column_name, aggregation_type=aggregation_type)
-        debug_print("Query finished")
-        return aggregation_result
+            return qs.aggregate(result=agg_func(col_name))["result"]
     
     # -------------------- Grouping --------------------
 

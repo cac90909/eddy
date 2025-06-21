@@ -56,3 +56,10 @@ class FrequencyType(str, Enum):
     WEEKLY  = "weekly"
     MONTHLY = "monthly"
     YEARLY  = "yearly"
+
+class AggregationType(str, Enum):
+    COUNT = "count"
+    AVG   = "avg"
+    SUM   = "sum"
+    MIN   = "min"
+    MAX   = "max"

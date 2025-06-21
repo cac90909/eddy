@@ -41,7 +41,7 @@ def get_column_value_options(user_id, data_src, col_name):
     return UniversalRepository.get_distinct_values(data_src, col_name)
 
 def get_filter_type_options(user_id, data_src, col_name):
-    col_data_type = UniversalUtil.get_column_data_type(data_src, col_name)
+    col_data_type = UniversalUtil.get_column_primitive_type(data_src, col_name)
     return DATATYPE_TO_OPERATORS[col_data_type]
 
 def get_start_id_options(user_id, data_src):
@@ -76,7 +76,7 @@ def get_target_column_options(
         valid_types = {DataType.INT, DataType.FLOAT, DataType.DATE}
         return [
           c for c in cols
-          if UniversalUtil.get_column_data_type(data_src, c) in valid_types
+          if UniversalUtil.get_column_primitive_type(data_src, c) in valid_types
         ]
 
     # for count, return all
