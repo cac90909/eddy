@@ -11,7 +11,7 @@ from shared.universal.mappings import (
 from shared.operation.mappings import (
     DATATYPE_TO_OPERATORS
 )
-from shared.operation.service.service import OperationService
+from shared.operation.service import OperationService
 from shared.operation.enums import (
     NON_FILTERABLE_COLUMNS,
     TraversalDirection,

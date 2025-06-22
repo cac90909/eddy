@@ -1,8 +1,11 @@
-from shared.operation.mappings import (
-    CONTAINS_OPERATOR_MAP
-)
-import shared.universal.util as UniversalUtil
+from typing import Any
+from collections import deque
 
-def translate_filter_label(filter_type, col_name):
-    if filter_type in CONTAINS_OPERATOR_MAP:
-        UniversalUtil.get_column_primitive_type() 
+def bfs_traverse(neighbor_map: dict[Any, list[Any]], start: Any) -> set[Any]:
+    visited, queue = set(), deque([start])
+    while queue:
+        node = queue.popleft()
+        if node in visited: continue
+        visited.add(node)
+        queue.extend(n for n in neighbor_map.get(node, []) if n not in visited)
+    return visited

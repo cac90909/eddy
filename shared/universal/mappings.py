@@ -1,19 +1,28 @@
 # core/universal/mappings.py
+from typing import Type, NamedTuple
+
 from django.db.models import Count, Avg, Sum, Min, Max
-from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.db.models import (
-    CharField, TextField, BooleanField, IntegerField, FloatField, DateField, JSONField, Field
+    CharField, 
+    TextField, 
+    BooleanField, 
+    IntegerField, 
+    FloatField, 
+    DateField, 
+    JSONField, 
+    Field
 )
+from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.contrib.postgres.fields import ArrayField
 
-from typing import Any, Dict, Callable, List, Type, NamedTuple
-from .enums import (
-    AggregationType, FrequencyType, DataType, OperatorType
+from shared.universal.enums import (
+    AggregationType, 
+    FrequencyType, 
+    DataType, 
+    OperatorType, 
+    UniversalColumn
 )
-from shared.universal.enums import DataType
-from shared.operation.enums import UniversalColumn
-import shared.universal.util as UniversalUtil 
-from shared.operation.enums import TraversalDirection
+
 
 AGGREGATION_FUNCTIONS = {
     AggregationType.COUNT: Count,
@@ -42,7 +51,7 @@ FIELD_TO_DATA_TYPE = {
 }
 
 DATA_TYPE_TO_FIELD: dict[DataType, Type[Field]] = {
-    DataType.STRING:  CharField,    # choose CharField over TextField
+    DataType.STRING:  CharField,    
     DataType.BOOLEAN: BooleanField,
     DataType.INT:     IntegerField,
     DataType.FLOAT:   FloatField,
@@ -51,17 +60,9 @@ DATA_TYPE_TO_FIELD: dict[DataType, Type[Field]] = {
     DataType.JSON:    JSONField,
 }
 
-OPERATORS_BY_TYPE = {
-    DataType.INT:     [OperatorType.EQ.value, OperatorType.NEQ.value, OperatorType.LT.value, OperatorType.GT.value, OperatorType.LTE.value, OperatorType.GTE.value],
-    DataType.FLOAT:   [OperatorType.EQ.value, OperatorType.NEQ.value, OperatorType.LT.value, OperatorType.GT.value, OperatorType.LTE.value, OperatorType.GTE.value],
-    DataType.STRING:  [OperatorType.EQ.value, OperatorType.NEQ.value, OperatorType.STRING_CONTAINS.value, OperatorType.STRING_NOT_CONTAINS.value],
-    DataType.DATE:    [OperatorType.EQ.value, OperatorType.NEQ.value, OperatorType.LT.value, OperatorType.GT.value, OperatorType.LTE.value, OperatorType.GTE.value],
-    DataType.BOOLEAN: [OperatorType.EQ.value, OperatorType.NEQ.value],
-    DataType.LIST:    [OperatorType.ARRAY_CONTAINS.value, OperatorType.ARRAY_NOT_CONTAINS.value],
-}
 
 class LookupItem(NamedTuple):
-    lookup_suffix: str   # the "__gt", "__isnull", etc.
+    lookup_suffix: str  
     exclude: bool 
 OPERATOR_LOOKUPS: dict[str, LookupItem] = {
 OperatorType.EQ.value:                LookupItem("", False),
@@ -76,7 +77,9 @@ OperatorType.ARRAY_NOT_CONTAINS.value:LookupItem("__contains", True),
 OperatorType.IS_NULL.value:           LookupItem("__isnull", False),
 OperatorType.IS_NOT_NULL.value:       LookupItem("__isnull", False),
 OperatorType.HAS_KEY.value:           LookupItem("__has_key", False),
-OperatorType.DOESNT_HAVE_KEY.value:   LookupItem("__has_key", True)
+OperatorType.DOESNT_HAVE_KEY.value:   LookupItem("__has_key", True),
+OperatorType.IN.value:                LookupItem("__in", False),
+OperatorType.NOT_IN.value:            LookupItem("__in", True)
 }
 
 UNIVERSAL_COLUMN_TO_DATATYPE: dict[UniversalColumn, DataType] = {
@@ -95,3 +98,11 @@ UNIVERSAL_COLUMN_TO_DATATYPE: dict[UniversalColumn, DataType] = {
     UniversalColumn.USER:              DataType.STRING,
 }
 
+OPERATORS_BY_TYPE = {
+    DataType.INT:     [OperatorType.EQ.value, OperatorType.NEQ.value, OperatorType.LT.value, OperatorType.GT.value, OperatorType.LTE.value, OperatorType.GTE.value],
+    DataType.FLOAT:   [OperatorType.EQ.value, OperatorType.NEQ.value, OperatorType.LT.value, OperatorType.GT.value, OperatorType.LTE.value, OperatorType.GTE.value],
+    DataType.STRING:  [OperatorType.EQ.value, OperatorType.NEQ.value, OperatorType.STRING_CONTAINS.value, OperatorType.STRING_NOT_CONTAINS.value],
+    DataType.DATE:    [OperatorType.EQ.value, OperatorType.NEQ.value, OperatorType.LT.value, OperatorType.GT.value, OperatorType.LTE.value, OperatorType.GTE.value],
+    DataType.BOOLEAN: [OperatorType.EQ.value, OperatorType.NEQ.value],
+    DataType.LIST:    [OperatorType.ARRAY_CONTAINS.value, OperatorType.ARRAY_NOT_CONTAINS.value],
+}

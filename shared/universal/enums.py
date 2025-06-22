@@ -57,6 +57,8 @@ class OperatorType(str, Enum):
     IS_NOT_NULL         = "is_not_null"
     HAS_KEY             = "has_key"
     DOESNT_HAVE_KEY     = "doesnt_have_key"
+    IN                  = "in"
+    NOT_IN              = "not_in"
 
 
 TRAVERSABLE_COLUMNS = {

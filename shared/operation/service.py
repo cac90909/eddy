@@ -3,17 +3,16 @@ from shared.logger import debug_print, debug_print_vars
 from shared.util import log_vars_vals_cls, catch_exceptions_cls
 from shared.universal.repository import UniversalRepository
 from shared.operation.mappings import (
-    CONTAINS_OPERATOR_MAP,
     TRAVERSAL_DIRECTION_TO_UNIVERSAL_COLUMN
 )
 from shared.universal.enums import (
-    AggregationType
+    AggregationType,
+    FrequencyType
 )
 from django.db.models import QuerySet
 from shared.models import Universal
-import shared.universal.util as UniversalUtil 
 from typing import Sequence, Any, Dict
-import shared.operation.service.util as OpSvcUtil
+import shared.operation.util as OpUtil
 
 #@log_vars_vals_cls(exclude=None)
 @catch_exceptions_cls(exception_return_value="Error", exclude=None)
@@ -44,54 +43,59 @@ class OperationService:
         """
         graph_cols = [TRAVERSAL_DIRECTION_TO_UNIVERSAL_COLUMN[d]for d in traversal_dirs]
         neighbor_map = self.univ_repo.get_neighbors(data_src, graph_cols)
-        visited_ids = OpSvcUtil.bfs_traverse(neighbor_map, start_id)
+        visited_ids = OpUtil.bfs_traverse(neighbor_map, start_id)
         return self.univ_repo.get_rows_by_ids(data_src, visited_ids)
     
     # ----- Metric (Simple Aggregations) -----
     
     def get_count(self, user_id, data_src, col_name):   
-        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.COUNT)
+        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.COUNT.value)
 
     def get_min(self, user_id, data_src, col_name):   
-        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.MIN)
+        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.MIN.value)
     
     def get_max(self, user_id, data_src, col_name):   
-        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.MAX)
+        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.MAX.value)
     
     def get_sum(self, user_id, data_src, col_name):   
-        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.SUM)
+        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.SUM.value)
     
     def get_average(self, user_id, data_src, col_name):   
-        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.AVG)
+        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.AVG.value)
     
     # ----- List -----
     
     def get_unique_column_values(self, user_id, data_src, col_name):
-        return self.uni_rep.get_unique_column_values(data_src, col_name)
+        return self.univ_repo.get_unique_values(data_src, col_name)
 
     def get_unique_json_keys(self, user_id, data_src):
-        return self.uni_rep.get_unique_json_keys(data_src)
+        return self.univ_repo.get_unique_json_keys(data_src)
 
     def get_unique_json_key_values(self, user_id, data_src, json_key):
-        return self.uni_rep.get_unique_json_key_values(data_src, json_key)
+        return self.univ_repo.get_unique_json_key_values(data_src, json_key)
     
     def get_unique_json_values(self, user_id, data_src):
-        return self.uni_rep.get_unique_json_values(data_src)
+        return self.univ_repo.get_unique_json_values(data_src)
     
     # ----- Group Aggregations -----
     
     def get_count_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-        return self.uni_rep.get_count_group_aggregate(data_src, grp_cols, tgt_col, freq)
+        agg_type = AggregationType.COUNT.value
+        return self.univ_repo.aggregate_group_fields(data_src, grp_cols, agg_type, tgt_col, freq)
     
     def get_min_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-        return self.uni_rep.get_min_group_aggregate(data_src, grp_cols, tgt_col, freq)
+        agg_type = AggregationType.MIN.value
+        return self.univ_repo.aggregate_group_fields(data_src, grp_cols, agg_type, tgt_col, freq)
     
     def get_max_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-        return self.uni_rep.get_max_group_aggregate(data_src, grp_cols, tgt_col, freq)
+        agg_type = AggregationType.MAX.value
+        return self.univ_repo.aggregate_group_fields(data_src, grp_cols, agg_type, tgt_col, freq)
     
     def get_sum_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-        return self.uni_rep.get_sum_group_aggregate(data_src, grp_cols, tgt_col, freq)
+        agg_type = AggregationType.SUM.value
+        return self.univ_repo.aggregate_group_fields(data_src, grp_cols, agg_type, tgt_col, freq)
     
     def get_average_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-        return self.uni_rep.get_average_group_aggregate(data_src, grp_cols, tgt_col, freq)
+        agg_type = AggregationType.AVG.value
+        return self.univ_repo.aggregate_group_fields(data_src, grp_cols, agg_type, tgt_col, freq)
 

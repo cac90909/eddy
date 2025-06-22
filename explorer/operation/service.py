@@ -2,7 +2,7 @@
 from typing import Any, Dict, Callable
 
 from rest_framework.exceptions import APIException, NotFound
-from shared.operation.service.service import OperationService
+from shared.operation.service import OperationService
 from explorer.cache.service import ExplorerCacheService
 from explorer.metadata.service import ExplorerMetadataService
 from explorer.domain.operation import Operation
