@@ -1,2 +1,4 @@
 {
+  "python.languageServer": "Pylance",
+  "python.analysis.typeCheckingMode": "basic",  // or "strict" for even more detail
 }

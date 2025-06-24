@@ -5,14 +5,21 @@ from shared.universal.repository import UniversalRepository
 from shared.operation.mappings import (
     TRAVERSAL_DIRECTION_TO_UNIVERSAL_COLUMN
 )
+from shared.operation.enums import (
+    TraversalDirection
+)
 from shared.universal.enums import (
-    AggregationType,
-    FrequencyType
+    AggregateType,
+    FrequencyType,
+    UniversalColumn,
+    OperatorType,
+    TRAVERSABLE_COLUMNS
 )
 from django.db.models import QuerySet
 from shared.models import Universal
 from typing import Sequence, Any, Dict
 import shared.operation.util as OpUtil
+from shared.universal.util import bfs_traverse
 
 #@log_vars_vals_cls(exclude=None)
 @catch_exceptions_cls(exception_return_value="Error", exclude=None)
@@ -22,18 +29,23 @@ class OperationService:
 
     # ----- Raw Universal -----
 
-    def get_full_data(self, user_id):
+    def full_data(self, user_id):
         return self.univ_repo.get_full_data(user_id)
 
-    def filter(self, user_id, data_src, col_name, filter_val, filter_type):
-        return self.univ_repo.filter_data(data_src, col_name, filter_val, filter_type)
+    def filter(self, 
+               user_id, 
+               data_source: QuerySet[Universal], 
+               column: UniversalColumn, 
+               value: Any, 
+               operator: OperatorType):
+        return self.univ_repo.filter_data(data_source, column, value, operator)
 
     def traverse(
             self, 
             user_id: int, 
-            data_src: QuerySet[Universal], 
+            data_source: QuerySet[Universal], 
             start_id: Any, 
-            traversal_dirs: Sequence[str],
+            traversal_dirs: Sequence[TraversalDirection],
     ) -> QuerySet[Universal]:
         """
         1) Translates traversal directions to model columns names 
@@ -42,60 +54,132 @@ class OperationService:
         4) and then returns all neighbors that are reachable from the entry ID. 
         """
         graph_cols = [TRAVERSAL_DIRECTION_TO_UNIVERSAL_COLUMN[d]for d in traversal_dirs]
-        neighbor_map = self.univ_repo.get_neighbors(data_src, graph_cols)
-        visited_ids = OpUtil.bfs_traverse(neighbor_map, start_id)
-        return self.univ_repo.get_rows_by_ids(data_src, visited_ids)
+        neighbor_map = self.univ_repo.get_neighbors(data_source, graph_cols)
+        visited_ids = bfs_traverse(neighbor_map, start_id)
+        return self.univ_repo.get_rows_by_ids(data_source, visited_ids)
     
     # ----- Metric (Simple Aggregations) -----
     
-    def get_count(self, user_id, data_src, col_name):   
-        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.COUNT.value)
+    def simple_count(
+            self, 
+            user_id, 
+            data_source: QuerySet[Universal], 
+            column: UniversalColumn):   
+        return self.univ_repo.aggregate_field(data_source, column, AggregateType.COUNT)
 
-    def get_min(self, user_id, data_src, col_name):   
-        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.MIN.value)
+    def simple_min(
+            self, 
+            user_id, 
+            data_source: QuerySet[Universal], 
+            column: UniversalColumn):
+        return self.univ_repo.aggregate_field(data_source, column, AggregateType.MIN)
     
-    def get_max(self, user_id, data_src, col_name):   
-        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.MAX.value)
+    def simple_max(
+            self, 
+            user_id, 
+            data_source: QuerySet[Universal], 
+            column: UniversalColumn):
+        return self.univ_repo.aggregate_field(data_source, column, AggregateType.MAX)
     
-    def get_sum(self, user_id, data_src, col_name):   
-        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.SUM.value)
+    def simple_sum(
+            self, 
+            user_id, 
+            data_source: QuerySet[Universal], 
+            column: UniversalColumn): 
+        return self.univ_repo.aggregate_field(data_source, column, AggregateType.SUM)
     
-    def get_average(self, user_id, data_src, col_name):   
-        return self.univ_repo.aggregate_field(data_src, col_name, AggregationType.AVG.value)
+    def simple_average(
+            self, 
+            user_id, 
+            data_source: QuerySet[Universal], 
+            column: UniversalColumn):
+        return self.univ_repo.aggregate_field(data_source, column, AggregateType.AVG)
     
     # ----- List -----
     
-    def get_unique_column_values(self, user_id, data_src, col_name):
-        return self.univ_repo.get_unique_values(data_src, col_name)
+    def unique_column_values(
+            self, 
+            user_id, 
+            data_source: QuerySet[Universal], 
+            column: UniversalColumn
+        ):
+        return self.univ_repo.get_unique_values(data_source, column)
 
-    def get_unique_json_keys(self, user_id, data_src):
-        return self.univ_repo.get_unique_json_keys(data_src)
+    def unique_json_keys(
+            self, 
+            user_id, 
+            data_source: QuerySet[Universal]
+        ):
+        return self.univ_repo.get_unique_json_keys(data_source)
 
-    def get_unique_json_key_values(self, user_id, data_src, json_key):
-        return self.univ_repo.get_unique_json_key_values(data_src, json_key)
+    def unique_json_key_values(
+            self, 
+            user_id, 
+            data_source: QuerySet[Universal], 
+            key: str):
+        return self.univ_repo.get_unique_json_key_values(data_source, key)
     
-    def get_unique_json_values(self, user_id, data_src):
-        return self.univ_repo.get_unique_json_values(data_src)
+    def unique_json_values(
+            self, 
+            user_id, 
+            data_source: QuerySet[Universal]
+        ):
+        return self.univ_repo.get_unique_json_values(data_source)
     
     # ----- Group Aggregations -----
     
-    def get_count_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-        agg_type = AggregationType.COUNT.value
-        return self.univ_repo.aggregate_group_fields(data_src, grp_cols, agg_type, tgt_col, freq)
+    def group_count(
+            self, 
+            user_id, 
+            data_source: QuerySet[Universal], 
+            group_columns: list[UniversalColumn], 
+            target_column: UniversalColumn, 
+            frequency: FrequencyType|None = None
+        ) -> QuerySet:
+        aggregate_operation = AggregateType.COUNT
+        return self.univ_repo.aggregate_group_fields(data_source, group_columns, aggregate_operation, target_column, frequency)
     
-    def get_min_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-        agg_type = AggregationType.MIN.value
-        return self.univ_repo.aggregate_group_fields(data_src, grp_cols, agg_type, tgt_col, freq)
+    def group_min(
+            self, 
+            user_id, 
+            data_source: QuerySet[Universal], 
+            group_columns: list[UniversalColumn], 
+            target_column: UniversalColumn, 
+            frequency: FrequencyType|None = None
+        ) -> QuerySet:
+        aggregate_operation = AggregateType.MIN
+        return self.univ_repo.aggregate_group_fields(data_source, group_columns, aggregate_operation, target_column, frequency)
     
-    def get_max_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-        agg_type = AggregationType.MAX.value
-        return self.univ_repo.aggregate_group_fields(data_src, grp_cols, agg_type, tgt_col, freq)
+    def group_max(
+            self, 
+            user_id, 
+            data_source: QuerySet[Universal], 
+            group_columns: list[UniversalColumn], 
+            target_column: UniversalColumn, 
+            frequency: FrequencyType|None = None
+        ) -> QuerySet:
+        aggregate_operation = AggregateType.MAX
+        return self.univ_repo.aggregate_group_fields(data_source, group_columns, aggregate_operation, target_column, frequency)
     
-    def get_sum_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-        agg_type = AggregationType.SUM.value
-        return self.univ_repo.aggregate_group_fields(data_src, grp_cols, agg_type, tgt_col, freq)
+    def group_sum(
+            self, 
+            user_id, 
+            data_source: QuerySet[Universal], 
+            group_columns: list[UniversalColumn], 
+            target_column: UniversalColumn, 
+            frequency: FrequencyType|None = None
+        ) -> QuerySet:
+        aggregate_operation = AggregateType.SUM
+        return self.univ_repo.aggregate_group_fields(data_source, group_columns, aggregate_operation, target_column, frequency)
     
-    def get_average_group_aggregate(self, user_id, data_src, grp_cols, tgt_col, freq=None):
-        agg_type = AggregationType.AVG.value
-        return self.univ_repo.aggregate_group_fields(data_src, grp_cols, agg_type, tgt_col, freq)
+    def group_average(
+            self, 
+            user_id, 
+            data_source: QuerySet[Universal], 
+            group_columns: list[UniversalColumn], 
+            target_column: UniversalColumn, 
+            frequency: FrequencyType|None = None
+        ) -> QuerySet:
+        aggregate_operation = AggregateType.AVG
+        return self.univ_repo.aggregate_group_fields(data_source, group_columns, aggregate_operation, target_column, frequency)
 

@@ -16,7 +16,7 @@ from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYea
 from django.contrib.postgres.fields import ArrayField
 
 from shared.universal.enums import (
-    AggregationType, 
+    AggregateType, 
     FrequencyType, 
     DataType, 
     OperatorType, 
@@ -25,11 +25,11 @@ from shared.universal.enums import (
 
 
 AGGREGATION_FUNCTIONS = {
-    AggregationType.COUNT: Count,
-    AggregationType.AVG:   Avg,
-    AggregationType.SUM:   Sum,
-    AggregationType.MIN:   Min,
-    AggregationType.MAX:   Max,
+    AggregateType.COUNT: Count,
+    AggregateType.AVG:   Avg,
+    AggregateType.SUM:   Sum,
+    AggregateType.MIN:   Min,
+    AggregateType.MAX:   Max,
 }
 
 FREQUENCY_FUNCTIONS = {

@@ -5,6 +5,6 @@ class FlexibleDictSerializer(serializers.Serializer):
     def to_representation(self, instance):
         return instance
 
-class StandardOperationResponseSerializer(serializers.Serializer):
+class StandardResponseSerializer(serializers.Serializer):
     data = serializers.JSONField()
     meta = serializers.DictField(required=False)

@@ -2,23 +2,25 @@ from enum import Enum
 from shared.universal.enums import UniversalColumn
 
 class OperationName(str, Enum):
-    GET_FULL_DATA               = "get_full_data"
-    FILTER                      = "filter"
-    TRAVERSE                    = "traverse"
-    GET_UNIQUE_COLUMN_VALUES    = "get_unique_column_values"
-    GET_UNIQUE_JSON_KEYS        = "get_unique_json_keys"
-    GET_UNIQUE_JSON_VALUES      = "get_unique_json_values"
-    GET_UNIQUE_JSON_KEY_VALUES  = "get_unique_json_key_values"
-    GET_COUNT                   = "get_count"
-    GET_AVERAGE                 = "get_average"
-    GET_SUM                     = "get_sum"
-    GET_MIN                     = "get_min"
-    GET_MAX                     = "get_max"
-    GET_COUNT_GROUP_AGGREGATE   = "get_count_group_aggregate"
-    GET_MIN_GROUP_AGGREGATE     = "get_min_group_aggregate"
-    GET_MAX_GROUP_AGGREGATE     = "get_max_group_aggregate"
-    GET_SUM_GROUP_AGGREGATE     = "get_sum_group_aggregate"
-    GET_AVERAGE_GROUP_AGGREGATE = "get_average_group_aggregate"
+    FULL_DATA                = "full_data"
+    FILTER                   = "filter"
+    TRAVERSE                 = "traverse"
+    UNIQUE_COLUMN_VALUES     = "unique_column_values"
+    UNIQUE_JSON_KEYS         = "unique_json_keys"
+    UNIQUE_JSON_VALUES       = "unique_json_values"
+    UNIQUE_JSON_KEY_VALUES   = "unique_json_key_values"
+
+    SIMPLE_COUNT             = "count"
+    SIMPLE_AVERAGE           = "average"
+    SIMPLE_SUM               = "sum"
+    SIMPLE_MIN               = "min"
+    SIMPLE_MAX               = "max"
+
+    GROUP_COUNT              = "count_group_aggregate"
+    GROUP_MIN                = "min_group_aggregate"
+    GROUP_MAX                = "max_group_aggregate"
+    GROUP_SUM                = "sum_group_aggregate"
+    GROUP_AVERAGE            = "average_group_aggregate"
 
 class OperationType(str, Enum):
     RAW      = "raw"
@@ -27,16 +29,17 @@ class OperationType(str, Enum):
     ENRICHED = "enriched"
 
 class OperationArgumentName(str, Enum):
-    COLUMN_NAME           = "column_name"
-    FILTER_VALUE          = "filter_value"
-    FILTER_TYPE           = "filter_type"
+    COLUMN                = "column_name"
+    VALUE                 = "filter_value"
+    OPERATOR              = "operator"
     START_ID              = "start_id"
-    TRAVERSAL_DIRECTIONS  = "traversal_directions"
-    JSON_KEY              = "json_key"
+    DIRECTIONS            = "directions"
+    KEY                   = "key"
     GROUP_COLUMNS         = "group_columns"
     AGGREGATE_OPERATION   = "aggregate_operation"
     TARGET_COLUMN         = "target_column"
     FREQUENCY             = "frequency"
+    DATA_SOURCE           = "data_source"
 
 class TraversalDirection(str, Enum):
     UPWARDS    = "upwards"

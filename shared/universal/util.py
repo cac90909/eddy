@@ -4,7 +4,7 @@ from django.db.models.fields.json import KeyTextTransform
 from shared.models import Universal
 
 from collections import deque
-from typing import Type, Any, Tuple
+from typing import Type, Any, Tuple, List, Dict
 from django.db import models
 from django.db.models import QuerySet, Expression, Field
 from django.db.models.functions import Cast
@@ -23,6 +23,29 @@ from shared.universal.mappings import (
     DATA_TYPE_TO_FIELD,
     FREQUENCY_FUNCTIONS
 )
+
+def bfs_traverse(
+        neighbor_map: Dict[Any, List[Any]],
+        start_id: Any
+    ) -> List[Any]:
+        """
+        Perform a breadth-first search over the neighbor_map,
+        starting from start_id, and return the list of all visited IDs
+        in the order they were first encountered.
+        """
+        visited = set([start_id])
+        queue   = deque([start_id])
+        order   = []
+
+        while queue:
+            current = queue.popleft()
+            order.append(current)
+            for nbr in neighbor_map.get(current, []):
+                if nbr not in visited:
+                    visited.add(nbr)
+                    queue.append(nbr)
+
+        return order
 
 def get_json_key_type(qs: QuerySet, json_key: str) -> DataType:
     """

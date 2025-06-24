@@ -3,7 +3,7 @@ from rest_framework.exceptions import APIException, NotFound
 from typing import Any
 
 import shared.operation.arguments.util as OperationArgumentsUtil
-from shared.operation.specs import OP_SPECS
+from shared.operation.specs import OPERATION_SPECS
 from shared.operation.domain import OperationSpec, ArgumentSpec
 from shared.operation.enums import OperationName, OperationArgumentName
 from explorer.cache.service import ExplorerCacheService
@@ -23,7 +23,7 @@ class LookupService:
         #NOTE: assumes all operations need prev data src right now
         try:
             op_enum = OperationName(op_name)
-            op_spec: OperationSpec = OP_SPECS[op_enum]
+            op_spec: OperationSpec = OPERATION_SPECS[op_enum]
         except (ValueError, KeyError):
             raise NotFound(f"{op_name!r} is not a valid operation")
         try:

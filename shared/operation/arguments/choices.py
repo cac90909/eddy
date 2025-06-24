@@ -1,12 +1,11 @@
-from typing import set, Any
+from typing import Any, Set, List
 
 from shared.universal.enums import (
     UniversalColumn,
     DataType,
 )
 from shared.universal.mappings import (
-    UNIVERSAL_COLUMN_TO_DATATYPE,
-    DATATYPE_TO_VALUE_PROVIDER
+    UNIVERSAL_COLUMN_TO_DATATYPE
 )
 from shared.operation.mappings import (
     DATATYPE_TO_OPERATORS
@@ -22,7 +21,7 @@ import shared.universal.util as UniversalUtil
 from shared.universal.repository import UniversalRepository
 # ----- Raw Universal -----
 
-def get_column_name_options(user_id, data_src) -> set:
+def get_column_name_options(user_id, data_src) -> List[str]:
     """
     Retrieves list of valid column names that can have a filter operation applied:
     combining a list of Universal Columns + Universal Fields Column Keys 
@@ -34,11 +33,12 @@ def get_column_name_options(user_id, data_src) -> set:
     #      (all ops dont use user maybe fields, thats it)
     all_cols = {col.value for col in UniversalColumn}
     filterable_cols = all_cols - NON_FILTERABLE_COLUMNS 
-    filterable_keys = OperationService.get_unique_json_keys(user_id, data_src)
-    return sorted(filterable_cols + filterable_keys)
+    filterable_keys = OperationService().unique_json_keys(user_id, data_src)
+    combined = filterable_cols | filterable_keys
+    return sorted(combined)
 
 def get_column_value_options(user_id, data_src, col_name):
-    return UniversalRepository.get_distinct_values(data_src, col_name)
+    return UniversalRepository().get_unique_values(data_src, col_name)
 
 def get_filter_type_options(user_id, data_src, col_name):
     col_data_type = UniversalUtil.get_column_primitive_type(data_src, col_name)
@@ -48,7 +48,7 @@ def get_start_id_options(user_id, data_src):
     """
     Reuses column value options logic but specifically for entry_id.
     """
-    return UniversalRepository.get_distinct_values(data_src, UniversalColumn.ENTRY_ID)
+    return UniversalRepository().get_unique_values(data_src, UniversalColumn.ENTRY_ID)
 
 def get_traversal_direction_options(user_id):
     """
@@ -57,7 +57,7 @@ def get_traversal_direction_options(user_id):
     return [d.value for d in TraversalDirection]
 
 def get_unique_json_keys(user_id, data_src):
-    return OperationService.get_unique_json_keys(user_id, data_src)
+    return OperationService().unique_json_keys(user_id, data_src)
 
     
 def get_target_column_options(
@@ -66,20 +66,14 @@ def get_target_column_options(
     group_columns: list[str],
     op_name: str
 ) -> list[str]:
-    # base list of all real columns + JSON keys:
     cols = get_column_name_options(user_id, data_src)
-    # remove the grouping columns
     cols = [c for c in cols if c not in group_columns]
-
-    # only for non-count ops, further restrict to numeric/date
-    if op_name != OperationName.GET_COUNT_GROUP_AGGREGATE.value:
+    if op_name != OperationName.GROUP_COUNT:
         valid_types = {DataType.INT, DataType.FLOAT, DataType.DATE}
         return [
           c for c in cols
           if UniversalUtil.get_column_primitive_type(data_src, c) in valid_types
         ]
-
-    # for count, return all
     return cols
 
 def get_group_aggregate_frequency_options(user_id):

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Sequence, Type, Set
 
 from django.contrib.auth import get_user_model
 from django.db import connection
@@ -6,7 +6,7 @@ from django.db.models import QuerySet
 
 from shared.logger import debug_print
 from shared.models import Universal
-from shared.universal.enums import AggregationType, FrequencyType, OperatorType, UniversalColumn
+from shared.universal.enums import AggregateType, FrequencyType, OperatorType, UniversalColumn
 from shared.universal.mappings import AGGREGATION_FUNCTIONS, OPERATOR_LOOKUPS
 import shared.universal.util as util
 
@@ -26,7 +26,7 @@ class UniversalRepository:
     def filter_data(
             self,
             qs: QuerySet[Universal],
-            column: str,
+            column: UniversalColumn,
             value: Any,
             operator: OperatorType
         ) -> QuerySet[Universal]:
@@ -47,7 +47,7 @@ class UniversalRepository:
     def get_neighbors(
         self,
         qs: QuerySet[Universal],
-        graph_cols: Sequence[str]
+        graph_cols: Sequence[UniversalColumn]
     ) -> Dict[Any, List[Any]]:
         """
         Bulk-fetch neighbor lists for graph traversal.
@@ -76,7 +76,7 @@ class UniversalRepository:
     def get_unique_values(
         self,
         qs: QuerySet[Universal],
-        column: str
+        column: UniversalColumn
     ) -> List[Any]:
         """Distinct values for any column, handling JSON/Array extraction."""
         qs2, field = util.adapt_column_for_processing(qs, column)
@@ -116,23 +116,23 @@ class UniversalRepository:
     def aggregate_field(
         self,
         qs: QuerySet[Universal],
-        column: str,
-        agg_type: AggregationType
+        column: UniversalColumn,
+        aggregate_type: AggregateType
     ) -> Any:
         """Aggregate a single column (scalar, JSON, or Array) into one value."""
         qs2, alias = util.adapt_column_for_processing(qs, column)
-        func = AGGREGATION_FUNCTIONS[agg_type]
+        func = AGGREGATION_FUNCTIONS[aggregate_type]
         result_kwargs = {"result":func(alias)}
         return qs2.aggregate(**result_kwargs)["result"]
     
     def aggregate_group_fields(
         self,
         qs: QuerySet[Universal],
-        group_cols: List[str],
-        agg_type: AggregationType,
+        group_cols: List[UniversalColumn],
+        aggregate_type: AggregateType,
         target_col: str,
-        freq: FrequencyType = None
-    ) -> QuerySet:
+        freq: FrequencyType|None
+    )  -> QuerySet:
         """
         Group-by aggregation with optional date-frequency and multi-column grouping.
         """
@@ -151,7 +151,7 @@ class UniversalRepository:
         qs, target_alias = util.adapt_column_for_processing(qs, target_col)
 
         # Perform grouping and aggregation
-        func = AGGREGATION_FUNCTIONS[agg_type]
+        func = AGGREGATION_FUNCTIONS[aggregate_type]
         result_kwargs = {"result":func(target_alias)}
         return qs.values(*all_group_cols).annotate(**result_kwargs)
 

@@ -3,7 +3,7 @@ from rest_framework.exceptions import APIException, NotFound
 from typing import Any
 
 import shared.operation.arguments.util as OperationArgumentsUtil
-from shared.operation.specs import OP_SPECS
+from shared.operation.specs import OPERATION_SPECS
 from shared.operation.domain import OperationSpec, ArgumentSpec
 from shared.operation.enums import OperationName, OperationArgumentName
 from explorer.cache.service import ExplorerCacheService

@@ -20,7 +20,7 @@ class UniversalColumn(str, Enum):
     ENTRY_ID            = "entry_id"
     USER                = "user"
 
-class AggregationType(str, Enum):
+class AggregateType(str, Enum):
     COUNT = "count"
     AVG   = "avg"
     SUM   = "sum"

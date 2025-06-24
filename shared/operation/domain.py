@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Tuple, Type, Optional, Mapping, List
+from typing import Any, Callable, Dict, Tuple, Type, Optional, Mapping, List, Sequence, Set, Iterable
 from .enums import OperationName, OperationType, OperationArgumentName
 from shared.operation.registry import get_spec_for_op
 
@@ -8,16 +8,19 @@ class ArgumentSpec:
     name: OperationArgumentName
     required: bool
     multiple: Optional[bool] = False
-    validate_fn: Optional[Callable[[Any, Dict[str, Any]], bool]] = lambda value, ctx: True
+    validate_fn: Optional[Callable[[Any, Dict[str, Any]], bool]] | Set = lambda value, ctx: True
     error_msg: Optional[str] = ""
-    choices_fn: Optional[Callable[..., Tuple[Any, ...]]] = None
+    choices_fn: Optional[Callable[..., Sequence[Any]]] = None
+    choices: Optional[Iterable[Any]] = None
 
 @dataclass(frozen=True)
 class OperationSpec:
     name: OperationName
     result_type: OperationType
     args: Tuple[ArgumentSpec, ...]
-    service_method: str
+    description: str
+    service_method: Callable[..., Any]
+    response_serializer: Type[Any]
 
 @dataclass(frozen=True)
 class Operation:
