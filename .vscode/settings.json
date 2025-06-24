@@ -1,4 +1,8 @@
 {
   "python.languageServer": "Pylance",
   "python.analysis.typeCheckingMode": "basic",  // or "strict" for even more detail
+  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/venv/Lib/site-packages"
+  ],
 }
