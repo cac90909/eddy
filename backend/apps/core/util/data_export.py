@@ -2,6 +2,10 @@ import csv
 from core.models import UserData
 from datetime import datetime
 
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 def export_data_native_format(output_file_path):
     """
     Exports data from the user_data_test table in native format, retaining JSON structure.

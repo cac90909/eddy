@@ -1,23 +1,23 @@
 from typing import Any, Set, List
 
-from backend.apps.core.enums.universal import (
+from core.domain.enums.universal import (
     UniversalColumn,
     DataType,
 )
-from backend.apps.core.mappings.universal import (
+from core.domain.mappings.universal import (
     UNIVERSAL_COLUMN_TO_DATATYPE
 )
-from core.operation.mappings import (
+from core.domain.mappings.operation import (
     DATATYPE_TO_OPERATORS
 )
-from core.operation.service import OperationService
-from core.operation.enums import (
+from core.services.operation import OperationService
+from core.domain.enums.operation import (
     NON_FILTERABLE_COLUMNS,
     TraversalDirection,
     OperationName,
     FrequencyType
 )
-import backend.apps.core.util.universal_util as UniversalUtil
+import core.util.universal as UniversalUtil
 from backend.apps.core.repositories.universal import UniversalRepository
 # ----- Raw Universal -----
 
@@ -43,6 +43,7 @@ def get_column_value_options(user_id, data_src, col_name):
 def get_filter_type_options(user_id, data_src, col_name):
     col_data_type = UniversalUtil.get_column_primitive_type(data_src, col_name)
     return DATATYPE_TO_OPERATORS[col_data_type]
+
 
 def get_start_id_options(user_id, data_src):
     """

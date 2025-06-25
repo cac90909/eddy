@@ -10,7 +10,7 @@ from core.operation.service import OperationService
 from core.operation.enums import OperationArgumentName, OperationName
 
 
-class OperationBuilderService:
+class ExplorerOperationBuilderService:
     """
     Service layer that wraps core Universal* services,
     caches each operation and its result for undo/replay,

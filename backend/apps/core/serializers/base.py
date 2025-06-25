@@ -1,11 +1,11 @@
-from typing import ClassVar
+from typing import ClassVar, Any
 from rest_framework import serializers
 
 class FlexibleDictSerializer(serializers.Serializer):
-    data: ClassVar[serializers.DictField] = serializers.DictField(child=serializers.JSONField())
+    data: ClassVar[serializers.Field] = serializers.DictField(child=serializers.JSONField())
     def to_representation(self, instance):
         return instance
 
 class StandardResponseSerializer(serializers.Serializer):
-    data: ClassVar[serializers.JSONField] = serializers.JSONField()
+    data: ClassVar[Any] = serializers.JSONField()
     meta = serializers.DictField(required=False)

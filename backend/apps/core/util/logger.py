@@ -34,33 +34,35 @@ def get_logger(name: str, log_file: str = "app.log", level=logging.INFO):
     return logger
 
 def debug_print(*args):
-    """
-    Prints a debug message with file name, line number, and function name.
-    Accepts multiple arguments for the message.
-    """
-    frame = inspect.currentframe().f_back  # Get the caller's frame
-    file_name = frame.f_code.co_filename   # Get the file name
-    file_name_trunc = os.path.basename(file_name)  # Get the file name without the path
-    line_number = frame.f_lineno           # Get the line number
-    function_name = frame.f_code.co_name   # Get the function name
+    pass
+    # """
+    # Prints a debug message with file name, line number, and function name.
+    # Accepts multiple arguments for the message.
+    # """
+    # frame = inspect.currentframe().f_back  # Get the caller's frame
+    # file_name = frame.f_code.co_filename   # Get the file name
+    # file_name_trunc = os.path.basename(file_name)  # Get the file name without the path
+    # line_number = frame.f_lineno           # Get the line number
+    # function_name = frame.f_code.co_name   # Get the function name
 
-    # Combine all arguments into a single message
-    message = "---".join(str(arg) for arg in args)
-    print(f"[{file_name_trunc}:{line_number} - {function_name}] {message}")
+    # # Combine all arguments into a single message
+    # message = "---".join(str(arg) for arg in args)
+    # print(f"[{file_name_trunc}:{line_number} - {function_name}] {message}")
 
 def debug_print_vars(**kwargs):
-    """
-    Prints a debug message with file name, line number, and function name,
-    along with the passed variables labeled as key: value.
-    """
-    frame = inspect.currentframe().f_back  # Get the caller's frame
-    file_name = frame.f_code.co_filename   # Get the file name
-    line_number = frame.f_lineno           # Get the line number
-    function_name = frame.f_code.co_name   # Get the function name
+    pass
+    # """
+    # Prints a debug message with file name, line number, and function name,
+    # along with the passed variables labeled as key: value.
+    # """
+    # frame = inspect.currentframe().f_back  # Get the caller's frame
+    # file_name = frame.f_code.co_filename   # Get the file name
+    # line_number = frame.f_lineno           # Get the line number
+    # function_name = frame.f_code.co_name   # Get the function name
 
-    # Create a string from the keyword arguments.
-    variables_str = ", ".join(f"{key}: {value}" for key, value in kwargs.items())
-    print(f"[{file_name}:{line_number} - {function_name}] {variables_str}")
+    # # Create a string from the keyword arguments.
+    # variables_str = ", ".join(f"{key}: {value}" for key, value in kwargs.items())
+    # print(f"[{file_name}:{line_number} - {function_name}] {variables_str}")
 
 
 def debug_request(request):

@@ -2,7 +2,7 @@ import json
 from typing import Any
 
 from backend.apps.core.services.cache import CacheService
-from explorer.domain.operation_chain import OperationChain, Operation
+from core.domain.operation_chain import OperationChain
 
 
 class ExplorerCacheService(CacheService):

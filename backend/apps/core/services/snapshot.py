@@ -1,4 +1,4 @@
-from core.models import Snapshots
+from core.models import Snapshot
 from backend.apps.core.util.logger import debug_print_vars, debug_print
 from backend.apps.core.repositories.snapshot import SnapshotsRepository
 

@@ -1,5 +1,5 @@
 from enum import Enum
-from backend.apps.core.enums.universal import UniversalColumn
+from core.domain.enums.universal import UniversalColumn
 
 class OperationName(str, Enum):
     FULL_DATA                = "full_data"

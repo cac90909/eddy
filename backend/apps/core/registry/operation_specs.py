@@ -1,25 +1,27 @@
 from dataclasses import dataclass
 from typing import Dict, Tuple, Callable, Any, Type
 
-from core.operation.enums import (
+from core.domain.enums.operation import (
     OperationName as OpName,
     OperationType as OpType,
     OperationArgumentName as OpArgName,
     TraversalDirection
 )
-from core.operation.domain import ArgumentSpec as ArgSpec
-from core.operation.domain import OperationSpec as OpSpec
-from core.operation.service import OperationService as OpSvc
+from core.domain.operation_spec import (
+    ArgumentSpec as ArgSpec,
+    OperationSpec as OpSpec
+)
+from core.services.operation import OperationService as OpSvc
 
 # import your DRF serializers
-from core.operation.serializers import (
+from core.serializers.operation import (
     RawOperationResponseSerializer,
     ListOperationResponseSerializer,
     EnrichedOperationResponseSerializer,
     MetricOperationResponseSerializer,
 )
 
-import core.operation.arguments.choices as ChoiceUtil
+import core.services.operation_arg_choices as ChoiceUtil
 
 
 

@@ -4,11 +4,11 @@ from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.models import QuerySet
 
-from backend.apps.core.util.logger import debug_print
+from core.util.logger import debug_print
 from core.models import Universal
-from backend.apps.core.enums.universal import AggregateType, FrequencyType, OperatorType, UniversalColumn
-from backend.apps.core.mappings.universal import AGGREGATION_FUNCTIONS, OPERATOR_LOOKUPS
-import backend.apps.core.util.universal_util as universal_util
+from core.domain.enums.universal import AggregateType, FrequencyType, OperatorType, UniversalColumn
+from core.domain.mappings.universal import AGGREGATION_FUNCTIONS, OPERATOR_LOOKUPS
+import core.util.universal as universal_util
 
 User = get_user_model()
 
@@ -82,10 +82,10 @@ class UniversalRepository:
         qs2, field = universal_util.adapt_column_for_processing(qs, column)
         return list(qs2.values_list(field, flat=True).distinct())
 
-    def get_unique_json_keys(self, qs: QuerySet[Universal]) -> Set[str]:
+    def get_unique_json_keys(self, qs: QuerySet[Universal]) -> list[str]:
         """All distinct JSON keys in the 'fields' JSON column."""
         qs2, alias = universal_util.create_col_for_all_json_keys(qs)
-        return set(qs2.values_list(alias, flat=True).distinct())
+        return list(qs2.values_list(alias, flat=True).distinct())
 
     def get_unique_json_key_values(
         self,
@@ -132,7 +132,7 @@ class UniversalRepository:
         aggregate_type: AggregateType,
         target_col: str,
         freq: FrequencyType|None
-    )  -> QuerySet:
+    )  -> Any:
         """
         Group-by aggregation with optional date-frequency and multi-column grouping.
         """

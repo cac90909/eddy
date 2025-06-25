@@ -1,5 +1,5 @@
 # core/universal/mappings.py
-from typing import Type, NamedTuple
+from typing import Type, NamedTuple, Callable
 
 from django.db.models import Count, Avg, Sum, Min, Max
 from django.db.models import (
@@ -15,7 +15,7 @@ from django.db.models import (
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.contrib.postgres.fields import ArrayField
 
-from backend.apps.core.enums.universal import (
+from core.domain.enums.universal import (
     AggregateType, 
     FrequencyType, 
     DataType, 
@@ -32,7 +32,7 @@ AGGREGATION_FUNCTIONS = {
     AggregateType.MAX:   Max,
 }
 
-FREQUENCY_FUNCTIONS = {
+FREQUENCY_FUNCTIONS: dict[FrequencyType, Callable]= {
     FrequencyType.DAILY:   TruncDay,
     FrequencyType.WEEKLY:  TruncWeek,
     FrequencyType.MONTHLY: TruncMonth,

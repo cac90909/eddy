@@ -8,7 +8,7 @@ from core.operation.domain import OperationSpec, ArgumentSpec
 from core.operation.enums import OperationName, OperationArgumentName
 from backend.apps.explorer.services.cache import ExplorerCacheService
 
-class LookupService:
+class ExplorerLookupService:
 
     def __init__(self):
         self.cache_svc = ExplorerCacheService()

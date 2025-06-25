@@ -1,14 +1,13 @@
 from backend.apps.core.repositories.universal import UniversalRepository
 from backend.apps.core.util.logger import debug_print, debug_print_vars
-from core.util import log_vars_vals_cls, catch_exceptions_cls
 from backend.apps.core.repositories.universal import UniversalRepository
-from core.operation.mappings import (
+from core.domain.mappings.operation import (
     TRAVERSAL_DIRECTION_TO_UNIVERSAL_COLUMN
 )
-from core.operation.enums import (
+from core.domain.enums.operation import (
     TraversalDirection
 )
-from backend.apps.core.enums.universal import (
+from core.domain.enums.universal import (
     AggregateType,
     FrequencyType,
     UniversalColumn,
@@ -18,11 +17,10 @@ from backend.apps.core.enums.universal import (
 from django.db.models import QuerySet
 from core.models import Universal
 from typing import Sequence, Any, Dict
-import core.operation.util as OpUtil
-from backend.apps.core.util.universal_util import bfs_traverse
+import core.util.operation as OpUtil
+from core.util.universal import bfs_traverse
 
 #@log_vars_vals_cls(exclude=None)
-@catch_exceptions_cls(exception_return_value="Error", exclude=None)
 class OperationService:
     def __init__(self):
         self.univ_repo = UniversalRepository()

@@ -1,4 +1,4 @@
-from core.models import Snapshots
+from core.models import Snapshot
 from backend.apps.core.util.logger import debug_print
 from django.contrib.auth import get_user_model
 
@@ -10,7 +10,7 @@ class SnapshotsRepository:
         Retrieve all snapshots for a given user.
         """
         user_instance = User.objects.get(pk=user_id)
-        snapshots = Snapshots.objects.filter(user=user_instance)
+        snapshots = Snapshot.objects.filter(user=user_instance)
         debug_print("Query Finished")
         return snapshots
 
@@ -20,7 +20,7 @@ class SnapshotsRepository:
         """
         try:
             user_instance = User.objects.get(pk=user_id)
-            snapshot = Snapshots.objects.get(user=user_instance, snapshot_id=snapshot_id)
+            snapshot = Snapshot.objects.get(user=user_instance, snapshot_id=snapshot_id)
             debug_print("Query Finished")
             return snapshot
         except Exception as e:
@@ -31,7 +31,7 @@ class SnapshotsRepository:
         Create a new snapshot for a given user.
         """
         user_instance = User.objects.get(pk=user_id)
-        snapshot = Snapshots.objects.create(
+        snapshot = Snapshot.objects.create(
             user=user_instance,
             title=title,
             description=description,

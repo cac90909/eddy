@@ -23,7 +23,7 @@ from rest_framework import status
 
 from explorer.snapshot.serializers import *
 from explorer.serializers.base import StandardOperationResponseSerializer
-from explorer.snapshot.service import ExplorerSnapshotService
+from explorer.services.snapshot import ExplorerSnapshotService
 from backend.apps.core.service.snapshot import SnapshotsService
 
 #TODO -> this class makes use of SnapshotResponseSerializer (snapshots are being returned)

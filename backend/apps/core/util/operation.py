@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from core.operation.specs import OPERATION_SPECS as OP_SPECS
-from core.operation.domain import (
+from core.registry.operation_specs import OPERATION_SPECS as OP_SPECS
+from core.domain.operation_spec import (
     OperationSpec as OpSpec, 
     ArgumentSpec as ArgSpec
 )

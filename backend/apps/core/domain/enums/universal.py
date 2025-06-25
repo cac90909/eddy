@@ -1,5 +1,6 @@
 # core/universal/enums.py
 from enum import Enum
+from typing import Type
 from django.db.models import (
     CharField, TextField, BooleanField, IntegerField, FloatField, DateField, JSONField
 )
@@ -72,7 +73,7 @@ class DataStructureType(str, Enum):
     JSON = "json"
     LIST = "list"
 
-DJANGO_FIELD_TYPES: Field = {
+DJANGO_FIELD_TYPES: set[Type[Field]] = {
     CharField,
     TextField,
     BooleanField,

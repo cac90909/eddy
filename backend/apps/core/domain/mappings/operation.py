@@ -1,17 +1,17 @@
 from typing import Dict, List, Type
-from backend.apps.core.enums.universal import (
+from core.domain.enums.universal import (
     DataType, 
     OperatorType,
     UniversalColumn,
     TRAVERSABLE_COLUMNS
 )
-from core.operation.enums import (
+from core.domain.enums.operation import (
     TraversalDirection,
     OperationType,
     OperationName
 )
 from backend.apps.core.serializers.base import StandardResponseSerializer
-from core.operation.serializers import (
+from core.serializers.operation import (
     RawOperationResponseSerializer,
     ListOperationResponseSerializer,
     MetricOperationResponseSerializer,

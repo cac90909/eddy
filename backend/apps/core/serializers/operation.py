@@ -1,8 +1,6 @@
 from rest_framework import serializers
 from backend.apps.core.serializers.universal import UniversalSerializer
 from backend.apps.core.serializers.base import StandardResponseSerializer
-from core.operation.util import build_request_serializer
-from core.operation.registry import OPERATION_SPECS as OP_SPECS
 
 class RawOperationResponseSerializer(StandardResponseSerializer):
     """
@@ -38,7 +36,3 @@ class MetricOperationResponseSerializer(StandardResponseSerializer):
     meta: Dict
     """
     data = serializers.FloatField()  # or IntegerField if metrics are ints
-
-# A mapping from OpName enum → concrete Serializer class
-REQUEST_SERIALIZERS = {spec.name: build_request_serializer(spec) for spec in OP_SPECS.values()
-}

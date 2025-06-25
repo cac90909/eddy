@@ -1,5 +1,5 @@
 from django.core.exceptions import FieldDoesNotExist
-from django.db.models import F, Func
+from django.db.models import F, Func, Expression
 from django.db.models.fields.json import KeyTextTransform
 from core.models import Universal
 
@@ -10,7 +10,7 @@ from django.db.models import QuerySet, Expression, Field
 from django.db.models.functions import Cast
 from django.contrib.postgres.fields import ArrayField
 
-from backend.apps.core.enums.universal import (
+from core.domain.enums.universal import (
     DataType,
     DataStructureType,
     UniversalColumn,
@@ -18,7 +18,7 @@ from backend.apps.core.enums.universal import (
     PGFunc,
     FrequencyType
 )
-from backend.apps.core.mappings.universal import (
+from core.domain.mappings.universal import (
     UNIVERSAL_COLUMN_TO_DATATYPE,
     DATA_TYPE_TO_FIELD,
     FREQUENCY_FUNCTIONS
@@ -76,7 +76,7 @@ def get_json_key_type(qs: QuerySet, json_key: str) -> DataType:
 
     return DataType.STRING
 
-def get_column_primitive_type(queryset: QuerySet, col: str) -> DataType:
+def get_column_primitive_type(queryset: QuerySet, col: str) -> Any:
     """
     Return the DataType for a model field or nested JSON key.
     """
@@ -85,11 +85,11 @@ def get_column_primitive_type(queryset: QuerySet, col: str) -> DataType:
     else:
         return get_json_key_type(queryset, col)
 
-def get_column_structure_type(col: str) -> DataStructureType:
+def get_column_structure_type(col: UniversalColumn) -> DataStructureType:
     """
     Classify a column name as SCALAR, LIST, or JSON.
     """
-    univ_cols = {u_col.value for u_col in UniversalColumn}
+    univ_cols = {u_col for u_col in UniversalColumn}
     if col not in univ_cols:
         return DataStructureType.JSON
     if UNIVERSAL_COLUMN_TO_DATATYPE.get(col) == DataType.LIST:
@@ -97,14 +97,14 @@ def get_column_structure_type(col: str) -> DataStructureType:
     else:
         return DataStructureType.SCALER
 
-def build_column_ref_expression(col_name: str) -> Func:
+def build_column_ref_expression(col: str) -> Any:
     """
     Return an ORM Expression that references the column or JSON key.
     """
-    if col_name in {col.value for col in UniversalColumn}:
-        return F(col_name)
+    if col in {col_ for col_ in UniversalColumn}:
+        return F(col)
     else:
-        return KeyTextTransform(col_name, UniversalColumn.FIELDS.value)
+        return KeyTextTransform(col, UniversalColumn.FIELDS.value)
     
 def create_col_for_json_key(
     qs: QuerySet,
@@ -116,8 +116,8 @@ def create_col_for_json_key(
     """
     col_expr = build_column_ref_expression(key)
     col_d_type = get_column_primitive_type(qs, key)
-    field_cls = DATA_TYPE_TO_FIELD.get(col_d_type)
-    cast_expr = Cast(col_expr, output_field=DATA_TYPE_TO_FIELD.get(field_cls()))
+    field_cls = DATA_TYPE_TO_FIELD.get(col_d_type, models.TextField)
+    cast_expr = Cast(col_expr, output_field=field_cls())
     qs_mod = qs.annotate(**{alias: cast_expr})
     return qs_mod, alias
 
@@ -154,7 +154,7 @@ def create_frequency_col(
     """
     Annotate a queryset by truncating the `date` field to a given frequency.
     """
-    freq_func = FREQUENCY_FUNCTIONS.get(freq)
+    freq_func: FrequencyType = FREQUENCY_FUNCTIONS.get(freq)
     date_kwargs = {alias: freq_func(UniversalColumn.DATE.value)}
     qs_mod = qs.annotate(**date_kwargs)
     return qs_mod, alias
