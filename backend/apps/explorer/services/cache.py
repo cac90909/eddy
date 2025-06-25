@@ -2,7 +2,8 @@ import json
 from typing import Any
 
 from backend.apps.core.services.cache import CacheService
-from core.domain.operation_chain import OperationChain
+from core.domain.operation import Operation, OperationChain
+from explorer.services.metadata import ExplorerMetadataService
 
 
 class ExplorerCacheService(CacheService):
@@ -21,6 +22,8 @@ class ExplorerCacheService(CacheService):
 
     def __init__(self, default_timeout: int = 3600):
         super().__init__(default_timeout)
+        self.meta_svc = ExplorerMetadataService()
+
 
     # ─── Key generation ──────────────────────────────────────────────────────────
     def _chain_key(self, user_id: int) -> str:
@@ -131,112 +134,7 @@ class ExplorerCacheService(CacheService):
         self.update_meta_key(user_id, self.OPERATION_COUNT_KEY, 1)
 
 
-# from django.core.cache import cache
-# from shared.services.cache_service import CacheService
-# from shared.logger import debug_print_vars, debug_print
-# from shared.util import log_vars_vals_cls, catch_exceptions_cls
-
-
-
-# @catch_exceptions_cls(exception_return_value={"success": False})
-# class ExplorerCacheService(CacheService):
-#     MAX_CACHE_LEN = 50  # Max items in a specific cache object for a user
-
-#     # Named variables for subcache keys
-#     OPERAION_CHAIN_KEY = "OPERATION_CHAIN"
-#     OPERAION_CHAIN_METADATA_KEY = "OPERATION_CHAIN_METADATA"
-
-#     # ---- Initialization & Cache Setup Methods ----
-#     def create_empty_operation_chain_cache(self, user_id):
-#         if not self.get_user_cache(user_id=user_id):
-#             self.create_empty_user_cache(user_id=user_id)
-#         self.cache_user_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_KEY, obj_val=[])
-#         self.cache_user_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_METADATA_KEY, obj_val={})
-#         return "Success"
-
-#     def empty_operation_chain(self, user_id):
-#         self.cache_user_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_KEY, obj_val=[])
-#         self.cache_user_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_METADATA_KEY, obj_val={})
-#         return "Success"
-
-#     # ---- Retrieval Methods ----
-#     def get_operation_chain(self, user_id):
-#         operation_chain = self.get_user_cache_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_KEY)
-#         return operation_chain 
-
-#     def get_most_recent_operation_from_chain(self, user_id):
-#         operation_chain = self.get_operation_chain(user_id=user_id)
-#         most_recent_operation = operation_chain[-1] if operation_chain else None
-#         return most_recent_operation
-
-#     def get_most_recent_operation_chain_result(self, user_id):
-#         operation_chain_results = self.extract_operation_chain_result_data(user_id=user_id)
-#         most_recent_data_result = operation_chain_results[-1] if operation_chain_results else None
-#         return most_recent_data_result
-
-#     def get_most_recent_operation_chain_result_data(self, user_id):
-#         most_recent_result = self.get_most_recent_operation_chain_result(user_id=user_id)
-#         return most_recent_result["data"] if most_recent_result else None
-
-#     def get_most_recent_operation_chain_raw_data_result(self, user_id):
-#         operation_chain = self.get_operation_chain(user_id=user_id)
-#         for operation in operation_chain[::-1]:
-#             if operation.result_data_type == "raw":
-#                 return operation.result_data
-#         return None
-    
-#     def get_operation_chain_metadata(self, user_id):
-#         operation_chain_metadata = self.get_user_cache_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_METADATA_KEY)
-#         return operation_chain_metadata
-    
-#     def get_operation_chain_metadata_key(self, user_id, metadata_key):
-#         operation_chain_metadata = self.get_operation_chain_metadata(user_id=user_id)
-#         return operation_chain_metadata.get(metadata_key, None)
-    
-#     # ---- Modification Methods (Adding/Removing Operations) ----
-#     def cache_operation_onto_chain(self, user_id, operation):
-#         operation_chain = self.get_operation_chain(user_id=user_id)
-#         operation_chain.append(operation)
-#         self.cache_operation_chain(user_id=user_id, operation_chain=operation_chain)
-#         return "Success"
-
-#     def cache_operation_chain(self, user_id, operation_chain):
-#         self.cache_user_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_KEY, obj_val=operation_chain)
-#         return "Success"
-    
-#     def cache_operation_chain_metadata(self, user_id, metadata_key, metadata_value):
-#         metadata = self.get_operation_chain_metadata(user_id=user_id)
-#         metadata[metadata_key] = metadata_value
-#         self.cache_user_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_METADATA_KEY, obj_val=metadata)
-#         return "Success"
-
-#     def delete_operation_chain_cache(self, user_id):
-#         self.delete_user_cache_obj(user_id=user_id, obj_key=self.OPERAION_CHAIN_KEY)
-#         return "Success"
-
-#     def delete_most_recent_operation_from_chain(self, user_id):
-#         operation_chain = self.get_operation_chain(user_id=user_id)
-#         operation_chain.pop(-1)
-#         self.cache_operation_chain(user_id=user_id, operation_chain=operation_chain)
-#         return "Success"
-
-#     # ---- Helper/Extraction Methods ----
-
-#     def extract_operation_chain_operations(self, user_id):
-#         operation_chain = self.get_operation_chain(user_id=user_id)
-#         operation_chain_operations = []
-#         for operation in operation_chain:
-#             operation_chain_operations.append({
-#                 "operation_name": operation.operation_name,
-#                 "operation_arguments": operation.operation_arguments,
-#                 "operation_type": operation.operation_type
-#             })
-#         return operation_chain_operations
-
-#     def extract_operation_chain_result_data(self, user_id):
-#         operation_chain = self.get_operation_chain(user_id=user_id)
-#         operation_chain_operations = []
-#         for operation in operation_chain:
-#             operation_chain_operations.append(operation.result_data)
-#         return operation_chain_operations
-    
+    def cache_operation(self, user_id: int, op: Operation):
+        op_metadata = self.meta_svc.generate_operation_metadata(op)
+        for k,v in op_metadata.items():
+            

@@ -1,3 +1,4 @@
+import inspect
 from typing import Any, Set, List
 
 from core.domain.enums.universal import (
@@ -34,7 +35,7 @@ def get_column_name_options(user_id, data_src) -> List[str]:
     all_cols = {col.value for col in UniversalColumn}
     filterable_cols = all_cols - NON_FILTERABLE_COLUMNS 
     filterable_keys = OperationService().unique_json_keys(user_id, data_src)
-    combined = filterable_cols | filterable_keys
+    combined = [*filterable_keys, *filterable_cols]
     return sorted(combined)
 
 def get_column_value_options(user_id, data_src, col_name):
@@ -79,3 +80,30 @@ def get_target_column_options(
 
 def get_group_aggregate_frequency_options(user_id):
     return [freq.value for freq in FrequencyType]
+
+import inspect
+from typing import Any, Callable, Dict
+
+def invoke_choices_fn(
+    fn: Callable[..., Any],
+    *,
+    user_id: int,
+    data_src: Any,
+    args: Dict[str, Any],
+) -> Any:
+    """
+    Call fn by matching its parameters to (user_id, data_src, args[...]).
+    Raises if fn asks for something we didn’t supply.
+    """
+    sig   = inspect.signature(fn)
+    bound = {}
+    for name, param in sig.parameters.items():
+        if name == "user_id":
+            bound[name] = user_id
+        elif name == "data_src":
+            bound[name] = data_src
+        elif name in args:
+            bound[name] = args[name]
+        else:
+            raise ValueError(f"Missing argument {name!r} for {fn.__name__}")
+    return fn(**bound)

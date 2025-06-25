@@ -3,11 +3,8 @@ from typing import Any, Dict, Callable
 
 from rest_framework.exceptions import APIException, NotFound
 from backend.apps.explorer.services.cache import ExplorerCacheService
-from explorer.metadata.service import ExplorerMetadataService
-from explorer.domain.operation import Operation
-from core.operation.specs import OPERATION_SPECS
-from core.operation.service import OperationService
-from core.operation.enums import OperationArgumentName, OperationName
+from explorer.services.metadata import ExplorerMetadataService
+from core.services.operation_chain import OperationChainService
 
 
 class ExplorerOperationBuilderService:
@@ -18,22 +15,18 @@ class ExplorerOperationBuilderService:
     """
 
     def __init__(self):
-        self.op_svc = OperationService()
         self.cache_svc    = ExplorerCacheService()
         self.metadata_svc = ExplorerMetadataService()
+        self.op_chain_svc = OperationChainService()
 
     def handle_operation(self, user_id, op_name, **kwargs):
         try:
             previous = self.cache_svc.last_result(user_id)
-            if previous is not None:
-                kwargs = {**kwargs, OperationArgumentName.DATA_SOURCE.value:previous}
-            op_spec = OPERATION_SPECS[op_name]
-            res = op_spec.service_method(self.op_svc, user_id, **kwargs)
-            entry = Operation(name=op_name, args=kwargs, type=op_spec.result_type, result=res)
-            self.cache_svc.append_operation(user_id, entry)
-            shape = self.metadata_svc.compute_data_shape(res, op_spec.result_type)
-            self.cache_svc.set_current_shape(user_id, shape)
+            op_with_res, res = self.op_chain_svc.handle_operation(user_id, op_name, previous, **kwargs)
+            self.cache_svc.append_operation(user_id, op_with_res)
+            res_meta = self.metadata_svc.generate_result_metadata(op_with_res.result, op_with_res.type)
+            self.cache_svc.set_current_shape(user_id, res_meta)
             self.cache_svc.increment_operation_count(user_id)
-            return res, shape
+            return res, res_meta
         except Exception as e:
             raise APIException(str(e))

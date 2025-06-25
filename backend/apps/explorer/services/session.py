@@ -1,7 +1,7 @@
 from backend.apps.explorer.services.cache import ExplorerCacheService #Move ECS to non-serv folder
 from backend.apps.core.service.snapshot import SnapshotsService
-from explorer.operation.service import ExplorerOperationService
-from explorer.metadata.service import ExplorerMetadataService
+from core.services
+from explorer.services.metadata import ExplorerMetadataService
 from explorer.domain.operation_chain import OperationChain
 from rest_framework.exceptions import APIException
 from typing import Any, Callable, Dict
@@ -12,13 +12,13 @@ class ExplorerSessionService:
         self.cache_service = ExplorerCacheService()
         self.snapshot_service = SnapshotsService()
         self.operations_service = ExplorerOperationService()
-        self.metadata_service = ExplorerMetadataService()
+        self.meta_svc = ExplorerMetadataService()
 
     def start_session(self, user_id):
         try:
             self.cache_service.init_chain(user_id)
             full_data = self.operations_service.get_full_data(user_id)
-            shape = self.metadata_service.compute_data_shape(full_data, result_type="raw")
+            shape = self.meta_svc.generate_result_metadata(full_data, result_type="raw")
             self.cache_service.set_full_shape(user_id, shape)
             return full_data
         except Exception as e:
@@ -66,19 +66,6 @@ class ExplorerSessionService:
         except Exception as e:
             raise APIException(e)
         
-    def _assemble_from_chain(self, user_id: int, chain: OperationChain) -> None:
-        """
-        Replay each OperationCommand in the given chain in sequence,
-        passing the prior result into the next operation.
-        """
-        result = None
-        for op in chain.operations:
-            result = self.operations_service.execute(
-                user_id=user_id,
-                operation_name=op.name,
-                operation_args=op.args,
-                previous=result
-            )
 
 
 
@@ -86,28 +73,5 @@ class ExplorerSessionService:
 
 
 
-
-
-
-
-    #     def assemble_dataset_list_from_operation_chain(user_id, operation_chain):
-    # from explorer.services._______explorer_service import ExplorerService  # local import to avoid circular dependency
-    # explorer_service = ExplorerService()
-    # final_result = None
-    # for op in operation_chain:
-    #     op_name = op.get("operation_name")
-    #     op_args = op.get("operation_arguments")
-    #     try:
-    #         op_response = explorer_service.handle_operation(user_id, op_name, op_args)
-    #     except Exception as e:
-    #         debug_print(f"Error executing operation {op_name}: {e}")
-    #         return
-    #     # Instead of storing the whole op_response, extract its "data" key if available
-    #     if isinstance(op_response, dict) and "data" in op_response:
-    #         final_result = op_response["data"]
-    #     else:
-    #         final_result = op_response
-    # return final_result
-        
 
   

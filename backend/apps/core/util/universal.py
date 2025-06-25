@@ -85,14 +85,14 @@ def get_column_primitive_type(queryset: QuerySet, col: str) -> Any:
     else:
         return get_json_key_type(queryset, col)
 
-def get_column_structure_type(col: UniversalColumn) -> DataStructureType:
+def get_column_structure_type(col: str) -> DataStructureType:
     """
     Classify a column name as SCALAR, LIST, or JSON.
     """
     univ_cols = {u_col for u_col in UniversalColumn}
     if col not in univ_cols:
         return DataStructureType.JSON
-    if UNIVERSAL_COLUMN_TO_DATATYPE.get(col) == DataType.LIST:
+    if UNIVERSAL_COLUMN_TO_DATATYPE.get(UniversalColumn(col)) == DataType.LIST:
         return DataStructureType.LIST
     else:
         return DataStructureType.SCALER
@@ -154,7 +154,7 @@ def create_frequency_col(
     """
     Annotate a queryset by truncating the `date` field to a given frequency.
     """
-    freq_func: FrequencyType = FREQUENCY_FUNCTIONS.get(freq)
+    freq_func = FREQUENCY_FUNCTIONS[freq]
     date_kwargs = {alias: freq_func(UniversalColumn.DATE.value)}
     qs_mod = qs.annotate(**date_kwargs)
     return qs_mod, alias
@@ -162,7 +162,7 @@ def create_frequency_col(
 def adapt_column_for_processing(
     qs: QuerySet,
     col: str,
-    alias: str = None
+    alias: str = ''
 ) -> Tuple[QuerySet, str]:
     """
     Prepare any column for filtering or aggregation:
@@ -171,7 +171,7 @@ def adapt_column_for_processing(
       - SCALAR → no annotation
     Returns (modified_qs, target_column)
     """
-    alias = f"agg__{col}" if alias is None else alias
+    alias = f"agg__{col}" if alias is '' else alias
     col_struc = get_column_structure_type(col)
     if col_struc == DataStructureType.JSON:
         return create_col_for_json_key(qs, col, alias)
