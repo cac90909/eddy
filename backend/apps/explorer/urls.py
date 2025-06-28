@@ -2,7 +2,7 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 from backend.apps.explorer.views.lookup import LookupViewSet
 from backend.apps.explorer.views.metadata import MetadataViewSet
-from backend.apps.explorer.views.operation_builder import OperationBuilderViewSet
+from backend.apps.explorer.views.operation_executor import OperationBuilderViewSet
 from backend.apps.explorer.views.snapshot import SnapshotViewSet
 from backend.apps.explorer.views.session import SessionViewSet
 from backend.apps.explorer.views._dev import DevViewSet

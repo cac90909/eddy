@@ -40,3 +40,4 @@ OPERATION_TYPE_TO_SERIALIZER: Dict[OperationType, Type[StandardResponseSerialize
     OperationType.METRIC: MetricOperationResponseSerializer,
     OperationType.ENRICHED: EnrichedOperationResponseSerializer
 }
+

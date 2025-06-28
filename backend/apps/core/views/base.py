@@ -13,7 +13,7 @@ class BaseViewSet(ViewSet):
       • envelope_response()
     """
 
-    def parse_payload(self, 
+    def validate_request_body(self, 
                    request: Request, 
                    SerializerClass: Type[serializers.Serializer]
         ) -> Mapping[str, Any]:
@@ -40,7 +40,7 @@ class BaseViewSet(ViewSet):
         ser.is_valid(raise_exception=True)
         return cast(Mapping[str, Any], ser.validated_data)
 
-    def envelope_payload(
+    def envelope_response(
         self,
         payload: Any,
         ResponseSerializer: Type[serializers.Serializer],

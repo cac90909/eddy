@@ -1,32 +1,45 @@
-# explorer/services/eoperation_service.py
-from typing import Any, Dict, Callable
-
+#Probably fold this into just static methods, not much purpose for class-ing this i think
 from rest_framework.exceptions import APIException, NotFound
+from typing import Any
+
+import core.operation.arguments.util as OperationArgumentsUtil
+from core.registry.operation_specs import OPERATION_SPECS
+from core.domain.operation_spec import OperationSpec, ArgumentSpec
+from core.domain.enums.operation import OperationName, OperationArgumentName
 from backend.apps.explorer.services.cache import ExplorerCacheService
-from explorer.services.metadata import ExplorerMetadataService
-from core.services.operation_chain import OperationChainService
 
-
-class ExplorerOperationBuilderService:
-    """
-    Service layer that wraps core Universal* services,
-    caches each operation and its result for undo/replay,
-    and uniformly handles exceptions.
-    """
+class ExplorerLookupService:
 
     def __init__(self):
-        self.cache_svc    = ExplorerCacheService()
-        self.metadata_svc = ExplorerMetadataService()
-        self.op_chain_svc = OperationChainService()
+        self.cache_svc = ExplorerCacheService()
 
-    def handle_operation(self, user_id, op_name, **kwargs):
+    def get_operation_argument_options(
+        self,
+        user_id: int,
+        op_name: str,
+        arg_name: str,
+        prev_args: dict[str, any],
+    ) -> list[Any]:
+        #NOTE: assumes all operations need prev data src right now
         try:
-            previous = self.cache_svc.last_result(user_id)
-            op_with_res, res = self.op_chain_svc.handle_operation(user_id, op_name, previous, **kwargs)
-            self.cache_svc.append_operation(user_id, op_with_res)
-            res_meta = self.metadata_svc.generate_result_metadata(op_with_res.result, op_with_res.type)
-            self.cache_svc.set_current_shape(user_id, res_meta)
-            self.cache_svc.increment_operation_count(user_id)
-            return res, res_meta
+            op_enum = OperationName(op_name)
+            op_spec: OperationSpec = OPERATION_SPECS[op_enum]
+        except (ValueError, KeyError):
+            raise NotFound(f"{op_name!r} is not a valid operation")
+        try:
+            arg_enum = OperationArgumentName(arg_name)
+            arg_spec: ArgumentSpec = op_spec.args[arg_enum]
+        except ValueError:
+            raise NotFound(f"{arg_name!r} is not a valid argument of {op_name}")
+        
+        choices_fn = arg_spec.choices_fn
+        data_src = self.cache_svc.last_result
+        try:
+            options = OperationArgumentsUtil.invoke_choices_fn(choices_fn, user_id, data_src, prev_args)
+            return options
         except Exception as e:
-            raise APIException(str(e))
+            raise APIException(e)
+    
+    def get_operation_info(self, operation_name):
+        #info on arguments, description of arguments, description of operatoin
+        pass
