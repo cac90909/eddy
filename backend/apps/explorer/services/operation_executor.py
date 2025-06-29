@@ -3,7 +3,7 @@ from typing import Any, Dict, Callable
 
 from rest_framework.exceptions import APIException, NotFound
 from backend.apps.explorer.services.cache import ExplorerCacheService
-from explorer.services.metadata import ExplorerMetadataService
+from backend.apps.explorer.services.metadata_calculator import ExplorerMetadataService
 from core.services.operation_chain import OperationChainService
 
 

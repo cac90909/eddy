@@ -1,7 +1,7 @@
 from backend.apps.explorer.services.cache import ExplorerCacheService #Move ECS to non-serv folder
 from backend.apps.core.service.snapshot import SnapshotsService
 from core.services
-from explorer.services.metadata import ExplorerMetadataService
+from backend.apps.explorer.services.metadata_calculator import ExplorerMetadataService
 from explorer.domain.operation_chain import OperationChain
 from rest_framework.exceptions import APIException
 from typing import Any, Callable, Dict

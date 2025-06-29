@@ -1,12 +1,12 @@
 import json
 from typing import Any
 
-from backend.apps.core.services.cache import CacheService
+from backend.apps.core.infrastructure.base_cache import BaseCache
 from core.domain.operation import Operation, OperationChain
-from explorer.services.metadata import ExplorerMetadataService
+from backend.apps.explorer.services.metadata_calculator import ExplorerMetadataService
 
 
-class ExplorerCacheService(CacheService):
+class ExplorerCacheService(BaseCache):
     """
     Caches a user's operation chain and its metadata using flat keys.
     Provides convenience methods to append operations, clear state,

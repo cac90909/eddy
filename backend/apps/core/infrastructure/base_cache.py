@@ -2,7 +2,7 @@
 
 from django.core.cache import cache
 
-class CacheService:
+class BaseCache:
     """
     Simple key→value cache abstraction over Django’s cache backend.
     All values must be JSON‐serializable.
