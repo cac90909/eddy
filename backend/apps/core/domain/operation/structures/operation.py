@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Tuple, Type, Optional, Mapping, List, Sequence, Set, Iterable
-from core.domain.enums.operation import OperationName, OperationType, OperationArgumentName
+from core.domain.operation.enums import (
+    OperationName,
+    OperationType,
+    OperationArgumentName
+)
 
 @dataclass(frozen=True)
 class Operation:

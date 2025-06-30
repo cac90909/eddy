@@ -1,4 +1,4 @@
-from core.domain.operation import OperationType
+from backend.apps.core.domain.operation.enums.op_type import OperationType
 from core.api.serializers.operation import (
     RawOperationResponseSerializer,
     MetricOperationResponseSerializer,

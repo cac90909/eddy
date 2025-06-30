@@ -1,10 +1,10 @@
 from enum import Enum
-from core.domain.universal.enum.col_names import UniversalColumn
+from core.domain.universal.enums.univ_columns import UniversalColumn
 
 NON_FILTERABLE_COLUMNS = {
-    UniversalColumn.USER.value,
-    UniversalColumn.CHILDREN_IDS.value,
-    UniversalColumn.PARENTS_IDS.value,
-    UniversalColumn.SIBLINGS_IDS.value,
-    UniversalColumn.FIELDS.value
+    UniversalColumn.USER,
+    UniversalColumn.CHILDREN_IDS,
+    UniversalColumn.PARENTS_IDS,
+    UniversalColumn.SIBLINGS_IDS,
+    UniversalColumn.FIELDS
 }

@@ -1,24 +1,16 @@
-from backend.apps.core.repositories.universal import UniversalRepository
-from backend.apps.core.util.logger import debug_print, debug_print_vars
-from backend.apps.core.repositories.universal import UniversalRepository
-from core.domain.mappings.operation import (
-    TRAVERSAL_DIRECTION_TO_UNIVERSAL_COLUMN
-)
-from core.domain.enums.operation import (
-    TraversalDirection
-)
-from core.domain.enums.universal import (
-    AggregateType,
-    FrequencyType,
-    UniversalColumn,
-    OperatorType,
-    TRAVERSABLE_COLUMNS
-)
+from core.infrastructure.repositories.universal import UniversalRepository
+from backend.apps.core.infrastructure.logging.logger import debug_print, debug_print_vars
+from core.domain.operation.maps.traversal_dir_to_univ_col import TRAVERSAL_DIRECTION_TO_UNIVERSAL_COLUMN
+from core.domain.operation.enums.traversal_directions import TraversalDirection
+from core.domain.universal.enums.aggregation_type import AggregationType
+from core.domain.universal.enums.frequency_type import FrequencyType
+from core.domain.universal.enums.univ_columns import UniversalColumn
+from core.domain.universal.enums.operator_type import OperatorType
+from core.domain.universal.enums.traversable_cols import TRAVERSABLE_COLUMNS
 from django.db.models import QuerySet
 from core.models import Universal
 from typing import Sequence, Any, Dict
-import core.util.operation as OpUtil
-from core.util.universal import bfs_traverse
+from backend.apps.core.infrastructure.repositories.universal_util import bfs_traverse
 
 #@log_vars_vals_cls(exclude=None)
 class OperationService:
@@ -63,35 +55,35 @@ class OperationService:
             user_id, 
             data_source: QuerySet[Universal], 
             column: UniversalColumn):   
-        return self.univ_repo.aggregate_field(data_source, column, AggregateType.COUNT)
+        return self.univ_repo.aggregate_field(data_source, column, AggregationType.COUNT)
 
     def simple_min(
             self, 
             user_id, 
             data_source: QuerySet[Universal], 
             column: UniversalColumn):
-        return self.univ_repo.aggregate_field(data_source, column, AggregateType.MIN)
+        return self.univ_repo.aggregate_field(data_source, column, AggregationType.MIN)
     
     def simple_max(
             self, 
             user_id, 
             data_source: QuerySet[Universal], 
             column: UniversalColumn):
-        return self.univ_repo.aggregate_field(data_source, column, AggregateType.MAX)
+        return self.univ_repo.aggregate_field(data_source, column, AggregationType.MAX)
     
     def simple_sum(
             self, 
             user_id, 
             data_source: QuerySet[Universal], 
             column: UniversalColumn): 
-        return self.univ_repo.aggregate_field(data_source, column, AggregateType.SUM)
+        return self.univ_repo.aggregate_field(data_source, column, AggregationType.SUM)
     
     def simple_average(
             self, 
             user_id, 
             data_source: QuerySet[Universal], 
             column: UniversalColumn):
-        return self.univ_repo.aggregate_field(data_source, column, AggregateType.AVG)
+        return self.univ_repo.aggregate_field(data_source, column, AggregationType.AVG)
     
     # ----- List -----
     
@@ -134,7 +126,7 @@ class OperationService:
             target_column: UniversalColumn, 
             frequency: FrequencyType|None = None
         ) -> QuerySet:
-        aggregate_operation = AggregateType.COUNT
+        aggregate_operation = AggregationType.COUNT
         return self.univ_repo.aggregate_group_fields(data_source, group_columns, aggregate_operation, target_column, frequency)
     
     def group_min(
@@ -145,7 +137,7 @@ class OperationService:
             target_column: UniversalColumn, 
             frequency: FrequencyType|None = None
         ) -> QuerySet:
-        aggregate_operation = AggregateType.MIN
+        aggregate_operation = AggregationType.MIN
         return self.univ_repo.aggregate_group_fields(data_source, group_columns, aggregate_operation, target_column, frequency)
     
     def group_max(
@@ -156,7 +148,7 @@ class OperationService:
             target_column: UniversalColumn, 
             frequency: FrequencyType|None = None
         ) -> QuerySet:
-        aggregate_operation = AggregateType.MAX
+        aggregate_operation = AggregationType.MAX
         return self.univ_repo.aggregate_group_fields(data_source, group_columns, aggregate_operation, target_column, frequency)
     
     def group_sum(
@@ -167,7 +159,7 @@ class OperationService:
             target_column: UniversalColumn, 
             frequency: FrequencyType|None = None
         ) -> QuerySet:
-        aggregate_operation = AggregateType.SUM
+        aggregate_operation = AggregationType.SUM
         return self.univ_repo.aggregate_group_fields(data_source, group_columns, aggregate_operation, target_column, frequency)
     
     def group_average(
@@ -178,6 +170,6 @@ class OperationService:
             target_column: UniversalColumn, 
             frequency: FrequencyType|None = None
         ) -> QuerySet:
-        aggregate_operation = AggregateType.AVG
+        aggregate_operation = AggregationType.AVG
         return self.univ_repo.aggregate_group_fields(data_source, group_columns, aggregate_operation, target_column, frequency)
 

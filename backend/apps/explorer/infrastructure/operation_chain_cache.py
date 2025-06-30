@@ -1,8 +1,8 @@
 
 from typing import Any
-from core.infrastructure.base_cache import BaseCache
-from core.domain.operation_chain import OperationChain
-from core.domain.operation import Operation
+from backend.apps.core.infrastructure.cache.base_cache import BaseCache
+from backend.apps.core.domain.operation.structures.operation_chain import OperationChain
+from backend.apps.core.domain.operation.structures.operation import Operation
 
 class OperationChainCache(BaseCache):
     PREFIX = "explorer"

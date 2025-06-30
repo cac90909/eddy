@@ -1,25 +1,18 @@
 import inspect
 from typing import Any, Set, List
 
-from core.domain.enums.universal import (
-    UniversalColumn,
-    DataType,
-)
-from core.domain.mappings.universal import (
-    UNIVERSAL_COLUMN_TO_DATATYPE
-)
-from core.domain.mappings.operation import (
-    DATATYPE_TO_OPERATORS
-)
+
+from core.domain.common.enums.data_types import DataType
+from core.domain.universal.enums.univ_columns import UniversalColumn
+from core.domain.universal.maps.univ_col_to_datatype import UNIVERSAL_COLUMN_TO_DATATYPE
+from core.domain.universal.maps.dtype_to_op_options import DATATYPE_TO_OPERATOR_OPTIONS 
+from core.domain.universal.enums.non_filter_cols import NON_FILTERABLE_COLUMNS
+from core.domain.operation.enums.op_name import OperationName
+from core.domain.operation.enums.traversal_directions import TraversalDirection
+from core.domain.universal.enums.frequency_type import FrequencyType
 from core.services.operation import OperationService
-from core.domain.enums.operation import (
-    NON_FILTERABLE_COLUMNS,
-    TraversalDirection,
-    OperationName,
-    FrequencyType
-)
-import core.util.universal as UniversalUtil
-from backend.apps.core.repositories.universal import UniversalRepository
+import backend.apps.core.infrastructure.repositories.universal_util as UniversalUtil
+from core.infrastructure.repositories.universal import UniversalRepository
 # ----- Raw Universal -----
 
 def get_column_name_options(user_id, data_src) -> List[str]:
@@ -43,7 +36,7 @@ def get_column_value_options(user_id, data_src, col_name):
 
 def get_filter_type_options(user_id, data_src, col_name):
     col_data_type = UniversalUtil.get_column_primitive_type(data_src, col_name)
-    return DATATYPE_TO_OPERATORS[col_data_type]
+    return DATATYPE_TO_OPERATOR_OPTIONS[col_data_type]
 
 
 def get_start_id_options(user_id, data_src):

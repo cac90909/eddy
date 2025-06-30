@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Mapping, Any, Optional
-from core.domain.operation import Operation
+from backend.apps.core.domain.operation.structures.operation import Operation
 
 @dataclass
 class OperationChain:

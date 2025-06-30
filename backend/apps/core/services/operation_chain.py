@@ -1,8 +1,10 @@
-from typing import Any
+from typing import Any, Dict
 
-from core.domain.operation import OperationChain, Operation
+from backend.apps.core.domain.operation.structures.operation import Operation
+from backend.apps.core.domain.operation.structures.operation_chain import OperationChain
+from core.domain.operation.enums.op_arg_name import OperationArgumentName
 from core.services.operation import OperationService
-from core.registry.operation_specs import OPERATION_SPECS
+from backend.apps.core.domain.operation.maps.op_name_to_spec import OPERATION_SPECS
 
 class OperationChainService:
 
@@ -33,9 +35,14 @@ class OperationChainService:
         op_spec = OPERATION_SPECS[op_name]
         if data_src is not None:
              kwargs = {**kwargs, data_src:data_src}
+        #NOTE: replace this later, making sure keys are column names to satisfy the args type check
+        enum_args: dict[OperationArgumentName, Any] = {}
+        for key_str, val in kwargs.items():
+            enum_key = OperationArgumentName(key_str)
+            enum_args[enum_key] = val
         res = op_spec.service_method(self.op_svc, user_id, **kwargs)
         op_with_res = Operation(name=op_name, 
-                                args=kwargs, 
+                                args=enum_args, 
                                 type=op_spec.result_type, 
                                 result=res)
         return op_with_res, res

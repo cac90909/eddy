@@ -1,5 +1,5 @@
 from typing import Any, Optional
-from core.infrastructure.base_cache import BaseCache
+from backend.apps.core.infrastructure.cache.base_cache import BaseCache
 
 class MetaCacheManager(BaseCache):
     """

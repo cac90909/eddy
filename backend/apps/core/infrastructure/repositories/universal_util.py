@@ -10,19 +10,16 @@ from django.db.models import QuerySet, Expression, Field
 from django.db.models.functions import Cast
 from django.contrib.postgres.fields import ArrayField
 
-from core.domain.enums.universal import (
-    DataType,
-    DataStructureType,
-    UniversalColumn,
-    OperatorType,
-    PGFunc,
-    FrequencyType
-)
-from core.domain.mappings.universal import (
-    UNIVERSAL_COLUMN_TO_DATATYPE,
-    DATA_TYPE_TO_FIELD,
-    FREQUENCY_FUNCTIONS
-)
+from core.domain.universal.enums.univ_columns import UniversalColumn
+from core.domain.universal.enums.operator_type import OperatorType
+from core.domain.universal.enums.frequency_type import FrequencyType
+from core.domain.common.enums.data_types import DataType
+from core.domain.common.enums.data_structure_types import DataStructureType
+from core.domain.common.enums.postgres_func_names import PGFunc
+
+from core.domain.universal.maps.univ_col_to_datatype import UNIVERSAL_COLUMN_TO_DATATYPE
+from core.infrastructure.orm.dtype_to_dj_field import DATA_TYPE_TO_FIELD
+from core.infrastructure.orm.freq_type_to_truncation import FREQUENCY_FUNCTIONS
 
 def bfs_traverse(
         neighbor_map: Dict[Any, List[Any]],

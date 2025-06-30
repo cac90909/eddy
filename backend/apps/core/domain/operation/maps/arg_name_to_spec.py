@@ -2,14 +2,14 @@ from typing import Dict, Iterable, Sequence, Callable, Set, Optional, Union, Any
 from datetime import date
 from dataclasses import dataclass
 
-from core.domain.enums.operation import (
-    OperationArgumentName as OpArgName,
-    TraversalDirection,
-)
-from core.domain.operation_spec import ArgumentSpec
+from core.domain.operation.enums.op_arg_name import OperationArgumentName as OpArgName
+from core.domain.operation.enums.traversal_directions import TraversalDirection
+
+
+from backend.apps.core.domain.operation.structures.operation_spec import ArgumentSpec
 import core.services.operation_arg_choices as ChoiceUtil
 
-ARGUMENT_SPECS: Dict[OpArgName, ArgumentSpec] = {
+ARGUMENT_SPEC_MAP: Dict[OpArgName, ArgumentSpec] = {
     # Basic column + filtering args
     OpArgName.COLUMN: ArgumentSpec(
         name=OpArgName.COLUMN,

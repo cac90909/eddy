@@ -1,5 +1,6 @@
 from rest_framework.viewsets import ViewSet
 from rest_framework import status, serializers
+from rest_framework.serializers import BaseSerializer, Serializer
 from rest_framework.response import Response
 from rest_framework.request import Request
 from typing import Type, Any, Dict, Mapping, cast
@@ -15,7 +16,7 @@ class BaseViewSet(ViewSet):
 
     def validate_request_body(self, 
                    request: Request, 
-                   SerializerClass: Type[serializers.Serializer]
+                   SerializerClass: Type[BaseSerializer]
         ) -> Mapping[str, Any]:
         """Validate JSON payloads (POST/PUT)."""
         ser = SerializerClass(data=request.data)
@@ -25,13 +26,15 @@ class BaseViewSet(ViewSet):
     def parse_params(
             self, 
             request: Request, 
-            SerializerClass: Type[serializers.Serializer]
+            SerializerClass: Type[Serializer]
         ) -> Mapping[str, Any]:
         """Validate query-param GET requests (handles lists via ListField)."""
         raw = request.query_params
         data: dict[str, Any] = {}
         temp_ser = SerializerClass()  # to inspect which fields are lists
-        for name, field in temp_ser.fields.items():
+        if isinstance(temp_ser, serializers.ListSerializer):
+            raise TypeError("List Serializer passed to parse params --> remove this check")
+        for name, field in temp_ser.get_fields().items():
             if isinstance(field, serializers.ListField):
                 data[name] = raw.getlist(name)
             else:

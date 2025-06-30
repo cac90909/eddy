@@ -2,7 +2,7 @@
 
 from typing import Any, Sequence, Mapping
 from core.domain.enums.operation import OperationType
-from core.domain.operation import Operation
+from backend.apps.core.domain.operation.structures.operation import Operation
 from explorer.services.cache import ExplorerCacheService
 
 class ExplorerMetadataService:

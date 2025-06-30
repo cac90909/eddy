@@ -1,5 +1,5 @@
 from enum import Enum
-from core.domain.universal.enums.univ_col_names import UniversalColumn
+from backend.apps.core.domain.universal.enums.univ_columns import UniversalColumn
 
 TRAVERSABLE_COLUMNS = {
     UniversalColumn.PARENTS_IDS,

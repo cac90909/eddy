@@ -1,5 +1,5 @@
 from core.models import Snapshot
-from backend.apps.core.util.logger import debug_print
+from backend.apps.core.infrastructure.logging.logger import debug_print
 from django.contrib.auth import get_user_model
 
 User = get_user_model()

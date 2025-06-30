@@ -1,5 +1,5 @@
 import csv
-from core.models import UserData
+from core.models import Universal
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
@@ -12,7 +12,7 @@ def export_data_native_format(output_file_path):
     """
     try:
         # Fetch all rows from the table
-        data = UserData.objects.all().values()
+        data = Universal.objects.all().values()
 
         # Open the output file
         with open(output_file_path, mode='w', newline='', encoding='utf-8') as file:
@@ -41,7 +41,7 @@ def export_data_csv_format(output_file_path):
 
     try:
         # Fetch all rows from the table
-        data = UserData.objects.all().values()
+        data = Universal.objects.all().values()
 
         # Open the output file
         with open(output_file_path, mode='w', newline='', encoding='utf-8') as file:

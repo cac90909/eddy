@@ -4,11 +4,17 @@ from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.models import QuerySet
 
-from core.util.logger import debug_print
+from backend.apps.core.infrastructure.logging.logger import debug_print
 from core.models import Universal
-from core.domain.enums.universal import AggregateType, FrequencyType, OperatorType, UniversalColumn
-from core.domain.mappings.universal import AGGREGATION_FUNCTIONS, OPERATOR_LOOKUPS
-import core.util.universal as universal_util
+from core.domain.universal.enums.aggregation_type import AggregationType
+from core.domain.universal.enums.frequency_type import FrequencyType
+from core.domain.universal.enums.operator_type import OperatorType
+from core.domain.universal.enums.univ_columns import UniversalColumn
+
+from core.infrastructure.orm.operator_lookup import OPERATOR_LOOKUPS
+from core.infrastructure.orm.agg_type_to_func import AGGREGATION_FUNCTIONS
+
+import backend.apps.core.infrastructure.repositories.universal_util as universal_util
 
 User = get_user_model()
 
@@ -117,7 +123,7 @@ class UniversalRepository:
         self,
         qs: QuerySet[Universal],
         column: UniversalColumn,
-        aggregate_type: AggregateType
+        aggregate_type: AggregationType
     ) -> Any:
         """Aggregate a single column (scalar, JSON, or Array) into one value."""
         qs2, alias = universal_util.adapt_column_for_processing(qs, column)
@@ -129,7 +135,7 @@ class UniversalRepository:
         self,
         qs: QuerySet[Universal],
         group_cols: List[UniversalColumn],
-        aggregate_type: AggregateType,
+        aggregate_type: AggregationType,
         target_col: str,
         freq: FrequencyType|None
     )  -> Any:

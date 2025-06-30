@@ -4,7 +4,7 @@ from typing import (
     Callable, Dict, Tuple,
     Optional, Sequence, Iterable, Set
 )
-from core.domain.enums.operation import OperationArgumentName
+from core.domain.operation.enums.op_arg_name import OperationArgumentName
 
 @dataclass(frozen=True)
 class ArgumentSpec:

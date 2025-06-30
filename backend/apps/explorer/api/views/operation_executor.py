@@ -2,12 +2,13 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema
 
-from core.views.base import BaseViewSet
-from explorer.serializers.operation_executor import REQUEST_SERIALIZERS
-from explorer.serializers.operation_executor import RESPONSE_SERIALIZERS
-from core.registry.operation_specs import OPERATION_SPECS
-from core.domain.enums.operation import OperationName
-from core.domain.operation_spec import OperationSpec
+from core.api.views.base import BaseViewSet
+from explorer.api.serializers.operation_requests import REQUEST_SERIALIZERS
+from explorer.api.serializers.operation_responses import RESPONSE_SERIALIZERS
+
+from backend.apps.core.domain.operation.maps.op_name_to_spec import OPERATION_SPECS
+from core.domain.operation.enums.op_name import OperationName
+from backend.apps.core.domain.operation.structures.operation_spec import OperationSpec
 from explorer.services.operation_executor import ExplorerOperationExecutorService
 
 class BuilderViewSet(BaseViewSet):

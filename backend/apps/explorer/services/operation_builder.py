@@ -3,8 +3,8 @@ from rest_framework.exceptions import APIException, NotFound
 from typing import Any
 
 import core.operation.arguments.util as OperationArgumentsUtil
-from core.registry.operation_specs import OPERATION_SPECS
-from core.domain.operation_spec import OperationSpec, ArgumentSpec
+from backend.apps.core.domain.operation.maps.op_name_to_spec import OPERATION_SPECS
+from backend.apps.core.domain.operation.structures.operation_spec import OperationSpec, ArgumentSpec
 from core.domain.enums.operation import OperationName, OperationArgumentName
 from backend.apps.explorer.services.cache import ExplorerCacheService
 
