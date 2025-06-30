@@ -4,7 +4,7 @@ from rest_framework.request import Request
 from rest_framework.viewsets import ViewSet
 from typing import Type, Any
 from core.registry.operation_specs import OPERATION_SPECS as OP_SPECS
-from core.domain.enums.base_response import StandardResponse
+from backend.apps.core.api.base_response import StandardResponse
 from backend.apps.core.serializers.base import StandardResponseSerializer
 from core.domain.operation_spec import OperationSpec as OpSpec
 from core.domain.argument_spec import ArgumentSpec as ArgSpec

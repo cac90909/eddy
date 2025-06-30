@@ -9,7 +9,7 @@ from core.domain.enums.operation import OperationArgumentName
 @dataclass(frozen=True)
 class ArgumentSpec:
     name: OperationArgumentName
-    dtype: Type[Any]
+    dtype: type
     required: bool
     multiple: Optional[bool] = False
     validate_fn: Optional[Callable[[Any, Dict[str, Any]], bool]] | Set = lambda value, ctx: True

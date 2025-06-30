@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from backend.apps.core.serializers.universal import UniversalSerializer
-from backend.apps.core.serializers.base import StandardResponseSerializer
+from core.api.serializers.universal import UniversalSerializer
+from core.api.serializers.base import StandardResponseSerializer
 
 class RawOperationResponseSerializer(StandardResponseSerializer):
     """

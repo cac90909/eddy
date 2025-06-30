@@ -2,7 +2,7 @@ from typing import Type, Any, Dict
 from datetime import date, datetime, time
 from rest_framework import serializers
 
-PY_TO_DRF_FIELD: Dict[Type[Any], Type[serializers.Field]] = {
+PYTHON_TYPE_TO_DRF_FIELD: Dict[Type[Any], Type[serializers.Field]] = {
     str: serializers.CharField,
     int: serializers.IntegerField,
     float: serializers.FloatField,

@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, Sequence, Callable, Any, Set, Optional, Union, Any
+from typing import Dict, Iterable, Sequence, Callable, Set, Optional, Union, Any, Type
 from datetime import date
 from dataclasses import dataclass
 
@@ -86,7 +86,7 @@ ARGUMENT_SPECS: Dict[OpArgName, ArgumentSpec] = {
     # Data source selector (if you need it)
     OpArgName.DATA_SOURCE: ArgumentSpec(
         name=OpArgName.DATA_SOURCE,
-        dtype=Any,
+        dtype=Type[Any],
         required=False,
         multiple=False,
         choices_fn=None,

@@ -1,5 +1,5 @@
 from core.domain.operation import OperationType
-from core.serialization.operation import (
+from core.api.serializers.operation import (
     RawOperationResponseSerializer,
     MetricOperationResponseSerializer,
     EnrichedOperationResponseSerializer,

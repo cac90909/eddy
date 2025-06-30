@@ -5,13 +5,13 @@ from drf_spectacular.utils import extend_schema_serializer
 from core.registry.operation_specs import OPERATION_SPECS
 from core.domain.argument_spec import ArgumentSpec
 from core.domain.operation_spec import OperationSpec
-from backend.apps.core.serialization.py_drf_type_mappings import PY_TO_DRF_FIELD
-from backend.apps.core.serialization.operation_type_mappings import OP_TYPE_TO_SERIALIZER
+from backend.apps.core.serialization.python_type_to_drf_field import PYTHON_TYPE_TO_DRF_FIELD
+from backend.apps.core.serialization.operation_type_to_serializer import OP_TYPE_TO_SERIALIZER
 
 def build_request_serializer(arg_specs: Tuple[ArgumentSpec, ...]):
     field_defs = {}
     for spec in arg_specs:
-        drf_szr_cls = PY_TO_DRF_FIELD.get(spec.dtype)
+        drf_szr_cls = PYTHON_TYPE_TO_DRF_FIELD.get(spec.dtype)
         if not drf_szr_cls:
             raise RuntimeError(f"No mapping for dtype {spec.dtype}")
         field = drf_szr_cls(required=spec.required, help_text=spec.error_msg or None,)

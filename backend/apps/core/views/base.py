@@ -3,7 +3,7 @@ from rest_framework import status, serializers
 from rest_framework.response import Response
 from rest_framework.request import Request
 from typing import Type, Any, Dict, Mapping, cast
-from core.domain.enums.base_response import StandardResponse
+from backend.apps.core.api.base_response import StandardResponse
 
 class BaseViewSet(ViewSet):
     """
