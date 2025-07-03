@@ -2,8 +2,7 @@
 from typing import Any, Dict, Callable
 
 from rest_framework.exceptions import APIException, NotFound
-from backend.apps.explorer.services.cache import ExplorerCacheService
-from backend.apps.explorer.services.metadata_calculator import ExplorerMetadataService
+from backend.apps.explorer.services.metadata_calculator import ExplorerMetadataCalculator
 from core.services.operation_chain import OperationChainService
 
 
@@ -16,7 +15,7 @@ class ExplorerOperationExecutorService:
 
     def __init__(self):
         self.cache_svc    = ExplorerCacheService()
-        self.metadata_svc = ExplorerMetadataService()
+        self.metadata_svc = ExplorerMetadataCalculator()
         self.op_chain_svc = OperationChainService()
 
     def handle_operation(self, user_id, op_name, **kwargs):

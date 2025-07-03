@@ -5,7 +5,7 @@ from core.domain.enums.operation import OperationType
 from backend.apps.core.domain.operation.structures.operation import Operation
 from explorer.services.cache import ExplorerCacheService
 
-class ExplorerMetadataService:
+class ExplorerMetadataCalculator:
 
     SHAPE = "shape"
     OPERATION_COUNT = "operation_count"
@@ -19,7 +19,9 @@ class ExplorerMetadataService:
         op_count += 1
         return {self.SHAPE: shape, self.OPERATION_COUNT: op_count}
     
-    def generate_operation_shape(self, result_data, result_type):
+    def increment_operation_count()
+    
+    def generate_result_shape(self, result_data, result_type):
         if result_type == OperationType.RAW:
             return self._package_shape_obj(
             len(result_data),
