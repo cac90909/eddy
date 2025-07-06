@@ -1,43 +1,37 @@
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 from explorer.infrastructure.explorer_cache import ExplorerCache
 from explorer.services.metadata_calculator import ExplorerMetadataCalculator
 from core.domain.operation.structures.operation import Operation
+from core.infrastructure.cache.cache_resource import CacheResource
+from explorer.infrastructure.meta_resource import MetaResource
 
 
 
-class ExplorerMetadataService:
+class ExplorerMetadataManager:
     """
     Application‑level service that manages domain‑specific metadata fields,
     delegating persistence to the MetaCacheManager (flat key approach).
     """
-    FULL_SHAPE_KEY      = "full_shape"
-    CURRENT_SHAPE_KEY   = "current_shape"
-    OPERATION_COUNT_KEY = "operation_count"
-    LAST_UPDATED_KEY    = "last_updated"
+    
+    def __init__(self,):
+        self.cache = ExplorerCache()
 
-    def __init__(self):
-        # Inject or create the infra cache manager
-        self.meta_cache = ExplorerCache.meta
-        self.meta_calc = ExplorerMetadataCalculator()
-
-    @property
-    def full_shape(self):
-        return self.meta_cache.attribute(self.FULL_SHAPE_KEY)
-    @property
-    def current_shape(self):
-        return self.meta_cache.attribute(self.FULL_SHAPE_KEY)
-    @property
-    def operation_count(self):
-        return self.meta_cache.attribute(self.FULL_SHAPE_KEY)
-    @property
-    def last_updated(self):
-        return self.meta_cache.attribute(self.LAST_UPDATED_KEY)
     
     def increment_operation_count(self, user_id: int) -> int:
-        oc = self.operation_count.get(user_id) or 0
-        oc += 1
-        self.operation_count.set(user_id, oc)
+        key = self.cache.meta_operation_count_key(user_id)
+        oc = self.cache.get(key)
+        oc = oc + 1
+        self.cache.set(key, oc)
         return oc
+    
+
+
+
+
+
+
+
+    
 
     def initialize_metadata(self, user_id, op: Operation) -> None:
         full_shape = curr_shape = self.meta_calc.generate_result_shape(op.result, op.type)

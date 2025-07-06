@@ -23,17 +23,17 @@ class OperationChain:
         return cls([Operation(**item) for item in raw])
 
     @property
-    def last_operation(self) -> Optional[Operation]:
+    def latest_operation(self) -> Optional[Operation]:
         """Return the most‐recently appended Operation, or None."""
         return self.operations[-1] if self.operations else None
 
     @property
-    def last_result(self) -> Any:
+    def latest_result(self) -> Any:
         """
         Convenience to fetch the last command’s result_data field,
         or None if there is no last command.
         """
-        return self.last_operation.result if self.last_operation else None
+        return self.latest_operation.result if self.latest_operation else None
     
     def to_persistable(self) -> List[dict]:
         # used when saving a snapshot: drop the results

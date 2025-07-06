@@ -5,32 +5,44 @@ from core.domain.operation.structures.operation_chain import OperationChain
 from core.infrastructure.cache.base_cache import BaseCache
 from core.infrastructure.cache.cache_resource import CacheResource
 from core.infrastructure.cache.resource_attribute import ResourceAttribute
+from explorer.domain.structures.shape_dict import ShapeDict
+
+from explorer.infrastructure.meta_resource import MetaResource
+from explorer.domain.enums.meta_fields import MetaFields
+from explorer.domain.maps.meta_field_types import META_FIELD_TYPES
 
 class ExplorerCache(BaseCache):
 
     SERVICE        = "explorer"
-    CHAIN_RESOURCE = "operation_chain"
-    META_RESOURCE  = "metadata"
-    
+    CHAIN_RESOURCE = "chain"
+    META_RESOURCE  = "meta"
+
 
     def __init__(self):
-        super().__init__()
+        super().__init__(service=self.SERVICE)
 
-    @property
-    def _chain_key(self):
-        return self._chain_key(self.CHAIN_RESOURCE)
     
-    @property
-    def _meta_key(self):
-        return self._chain_key(self.META_RESOURCE)
+    def chain_key(self, user_id):
+        return self.build_cache_key(user_id, self.SERVICE, self.CHAIN_RESOURCE)
+    def meta_last_updated_key(self, user_id):
+        return self.build_cache_key(user_id, self.SERVICE, self.META_RESOURCE, MetaFields.last_updated.value)
+    def meta_operation_count_key(self, user_id):
+        return self.build_cache_key(user_id, self.SERVICE, self.META_RESOURCE, MetaFields.operation_count.value)
+    def meta_full_shape_key(self, user_id):
+        return self.build_cache_key(user_id, self.SERVICE, self.META_RESOURCE, MetaFields.full_shape.value)
+    def meta_current_shape_key(self, user_id):
+        return self.build_cache_key(user_id, self.SERVICE, self.META_RESOURCE, MetaFields.current_shape.value)
+
     
-    @cached_property
-    def chain(self):
-        return CacheResource(self, self.SERVICE, self.CHAIN_RESOURCE, OperationChain)
+
+
+
+
     
-    @cached_property
-    def meta(self):
-        return CacheResource(self, self.SERVICE, self.META_RESOURCE, Dict[str,Any])
+
+        
+    
+        
     
 
 

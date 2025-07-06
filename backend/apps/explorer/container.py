@@ -1,0 +1,8 @@
+from explorer.infrastructure.explorer_cache import ExplorerCache
+from explorer.services.operation_chain_manager import ExplorerOperationChainManager
+from explorer.services.metadata_manager import ExplorerMetadataManager
+
+explorer_cache = ExplorerCache()
+
+op_chain_manager = ExplorerOperationChainManager(explorer_cache.chain)
+meta_data_manager = ExplorerMetadataManager(explorer_cache.meta)
