@@ -12,6 +12,6 @@ from backend.apps.core.domain.operation.structures.argument_spec import Argument
 class OperationSpec:
     name: OperationName
     result_type: OperationType
-    args: Tuple[ArgumentSpec, ...]
+    args: Dict[OperationArgumentName, ArgumentSpec]
     description: str
     service_method: Callable[..., Any]

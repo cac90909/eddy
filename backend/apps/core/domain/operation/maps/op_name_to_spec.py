@@ -30,28 +30,28 @@ OPERATION_SPECS: Dict[OpName, OpSpec] = {
     OpName.FULL_DATA: OpSpec(
         name=OpName.FULL_DATA,
         result_type=OpType.RAW,
-        args=(),
+        args={},
         service_method=OpSvc.full_data,
         description="Load the full dataset",
     ),
     OpName.FILTER: OpSpec(
         name=OpName.FILTER,
         result_type=OpType.RAW,
-        args=(
-            ARGUMENT_SPEC_MAP[OpArgName.COLUMN],
-            ARGUMENT_SPEC_MAP[OpArgName.VALUE],
-            ARGUMENT_SPEC_MAP[OpArgName.OPERATOR],
-        ),
+        args={
+            OpArgName.COLUMN: ARGUMENT_SPEC_MAP[OpArgName.COLUMN],
+            OpArgName.VALUE: ARGUMENT_SPEC_MAP[OpArgName.VALUE],
+            OpArgName.OPERATOR: ARGUMENT_SPEC_MAP[OpArgName.OPERATOR],
+        },
         service_method=OpSvc.filter,
         description="Filter rows by column and value",
     ),
     OpName.TRAVERSE: OpSpec(
         name=OpName.TRAVERSE,
         result_type=OpType.RAW,
-        args=(
-            ARGUMENT_SPEC_MAP[OpArgName.START_ID],
-            ARGUMENT_SPEC_MAP[OpArgName.DIRECTIONS],
-        ),
+        args={
+            OpArgName.START_ID: ARGUMENT_SPEC_MAP[OpArgName.START_ID],
+            OpArgName.DIRECTIONS: ARGUMENT_SPEC_MAP[OpArgName.DIRECTIONS],
+        },
         service_method=OpSvc.traverse,
         description="Traverse graph relationships",
     ),
@@ -60,35 +60,45 @@ OPERATION_SPECS: Dict[OpName, OpSpec] = {
     OpName.SIMPLE_COUNT: OpSpec(
         name=OpName.SIMPLE_COUNT,
         result_type=OpType.METRIC,
-        args=(ARGUMENT_SPEC_MAP[OpArgName.COLUMN],),
+        args={
+            OpArgName.COLUMN: ARGUMENT_SPEC_MAP[OpArgName.COLUMN],
+        },
         service_method=OpSvc.simple_count,
         description="Count rows in a column",
     ),
     OpName.SIMPLE_SUM: OpSpec(
         name=OpName.SIMPLE_SUM,
         result_type=OpType.METRIC,
-        args=(ARGUMENT_SPEC_MAP[OpArgName.COLUMN],),
-        service_method=OpSvc.simple_min,
+        args={
+            OpArgName.COLUMN: ARGUMENT_SPEC_MAP[OpArgName.COLUMN],
+        },
+        service_method=OpSvc.simple_sum,
         description="Sum values in a column",
     ),
     OpName.SIMPLE_MIN: OpSpec(
         name=OpName.SIMPLE_MIN,
         result_type=OpType.METRIC,
-        args=(ARGUMENT_SPEC_MAP[OpArgName.COLUMN],),
+        args={
+            OpArgName.COLUMN: ARGUMENT_SPEC_MAP[OpArgName.COLUMN],
+        },
         service_method=OpSvc.simple_min,
         description="Minimum value in a column",
     ),
     OpName.SIMPLE_MAX: OpSpec(
         name=OpName.SIMPLE_MAX,
         result_type=OpType.METRIC,
-        args=(ARGUMENT_SPEC_MAP[OpArgName.COLUMN],),
+        args={
+            OpArgName.COLUMN: ARGUMENT_SPEC_MAP[OpArgName.COLUMN],
+        },
         service_method=OpSvc.simple_max,
         description="Maximum value in a column",
     ),
     OpName.SIMPLE_AVERAGE: OpSpec(
         name=OpName.SIMPLE_AVERAGE,
         result_type=OpType.METRIC,
-        args=(ARGUMENT_SPEC_MAP[OpArgName.COLUMN],),
+        args={
+            OpArgName.COLUMN: ARGUMENT_SPEC_MAP[OpArgName.COLUMN],
+        },
         service_method=OpSvc.simple_average,
         description="Average of values in a column",
     ),
@@ -97,28 +107,32 @@ OPERATION_SPECS: Dict[OpName, OpSpec] = {
     OpName.UNIQUE_COLUMN_VALUES: OpSpec(
         name=OpName.UNIQUE_COLUMN_VALUES,
         result_type=OpType.LIST,
-        args=(ARGUMENT_SPEC_MAP[OpArgName.COLUMN],),
+        args={
+            OpArgName.COLUMN: ARGUMENT_SPEC_MAP[OpArgName.COLUMN],
+        },
         service_method=OpSvc.unique_column_values,
         description="List distinct values of a column",
     ),
     OpName.UNIQUE_JSON_KEYS: OpSpec(
         name=OpName.UNIQUE_JSON_KEYS,
         result_type=OpType.LIST,
-        args=(),
+        args={},
         service_method=OpSvc.unique_json_keys,
         description="List distinct JSON keys",
     ),
     OpName.UNIQUE_JSON_KEY_VALUES: OpSpec(
         name=OpName.UNIQUE_JSON_KEY_VALUES,
         result_type=OpType.LIST,
-        args=(ARGUMENT_SPEC_MAP[OpArgName.KEY],),
+        args={
+            OpArgName.KEY: ARGUMENT_SPEC_MAP[OpArgName.KEY],
+        },
         service_method=OpSvc.unique_json_key_values,
         description="List distinct values for a JSON key",
     ),
     OpName.UNIQUE_JSON_VALUES: OpSpec(
         name=OpName.UNIQUE_JSON_VALUES,
         result_type=OpType.LIST,
-        args=(),
+        args={},
         service_method=OpSvc.unique_json_values,
         description="List all values in JSON fields",
     ),
@@ -127,55 +141,55 @@ OPERATION_SPECS: Dict[OpName, OpSpec] = {
     OpName.GROUP_COUNT: OpSpec(
         name=OpName.GROUP_COUNT,
         result_type=OpType.ENRICHED,
-        args=(
-            ARGUMENT_SPEC_MAP[OpArgName.GROUP_COLUMNS],
-            ARGUMENT_SPEC_MAP[OpArgName.TARGET_COLUMN],
-            ARGUMENT_SPEC_MAP[OpArgName.FREQUENCY],
-        ),
+        args={
+            OpArgName.GROUP_COLUMNS: ARGUMENT_SPEC_MAP[OpArgName.GROUP_COLUMNS],
+            OpArgName.TARGET_COLUMN: ARGUMENT_SPEC_MAP[OpArgName.TARGET_COLUMN],
+            OpArgName.FREQUENCY: ARGUMENT_SPEC_MAP[OpArgName.FREQUENCY],
+        },
         service_method=OpSvc.group_count,
         description="Count by group over time",
     ),
     OpName.GROUP_SUM: OpSpec(
         name=OpName.GROUP_SUM,
         result_type=OpType.ENRICHED,
-        args=(
-            ARGUMENT_SPEC_MAP[OpArgName.GROUP_COLUMNS],
-            ARGUMENT_SPEC_MAP[OpArgName.TARGET_COLUMN],
-            ARGUMENT_SPEC_MAP[OpArgName.FREQUENCY],
-        ),
+        args={
+            OpArgName.GROUP_COLUMNS: ARGUMENT_SPEC_MAP[OpArgName.GROUP_COLUMNS],
+            OpArgName.TARGET_COLUMN: ARGUMENT_SPEC_MAP[OpArgName.TARGET_COLUMN],
+            OpArgName.FREQUENCY: ARGUMENT_SPEC_MAP[OpArgName.FREQUENCY],
+        },
         service_method=OpSvc.group_sum,
         description="Sum by group over time",
     ),
     OpName.GROUP_MIN: OpSpec(
         name=OpName.GROUP_MIN,
         result_type=OpType.ENRICHED,
-        args=(
-            ARGUMENT_SPEC_MAP[OpArgName.GROUP_COLUMNS],
-            ARGUMENT_SPEC_MAP[OpArgName.TARGET_COLUMN],
-            ARGUMENT_SPEC_MAP[OpArgName.FREQUENCY],
-        ),
+        args={
+            OpArgName.GROUP_COLUMNS: ARGUMENT_SPEC_MAP[OpArgName.GROUP_COLUMNS],
+            OpArgName.TARGET_COLUMN: ARGUMENT_SPEC_MAP[OpArgName.TARGET_COLUMN],
+            OpArgName.FREQUENCY: ARGUMENT_SPEC_MAP[OpArgName.FREQUENCY],
+        },
         service_method=OpSvc.group_min,
         description="Minimum by group over time",
     ),
     OpName.GROUP_MAX: OpSpec(
         name=OpName.GROUP_MAX,
         result_type=OpType.ENRICHED,
-        args=(
-            ARGUMENT_SPEC_MAP[OpArgName.GROUP_COLUMNS],
-            ARGUMENT_SPEC_MAP[OpArgName.TARGET_COLUMN],
-            ARGUMENT_SPEC_MAP[OpArgName.FREQUENCY],
-        ),
+        args={
+            OpArgName.GROUP_COLUMNS: ARGUMENT_SPEC_MAP[OpArgName.GROUP_COLUMNS],
+            OpArgName.TARGET_COLUMN: ARGUMENT_SPEC_MAP[OpArgName.TARGET_COLUMN],
+            OpArgName.FREQUENCY: ARGUMENT_SPEC_MAP[OpArgName.FREQUENCY],
+        },
         service_method=OpSvc.group_max,
         description="Maximum by group over time",
     ),
     OpName.GROUP_AVERAGE: OpSpec(
         name=OpName.GROUP_AVERAGE,
         result_type=OpType.ENRICHED,
-        args=(
-            ARGUMENT_SPEC_MAP[OpArgName.GROUP_COLUMNS],
-            ARGUMENT_SPEC_MAP[OpArgName.TARGET_COLUMN],
-            ARGUMENT_SPEC_MAP[OpArgName.FREQUENCY],
-        ),
+        args={
+            OpArgName.GROUP_COLUMNS: ARGUMENT_SPEC_MAP[OpArgName.GROUP_COLUMNS],
+            OpArgName.TARGET_COLUMN: ARGUMENT_SPEC_MAP[OpArgName.TARGET_COLUMN],
+            OpArgName.FREQUENCY: ARGUMENT_SPEC_MAP[OpArgName.FREQUENCY],
+        },
         service_method=OpSvc.group_average,
         description="Average by group over time",
     ),

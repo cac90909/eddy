@@ -2,8 +2,9 @@
 from typing import Any, Dict, Callable
 
 from rest_framework.exceptions import APIException, NotFound
-from backend.apps.explorer.services.metadata_calculator import ExplorerMetadataCalculator
+from backend.apps.explorer.services.metadata_manager import ExplorerMetadataManager
 from core.services.operation_chain import OperationChainService
+from explorer.services.operation_chain_manager import ExplorerOperationChainManager
 
 
 class ExplorerOperationExecutorService:
@@ -14,18 +15,16 @@ class ExplorerOperationExecutorService:
     """
 
     def __init__(self):
-        self.cache_svc    = ExplorerCacheService()
-        self.metadata_svc = ExplorerMetadataCalculator()
-        self.op_chain_svc = OperationChainService()
+        self.metadata_mgr = ExplorerMetadataManager()
+        self.chain_mgr = ExplorerOperationChainManager()
+        self.chain_svc = OperationChainService()
 
-    def handle_operation(self, user_id, op_name, **kwargs):
+    def handle_operation(self, user_id: int, op_name: str, **kwargs):
         try:
-            previous = self.cache_svc.last_result(user_id)
-            op_with_res, res = self.op_chain_svc.handle_operation(user_id, op_name, previous, **kwargs)
-            self.cache_svc.append_operation(user_id, op_with_res)
-            res_meta = self.metadata_svc.generate_result_metadata(op_with_res.result, op_with_res.type)
-            self.cache_svc.set_current_shape(user_id, res_meta)
-            self.cache_svc.increment_operation_count(user_id)
-            return res, res_meta
+            previous = self.chain_mgr.get_latest_result(user_id)
+            op = self.chain_svc.handle_operation(user_id, op_name, previous, **kwargs)
+            self.chain_mgr.append_operation(user_id, op)
+            op_meta = self.metadata_mgr.update_metadata(user_id, op)
+            return op.result, op_meta
         except Exception as e:
             raise APIException(str(e))
